@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es" class="bg-slate-50 dark:bg-slate-900">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-visual" />
+  <!-- v1.2.0: theme-color cian de marca #01696f (antes emerald #10B981) -->
+  <meta name="theme-color" content="#01696f" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="description"
+    content="Sistema de gestión de inventario y punto de venta para bodegas y negocios en Venezuela. Precios actualizados con tasas BCV en tiempo real." />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Precios Al Día — Bodegas" />
+  <meta property="og:description"
+    content="Gestión de inventario, punto de venta y precios actualizados con tasas BCV en tiempo real para bodegas y negocios en Venezuela." />
+  <meta property="og:image" content="/pwa-512x512.png" />
+  <meta property="og:locale" content="es_VE" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Precios Al Día — Bodegas" />
+  <meta name="twitter:description"
+    content="Gestión de inventario, punto de venta y precios actualizados con tasas BCV en tiempo real." />
+  <meta name="twitter:image" content="/pwa-512x512.png" />
+
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="PreciosAlDía" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+
+  <title>Precios Al Día | Bodegas</title>
+
+  <!-- v1.2.0: Fonts del design system — Instrument Serif (display) + Work Sans (body) + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&family=DM+Mono:wght@400;500&family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap"
+    rel="stylesheet">
+
+  <!-- Capturar prompt de instalación PWA desde el inicio -->
+  <script>
+    window.deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.deferredInstallPrompt = e;
+    });
+  </script>
+
+  <!-- Anti-FOUC: aplicar tema antes del render para evitar flash de tema incorrecto -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme') || 'light';
+        // Respetar prefers-color-scheme si no hay preferencia guardada
+        if (!localStorage.getItem('theme')) {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+        if (t === 'dark') document.documentElement.classList.add('dark');
+        // Actualizar theme-color meta según tema
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#1a1917' : '#01696f');
+      } catch (e) { /* no-op: localStorage puede estar bloqueado */ }
+    })();
+  </script>
+</head>
+
+  <!-- Native HTML Initial Splash Background (First Paint - 0ms Delay) -->
+  <div id="initial-splash-overlay" style="position:fixed;inset:0;z-index:99999;background:#FFFFFF;transition:opacity 0.25s ease;"></div>
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        var splash = document.getElementById('initial-splash-overlay');
+        if (splash && t === 'dark') { splash.style.background = '#1a1917'; }
+      } catch(e) {}
+    })();
+  </script>
+
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>

@@ -1,0 +1,6 @@
+{
+  "appId": "com.tasasaldia.abasto",
+  "appName": "Precios Al Día",
+  "webDir": "dist",
+  "androidScheme": "https"
+}

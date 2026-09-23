@@ -1,0 +1,8 @@
+# robots.txt — INFRA-028
+# No se referencia un sitemap fijo porque el deploy es Cloudflare (no Vercel).
+# Si en el futuro se publica un sitemap real, configurar el dominio via env var
+# y regenerar este archivo, o servirlo dinámicamente desde el Worker.
+
+User-agent: *
+Allow: /
+Disallow: /api/

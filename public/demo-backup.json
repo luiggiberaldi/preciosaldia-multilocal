@@ -1,0 +1,4633 @@
+{
+  "timestamp": "2026-06-28T18:43:31.239Z",
+  "version": "2.0",
+  "appName": "TasasAlDia_Bodegas",
+  "data": {
+    "idb": {
+      "abasto_audit_log_v1": [
+        {
+          "id": "log-01",
+          "user": "Administrador",
+          "category": "SISTEMA",
+          "action": "APERTURA_CAJA",
+          "details": "Caja inicializada con $50.00",
+          "timestamp": "2026-06-28T18:43:31.238Z"
+        },
+        {
+          "id": "log-02",
+          "user": "Administrador",
+          "category": "INVENTARIO",
+          "action": "CARGA_INICIAL",
+          "details": "Carga inicial de 15 productos de prueba",
+          "timestamp": "2026-06-28T18:43:31.238Z"
+        }
+      ],
+      "bodega_accounts_v2": [
+        {
+          "id": "shift-2026-06-22",
+          "status": "CLOSED",
+          "openingTimestamp": "2026-06-22T08:00:00.000Z",
+          "closingTimestamp": "2026-06-22T20:00:00.000Z",
+          "openingUsd": 50,
+          "openingBs": 2225,
+          "cajero": "Administrador",
+          "salesTotalUsd": 100,
+          "salesTotalBs": 4450.01,
+          "totalProfitUsd": 28.2,
+          "closingUsd": 72.25,
+          "closingBs": 2305.1000000000004,
+          "cashReconciliation": {
+            "expectedUsd": 72.25,
+            "realUsd": 72.25,
+            "expectedBs": 2305.1000000000004,
+            "realBs": 2305.1000000000004,
+            "diffUsd": 0,
+            "diffBs": 0,
+            "notes": "Cierre de caja cuadrado sin descuadres."
+          }
+        },
+        {
+          "id": "shift-2026-06-23",
+          "status": "CLOSED",
+          "openingTimestamp": "2026-06-23T08:00:00.000Z",
+          "closingTimestamp": "2026-06-23T20:00:00.000Z",
+          "openingUsd": 50,
+          "openingBs": 2225,
+          "cajero": "Administrador",
+          "salesTotalUsd": 137.73,
+          "salesTotalBs": 6129.02,
+          "totalProfitUsd": 39.28,
+          "closingUsd": 140.3,
+          "closingBs": 1462.74,
+          "cashReconciliation": {
+            "expectedUsd": 140.3,
+            "realUsd": 140.3,
+            "expectedBs": 1462.74,
+            "realBs": 1462.74,
+            "diffUsd": 0,
+            "diffBs": 0,
+            "notes": "Cierre de caja cuadrado sin descuadres."
+          }
+        },
+        {
+          "id": "shift-2026-06-24",
+          "status": "CLOSED",
+          "openingTimestamp": "2026-06-24T08:00:00.000Z",
+          "closingTimestamp": "2026-06-24T20:00:00.000Z",
+          "openingUsd": 50,
+          "openingBs": 2225,
+          "cajero": "Administrador",
+          "salesTotalUsd": 104.7,
+          "salesTotalBs": 4659.18,
+          "totalProfitUsd": 30.05,
+          "closingUsd": 90.34,
+          "closingBs": 1159.2400000000002,
+          "cashReconciliation": {
+            "expectedUsd": 90.34,
+            "realUsd": 90.34,
+            "expectedBs": 1159.2400000000002,
+            "realBs": 1159.2400000000002,
+            "diffUsd": 0,
+            "diffBs": 0,
+            "notes": "Cierre de caja cuadrado sin descuadres."
+          }
+        },
+        {
+          "id": "shift-2026-06-25",
+          "status": "CLOSED",
+          "openingTimestamp": "2026-06-25T08:00:00.000Z",
+          "closingTimestamp": "2026-06-25T20:00:00.000Z",
+          "openingUsd": 50,
+          "openingBs": 2225,
+          "cajero": "Administrador",
+          "salesTotalUsd": 159.45,
+          "salesTotalBs": 7095.53,
+          "totalProfitUsd": 45.65,
+          "closingUsd": 118.85000000000001,
+          "closingBs": 2710.0600000000004,
+          "cashReconciliation": {
+            "expectedUsd": 118.85000000000001,
+            "realUsd": 118.85000000000001,
+            "expectedBs": 2710.0600000000004,
+            "realBs": 2710.0600000000004,
+            "diffUsd": 0,
+            "diffBs": 0,
+            "notes": "Cierre de caja cuadrado sin descuadres."
+          }
+        },
+        {
+          "id": "shift-2026-06-26",
+          "status": "CLOSED",
+          "openingTimestamp": "2026-06-26T08:00:00.000Z",
+          "closingTimestamp": "2026-06-26T20:00:00.000Z",
+          "openingUsd": 50,
+          "openingBs": 2225,
+          "cajero": "Administrador",
+          "salesTotalUsd": 76.64,
+          "salesTotalBs": 3410.5,
+          "totalProfitUsd": 22.09,
+          "closingUsd": 80.99000000000001,
+          "closingBs": 1446.26,
+          "cashReconciliation": {
+            "expectedUsd": 80.99000000000001,
+            "realUsd": 80.99000000000001,
+            "expectedBs": 1446.26,
+            "realBs": 1446.26,
+            "diffUsd": 0,
+            "diffBs": 0,
+            "notes": "Cierre de caja cuadrado sin descuadres."
+          }
+        },
+        {
+          "id": "shift-2026-06-27",
+          "status": "CLOSED",
+          "openingTimestamp": "2026-06-27T08:00:00.000Z",
+          "closingTimestamp": "2026-06-27T20:00:00.000Z",
+          "openingUsd": 50,
+          "openingBs": 2225,
+          "cajero": "Administrador",
+          "salesTotalUsd": 88.1,
+          "salesTotalBs": 3920.46,
+          "totalProfitUsd": 24.6,
+          "closingUsd": 100.30000000000001,
+          "closingBs": 1181.49,
+          "cashReconciliation": {
+            "expectedUsd": 100.30000000000001,
+            "realUsd": 100.30000000000001,
+            "expectedBs": 1181.49,
+            "realBs": 1181.49,
+            "diffUsd": 0,
+            "diffBs": 0,
+            "notes": "Cierre de caja cuadrado sin descuadres."
+          }
+        },
+        {
+          "id": "shift-2026-06-28",
+          "status": "OPEN",
+          "openingTimestamp": "2026-06-28T08:00:00.000Z",
+          "openingUsd": 50,
+          "openingBs": 2225,
+          "cajero": "Administrador",
+          "totals": {
+            "salesTotalUsd": 68.85,
+            "salesTotalBs": 3063.83,
+            "totalProfitUsd": 19.45
+          }
+        }
+      ],
+      "bodega_customers_v1": [
+        {
+          "id": "cust-01",
+          "name": "María García",
+          "phone": "0412-5551234",
+          "deuda": 12.5,
+          "favor": 0
+        },
+        {
+          "id": "cust-02",
+          "name": "José Rodríguez",
+          "phone": "0414-9876543",
+          "deuda": 0,
+          "favor": 1.8
+        },
+        {
+          "id": "cust-03",
+          "name": "Ana Martínez (Cashea)",
+          "phone": "0424-4448888",
+          "deuda": 44,
+          "favor": 0
+        },
+        {
+          "id": "cust-04",
+          "name": "Carlos Mendoza",
+          "phone": "0416-2223344",
+          "deuda": 0,
+          "favor": 0
+        }
+      ],
+      "bodega_payment_methods_v1": [
+        {
+          "id": "efectivo_usd",
+          "label": "Efectivo $",
+          "currency": "USD",
+          "isActive": true,
+          "isSystem": true
+        },
+        {
+          "id": "efectivo_bs",
+          "label": "Efectivo Bsf",
+          "currency": "BS",
+          "isActive": true,
+          "isSystem": true
+        },
+        {
+          "id": "pago_movil",
+          "label": "Pago Móvil",
+          "currency": "BS",
+          "isActive": true,
+          "isSystem": true
+        },
+        {
+          "id": "cashea",
+          "label": "Cashea",
+          "currency": "USD",
+          "isActive": true,
+          "isSystem": true
+        },
+        {
+          "id": "punto_de_venta",
+          "label": "Punto de Venta",
+          "currency": "BS",
+          "isActive": true,
+          "isSystem": true
+        }
+      ],
+      "bodega_products_v1": [
+        {
+          "id": "prod-01",
+          "name": "Harina PAN 1kg",
+          "priceUsd": 1.2,
+          "priceUsdt": 1.2,
+          "costUsd": 0.85,
+          "stock": 145,
+          "lowStockAlert": 15,
+          "category": "Víveres",
+          "barcode": "7591001000112",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23F3C614' rx='15'/><circle cx='50' cy='45' r='25' fill='%230F4C81'/><path d='M40,45 L60,45 M50,35 L50,55' stroke='white' stroke-width='6' stroke-linecap='round'/><text x='50' y='82' font-family='sans-serif' font-size='10' font-weight='bold' fill='%230F4C81' text-anchor='middle'>HARINA PAN</text></svg>"
+        },
+        {
+          "id": "prod-02",
+          "name": "Arroz Mary Dorado 1kg",
+          "priceUsd": 0.98,
+          "priceUsdt": 0.98,
+          "costUsd": 0.7,
+          "stock": 98,
+          "lowStockAlert": 10,
+          "category": "Víveres",
+          "barcode": "7592002000224",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23D9383A' rx='15'/><rect x='25' y='20' width='50' height='50' fill='white' rx='8'/><circle cx='50' cy='45' r='10' fill='%23D9383A'/><text x='50' y='82' font-family='sans-serif' font-size='10' font-weight='bold' fill='white' text-anchor='middle'>ARROZ MARY</text></svg>"
+        },
+        {
+          "id": "prod-03",
+          "name": "Aceite Mazeite 1L",
+          "priceUsd": 2.95,
+          "priceUsdt": 2.95,
+          "costUsd": 2.1,
+          "stock": 42,
+          "lowStockAlert": 8,
+          "category": "Víveres",
+          "barcode": "7593003000336",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230D9488' rx='15'/><path d='M45,20 L55,20 L53,35 L62,45 L62,75 L38,75 L38,45 L47,35 Z' fill='%23FBBF24'/><rect x='42' y='75' width='16' height='5' fill='%231E293B'/><text x='50' y='90' font-family='sans-serif' font-size='9' font-weight='bold' fill='white' text-anchor='middle'>MAZEITE 1L</text></svg>"
+        },
+        {
+          "id": "prod-04",
+          "name": "Pasta Capri 500g",
+          "priceUsd": 0.8,
+          "priceUsdt": 0.8,
+          "costUsd": 0.55,
+          "stock": 120,
+          "lowStockAlert": 15,
+          "category": "Víveres",
+          "barcode": "7594004000448",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231E40AF' rx='15'/><rect x='20' y='30' width='60' height='40' fill='%23F59E0B' rx='4'/><path d='M25,40 L75,40 M25,45 L75,45 M25,50 L75,50 M25,55 L75,55' stroke='white' stroke-width='2'/><text x='50' y='82' font-family='sans-serif' font-size='9' font-weight='bold' fill='white' text-anchor='middle'>PASTA CAPRI</text></svg>"
+        },
+        {
+          "id": "prod-05",
+          "name": "Mayonesa Mavesa 500g",
+          "priceUsd": 2.4,
+          "priceUsdt": 2.4,
+          "costUsd": 1.8,
+          "stock": 35,
+          "lowStockAlert": 8,
+          "category": "Víveres",
+          "barcode": "7595005000550",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23F8FAFC' rx='15' stroke='%23E2E8F0' stroke-width='2'/><ellipse cx='50' cy='55' rx='22' ry='25' fill='%23FEF08A'/><rect x='35' y='22' width='30' height='10' fill='%23DC2626' rx='3'/><text x='50' y='58' font-family='sans-serif' font-size='8' font-weight='bold' fill='%23DC2626' text-anchor='middle'>MAVESA</text><text x='50' y='90' font-family='sans-serif' font-size='8' font-weight='bold' fill='%23475569' text-anchor='middle'>MAYONESA</text></svg>"
+        },
+        {
+          "id": "prod-06",
+          "name": "Salsa de Tomate Pampero 397g",
+          "priceUsd": 1.5,
+          "priceUsdt": 1.5,
+          "costUsd": 1.1,
+          "stock": 60,
+          "lowStockAlert": 10,
+          "category": "Víveres",
+          "barcode": "7596006000662",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23EF4444' rx='15'/><path d='M40,25 L60,25 L58,40 L64,48 L64,78 L36,78 L36,48 L42,40 Z' fill='%23B91C1C'/><rect x='42' y='48' width='16' height='20' fill='white'/><circle cx='50' cy='58' r='5' fill='%23EF4444'/><text x='50' y='90' font-family='sans-serif' font-size='8' font-weight='bold' fill='white' text-anchor='middle'>Ketchup Pampero</text></svg>"
+        },
+        {
+          "id": "prod-07",
+          "name": "Coca-Cola Sabor Original 2L",
+          "priceUsd": 2.2,
+          "priceUsdt": 2.2,
+          "costUsd": 1.6,
+          "stock": 80,
+          "lowStockAlert": 12,
+          "category": "Bebidas",
+          "barcode": "7597007000774",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231E293B' rx='15'/><rect x='42' y='20' width='16' height='60' fill='%23DC2626' rx='5'/><path d='M42,45 C48,42 52,48 58,45' stroke='white' stroke-width='4' fill='none'/><text x='50' y='90' font-family='sans-serif' font-size='8' font-weight='bold' fill='white' text-anchor='middle'>COCA-COLA 2L</text></svg>"
+        },
+        {
+          "id": "prod-08",
+          "name": "Malta Polar Botella 250ml",
+          "priceUsd": 0.75,
+          "priceUsdt": 0.75,
+          "costUsd": 0.5,
+          "stock": 150,
+          "lowStockAlert": 24,
+          "category": "Bebidas",
+          "barcode": "7598008000886",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2378350F' rx='15'/><rect x='44' y='25' width='12' height='50' fill='%231E3A8A' rx='4'/><rect x='44' y='45' width='12' height='12' fill='white'/><text x='50' y='90' font-family='sans-serif' font-size='9' font-weight='bold' fill='white' text-anchor='middle'>MALTA POLAR</text></svg>"
+        },
+        {
+          "id": "prod-09",
+          "name": "Jugo del Valle Naranja 1L",
+          "priceUsd": 1.7,
+          "priceUsdt": 1.7,
+          "costUsd": 1.2,
+          "stock": 8,
+          "lowStockAlert": 10,
+          "category": "Bebidas",
+          "barcode": "7599009000998",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23F97316' rx='15'/><rect x='30' y='20' width='40' height='60' fill='white' rx='3'/><circle cx='50' cy='50' r='12' fill='%23F97316'/><text x='50' y='90' font-family='sans-serif' font-size='9' font-weight='bold' fill='white' text-anchor='middle'>JUGO NARANJA</text></svg>"
+        },
+        {
+          "id": "prod-10",
+          "name": "Queso Llanero Blanco",
+          "priceUsd": 4.5,
+          "priceUsdt": 4.5,
+          "costUsd": 3.2,
+          "stock": 18.5,
+          "lowStockAlert": 5,
+          "category": "Charcutería",
+          "barcode": "2000000000105",
+          "unit": "kg",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FEF08A' rx='15'/><path d='M20,20 L80,20 L80,60 L20,80 Z' fill='%23FDE047'/><circle cx='35' cy='40' r='5' fill='%23CA8A04'/><circle cx='65' cy='45' r='4' fill='%23CA8A04'/><circle cx='50' cy='55' r='6' fill='%23CA8A04'/><text x='50' y='90' font-family='sans-serif' font-size='9' font-weight='bold' fill='%23854D0E' text-anchor='middle'>QUESO LLANERO</text></svg>"
+        },
+        {
+          "id": "prod-11",
+          "name": "Jamón Plumrose Cocido",
+          "priceUsd": 9,
+          "priceUsdt": 9,
+          "costUsd": 6.5,
+          "stock": 8.2,
+          "lowStockAlert": 3,
+          "category": "Charcutería",
+          "barcode": "2000000000204",
+          "unit": "kg",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FDA4AF' rx='15'/><ellipse cx='50' cy='50' rx='30' ry='20' fill='%23F43F5E'/><ellipse cx='50' cy='50' rx='20' ry='12' fill='%23FDA4AF'/><text x='50' y='85' font-family='sans-serif' font-size='9' font-weight='bold' fill='%239F1239' text-anchor='middle'>JAMÓN PLUMROSE</text></svg>"
+        },
+        {
+          "id": "prod-12",
+          "name": "Mantequilla Mavesa 500g",
+          "priceUsd": 2.85,
+          "priceUsdt": 2.85,
+          "costUsd": 2.1,
+          "stock": 40,
+          "lowStockAlert": 8,
+          "category": "Charcutería",
+          "barcode": "7595005000778",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FEF08A' rx='15'/><rect x='20' y='25' width='60' height='40' fill='%23F59E0B' rx='6'/><rect x='25' y='30' width='50' height='10' fill='white' rx='2'/><text x='50' y='82' font-family='sans-serif' font-size='9' font-weight='bold' fill='%2392400E' text-anchor='middle'>MANTEQUILLA</text></svg>"
+        },
+        {
+          "id": "prod-13",
+          "name": "Jabón Azul Las Llaves 250g",
+          "priceUsd": 1.35,
+          "priceUsdt": 1.35,
+          "costUsd": 0.9,
+          "stock": 70,
+          "lowStockAlert": 15,
+          "category": "Limpieza",
+          "barcode": "7596006000994",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2338BDF8' rx='15'/><path d='M25,50 Q50,20 75,50 Q50,80 25,50' fill='white' opacity='0.6'/><text x='50' y='55' font-family='sans-serif' font-size='9' font-weight='bold' fill='%230369A1' text-anchor='middle'>LAS LLAVES</text><text x='50' y='88' font-family='sans-serif' font-size='9' font-weight='bold' fill='white' text-anchor='middle'>JABÓN AZUL</text></svg>"
+        },
+        {
+          "id": "prod-14",
+          "name": "Detergente Ariel regular 1kg",
+          "priceUsd": 3.9,
+          "priceUsdt": 3.9,
+          "costUsd": 2.8,
+          "stock": 30,
+          "lowStockAlert": 8,
+          "category": "Limpieza",
+          "barcode": "7597007000998",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2315803D' rx='15'/><rect x='25' y='20' width='50' height='60' fill='white' rx='5'/><circle cx='50' cy='50' r='15' fill='%2315803D'/><text x='50' y='53' font-family='sans-serif' font-size='8' font-weight='bold' fill='white' text-anchor='middle'>ARIEL</text><text x='50' y='90' font-family='sans-serif' font-size='8' font-weight='bold' fill='white' text-anchor='middle'>DETERGENTE</text></svg>"
+        },
+        {
+          "id": "prod-15",
+          "name": "Cloro Los Tres Elefantes 1L",
+          "priceUsd": 1.2,
+          "priceUsdt": 1.2,
+          "costUsd": 0.8,
+          "stock": 55,
+          "lowStockAlert": 10,
+          "category": "Limpieza",
+          "barcode": "7598008000992",
+          "unit": "und",
+          "image": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FACC15' rx='15'/><path d='M42,20 L58,20 L58,30 L64,40 L64,75 L36,75 L36,40 L42,30 Z' fill='white'/><rect x='36' y='50' width='28' height='12' fill='%23B45309'/><text x='50' y='90' font-family='sans-serif' font-size='9' font-weight='bold' fill='%2378350F' text-anchor='middle'>CLORO 1L</text></svg>"
+        }
+      ],
+      "bodega_sales_v1": [
+        {
+          "id": "sale-2026-06-22-0",
+          "timestamp": "2026-06-22T14:29:43.000Z",
+          "items": [
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 2,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 9,
+          "discountAmountUsd": 0,
+          "totalUsd": 9,
+          "totalBs": 400.5,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 400.5,
+              "amountUsd": 9,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1000,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-1",
+          "timestamp": "2026-06-22T16:58:21.000Z",
+          "items": [
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 2,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 1,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 1,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 21.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 21.2,
+          "totalBs": 943.4,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 943.4,
+              "amountUsd": 21.2,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1001,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-2",
+          "timestamp": "2026-06-22T18:16:43.000Z",
+          "items": [
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 2,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 9.6,
+          "discountAmountUsd": 0,
+          "totalUsd": 9.6,
+          "totalBs": 427.2,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0.4,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1002,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-3",
+          "timestamp": "2026-06-22T08:41:46.000Z",
+          "items": [
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-05",
+              "name": "Mayonesa Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.4,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 2,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 15.9,
+          "discountAmountUsd": 0,
+          "totalUsd": 15.9,
+          "totalBs": 707.55,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 15.9,
+              "amountUsd": 15.9,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1003,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-4",
+          "timestamp": "2026-06-22T08:14:07.000Z",
+          "items": [
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 1.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 1.2,
+          "totalBs": 53.4,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 3.8,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1004,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-5",
+          "timestamp": "2026-06-22T09:49:49.000Z",
+          "items": [
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 2,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 5.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.2,
+          "totalBs": 231.4,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 4.8,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1005,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-6",
+          "timestamp": "2026-06-22T17:30:34.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 2,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 1,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 1,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 8,
+          "discountAmountUsd": 0,
+          "totalUsd": 8,
+          "totalBs": 356,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 356,
+              "amountUsd": 8,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1006,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-7",
+          "timestamp": "2026-06-22T18:25:19.000Z",
+          "items": [
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 2,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 1.6,
+          "discountAmountUsd": 0,
+          "totalUsd": 1.6,
+          "totalBs": 71.2,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 71.2,
+              "amountUsd": 1.6,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1007,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-8",
+          "timestamp": "2026-06-22T14:11:06.000Z",
+          "items": [
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 2,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 2,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-15",
+              "name": "Cloro Los Tres Elefantes 1L",
+              "qty": 2,
+              "priceUsd": 1.2,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 9.8,
+          "discountAmountUsd": 0,
+          "totalUsd": 9.8,
+          "totalBs": 436.1,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 436.1,
+              "amountUsd": 9.8,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1008,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-9",
+          "timestamp": "2026-06-22T12:19:12.000Z",
+          "items": [
+            {
+              "id": "prod-05",
+              "name": "Mayonesa Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.4,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 2.4,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.4,
+          "totalBs": 106.8,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 2.4,
+              "amountUsd": 2.4,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1009,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-10",
+          "timestamp": "2026-06-22T13:32:50.000Z",
+          "items": [
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 4.4,
+          "discountAmountUsd": 0,
+          "totalUsd": 4.4,
+          "totalBs": 195.8,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 2.2,
+              "amountUsd": 2.2,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 97.9,
+              "amountUsd": 2.2,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1010,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-11",
+          "timestamp": "2026-06-22T16:07:06.000Z",
+          "items": [
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-15",
+              "name": "Cloro Los Tres Elefantes 1L",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 4.05,
+          "discountAmountUsd": 0,
+          "totalUsd": 4.05,
+          "totalBs": 180.23,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0.95,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1011,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-22-12",
+          "timestamp": "2026-06-22T17:00:23.000Z",
+          "items": [
+            {
+              "id": "prod-05",
+              "name": "Mayonesa Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.4,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 1,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 1,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 7.65,
+          "discountAmountUsd": 0,
+          "totalUsd": 7.65,
+          "totalBs": 340.43,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 7.65,
+              "amountUsd": 7.65,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1012,
+          "shiftId": "shift-2026-06-22"
+        },
+        {
+          "id": "sale-2026-06-23-0",
+          "timestamp": "2026-06-23T08:32:33.000Z",
+          "items": [
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 2,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 1,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 1,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 10.6,
+          "discountAmountUsd": 0,
+          "totalUsd": 10.6,
+          "totalBs": 471.7,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 471.7,
+              "amountUsd": 10.6,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1013,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-1",
+          "timestamp": "2026-06-23T18:50:17.000Z",
+          "items": [
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 2,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 2.4,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.4,
+          "totalBs": 106.8,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 106.8,
+              "amountUsd": 2.4,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1014,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-2",
+          "timestamp": "2026-06-23T08:46:20.000Z",
+          "items": [
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 2,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 2,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 5.95,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.95,
+          "totalBs": 264.78,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 4.05,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1015,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-3",
+          "timestamp": "2026-06-23T13:46:30.000Z",
+          "items": [
+            {
+              "id": "prod-02",
+              "name": "Arroz Mary Dorado 1kg",
+              "qty": 1,
+              "priceUsd": 0.98,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 2,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 9.98,
+          "discountAmountUsd": 0,
+          "totalUsd": 9.98,
+          "totalBs": 444.11,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0.02,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1016,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-4",
+          "timestamp": "2026-06-23T17:42:00.000Z",
+          "items": [
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 2,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 3.8,
+          "discountAmountUsd": 0,
+          "totalUsd": 3.8,
+          "totalBs": 169.1,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 1.2,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1017,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-5",
+          "timestamp": "2026-06-23T14:46:46.000Z",
+          "items": [
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 2,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 18,
+          "discountAmountUsd": 0,
+          "totalUsd": 18,
+          "totalBs": 801,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 2,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 20,
+              "amountUsd": 20,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1018,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-6",
+          "timestamp": "2026-06-23T17:35:34.000Z",
+          "items": [
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 2,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 7.55,
+          "discountAmountUsd": 0,
+          "totalUsd": 7.55,
+          "totalBs": 335.98,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 7.55,
+              "amountUsd": 7.55,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1019,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-7",
+          "timestamp": "2026-06-23T08:03:34.000Z",
+          "items": [
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 2,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 2,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 16.1,
+          "discountAmountUsd": 0,
+          "totalUsd": 16.1,
+          "totalBs": 716.45,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 8.05,
+              "amountUsd": 8.05,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 358.23,
+              "amountUsd": 8.05,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1020,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-8",
+          "timestamp": "2026-06-23T08:41:40.000Z",
+          "items": [
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-02",
+              "name": "Arroz Mary Dorado 1kg",
+              "qty": 2,
+              "priceUsd": 0.98,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 7.01,
+          "discountAmountUsd": 0,
+          "totalUsd": 7.01,
+          "totalBs": 311.95,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 7.01,
+              "amountUsd": 7.01,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1021,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-9",
+          "timestamp": "2026-06-23T13:46:50.000Z",
+          "items": [
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 2,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 2,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 6.4,
+          "discountAmountUsd": 0,
+          "totalUsd": 6.4,
+          "totalBs": 284.8,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 3.6,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1022,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-10",
+          "timestamp": "2026-06-23T16:42:19.000Z",
+          "items": [
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 1,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 1,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 2,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 11,
+          "discountAmountUsd": 0,
+          "totalUsd": 11,
+          "totalBs": 489.5,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 9,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 20,
+              "amountUsd": 20,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1023,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-11",
+          "timestamp": "2026-06-23T17:30:30.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 2,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 2.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.7,
+          "totalBs": 120.15,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 1.35,
+              "amountUsd": 1.35,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 60.08,
+              "amountUsd": 1.35,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1024,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-12",
+          "timestamp": "2026-06-23T15:11:28.000Z",
+          "items": [
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 2,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-02",
+              "name": "Arroz Mary Dorado 1kg",
+              "qty": 1,
+              "priceUsd": 0.98,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 6.33,
+          "discountAmountUsd": 0,
+          "totalUsd": 6.33,
+          "totalBs": 281.69,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 281.69,
+              "amountUsd": 6.33,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1025,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-13",
+          "timestamp": "2026-06-23T14:11:30.000Z",
+          "items": [
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 2,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 7.55,
+          "discountAmountUsd": 0,
+          "totalUsd": 7.55,
+          "totalBs": 335.98,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 3.78,
+              "amountUsd": 3.78,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 167.77,
+              "amountUsd": 3.77,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1026,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-14",
+          "timestamp": "2026-06-23T14:12:16.000Z",
+          "items": [
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 7.35,
+          "discountAmountUsd": 0,
+          "totalUsd": 7.35,
+          "totalBs": 327.08,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 2.65,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1027,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-15",
+          "timestamp": "2026-06-23T11:53:35.000Z",
+          "items": [
+            {
+              "id": "prod-02",
+              "name": "Arroz Mary Dorado 1kg",
+              "qty": 2,
+              "priceUsd": 0.98,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 1,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 2,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 14.26,
+          "discountAmountUsd": 0,
+          "totalUsd": 14.26,
+          "totalBs": 634.57,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 5.74,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 20,
+              "amountUsd": 20,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1028,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-23-16",
+          "timestamp": "2026-06-23T13:35:38.000Z",
+          "items": [
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 1,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 0.75,
+          "discountAmountUsd": 0,
+          "totalUsd": 0.75,
+          "totalBs": 33.38,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 0.38,
+              "amountUsd": 0.38,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 16.47,
+              "amountUsd": 0.37,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1029,
+          "shiftId": "shift-2026-06-23"
+        },
+        {
+          "id": "sale-2026-06-24-0",
+          "timestamp": "2026-06-24T18:21:55.000Z",
+          "items": [
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 1,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 2,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 5.15,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.15,
+          "totalBs": 229.18,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 2.58,
+              "amountUsd": 2.58,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 114.37,
+              "amountUsd": 2.5700000000000003,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1030,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-1",
+          "timestamp": "2026-06-24T14:49:19.000Z",
+          "items": [
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 1,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 4.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 4.2,
+          "totalBs": 186.9,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 186.9,
+              "amountUsd": 4.2,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1031,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-2",
+          "timestamp": "2026-06-24T10:31:30.000Z",
+          "items": [
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 2,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 1.6,
+          "discountAmountUsd": 0,
+          "totalUsd": 1.6,
+          "totalBs": 71.2,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 1.6,
+              "amountUsd": 1.6,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1032,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-3",
+          "timestamp": "2026-06-24T09:26:11.000Z",
+          "items": [
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 2,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 1.5,
+          "discountAmountUsd": 0,
+          "totalUsd": 1.5,
+          "totalBs": 66.75,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 66.75,
+              "amountUsd": 1.5,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1033,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-4",
+          "timestamp": "2026-06-24T12:52:59.000Z",
+          "items": [
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 2.85,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.85,
+          "totalBs": 126.83,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 2.15,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1034,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-5",
+          "timestamp": "2026-06-24T12:51:05.000Z",
+          "items": [
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 1,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 1.5,
+          "discountAmountUsd": 0,
+          "totalUsd": 1.5,
+          "totalBs": 66.75,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 0.75,
+              "amountUsd": 0.75,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 33.38,
+              "amountUsd": 0.75,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1035,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-6",
+          "timestamp": "2026-06-24T19:10:30.000Z",
+          "items": [
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 1,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-15",
+              "name": "Cloro Los Tres Elefantes 1L",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-02",
+              "name": "Arroz Mary Dorado 1kg",
+              "qty": 2,
+              "priceUsd": 0.98,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 4.86,
+          "discountAmountUsd": 0,
+          "totalUsd": 4.86,
+          "totalBs": 216.27,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 4.86,
+              "amountUsd": 4.86,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1036,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-7",
+          "timestamp": "2026-06-24T14:45:20.000Z",
+          "items": [
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 2.85,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.85,
+          "totalBs": 126.83,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 126.83,
+              "amountUsd": 2.85,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1037,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-8",
+          "timestamp": "2026-06-24T18:51:44.000Z",
+          "items": [
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 2,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 2,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 6.4,
+          "discountAmountUsd": 0,
+          "totalUsd": 6.4,
+          "totalBs": 284.8,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 6.4,
+              "amountUsd": 6.4,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1038,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-9",
+          "timestamp": "2026-06-24T11:15:15.000Z",
+          "items": [
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 2,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-02",
+              "name": "Arroz Mary Dorado 1kg",
+              "qty": 2,
+              "priceUsd": 0.98,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 4.66,
+          "discountAmountUsd": 0,
+          "totalUsd": 4.66,
+          "totalBs": 207.37,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 2.33,
+              "amountUsd": 2.33,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 103.69,
+              "amountUsd": 2.33,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1039,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-10",
+          "timestamp": "2026-06-24T15:42:59.000Z",
+          "items": [
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 2.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.2,
+          "totalBs": 97.9,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 2.2,
+              "amountUsd": 2.2,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1040,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-11",
+          "timestamp": "2026-06-24T11:59:07.000Z",
+          "items": [
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 2,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 23.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 23.7,
+          "totalBs": 1054.65,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 11.85,
+              "amountUsd": 11.85,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 527.32,
+              "amountUsd": 11.85,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1041,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-12",
+          "timestamp": "2026-06-24T15:18:58.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 2,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 1,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 8.85,
+          "discountAmountUsd": 0,
+          "totalUsd": 8.85,
+          "totalBs": 393.83,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 8.85,
+              "amountUsd": 8.85,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1042,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-13",
+          "timestamp": "2026-06-24T13:43:19.000Z",
+          "items": [
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 1,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-02",
+              "name": "Arroz Mary Dorado 1kg",
+              "qty": 1,
+              "priceUsd": 0.98,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 5.48,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.48,
+          "totalBs": 243.86,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 4.52,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1043,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-14",
+          "timestamp": "2026-06-24T13:41:49.000Z",
+          "items": [
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 2,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 2,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 8.75,
+          "discountAmountUsd": 0,
+          "totalUsd": 8.75,
+          "totalBs": 389.38,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 8.75,
+              "amountUsd": 8.75,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1044,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-15",
+          "timestamp": "2026-06-24T08:08:41.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 2,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 5.65,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.65,
+          "totalBs": 251.43,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 5.65,
+              "amountUsd": 5.65,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1045,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-24-16",
+          "timestamp": "2026-06-24T15:41:00.000Z",
+          "items": [
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 2,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 1,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 2,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 14.5,
+          "discountAmountUsd": 0,
+          "totalUsd": 14.5,
+          "totalBs": 645.25,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 5.5,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 20,
+              "amountUsd": 20,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1046,
+          "shiftId": "shift-2026-06-24"
+        },
+        {
+          "id": "sale-2026-06-25-0",
+          "timestamp": "2026-06-25T15:43:48.000Z",
+          "items": [
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 2,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-05",
+              "name": "Mayonesa Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.4,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 6.4,
+          "discountAmountUsd": 0,
+          "totalUsd": 6.4,
+          "totalBs": 284.8,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 3.2,
+              "amountUsd": 3.2,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 142.4,
+              "amountUsd": 3.2,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1047,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-1",
+          "timestamp": "2026-06-25T19:36:27.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 2,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 2.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.7,
+          "totalBs": 120.15,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 120.15,
+              "amountUsd": 2.7,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1048,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-2",
+          "timestamp": "2026-06-25T18:26:25.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 2,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 2,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 1,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 29.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 29.7,
+          "totalBs": 1321.65,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 29.7,
+              "amountUsd": 29.7,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1049,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-3",
+          "timestamp": "2026-06-25T19:47:32.000Z",
+          "items": [
+            {
+              "id": "prod-05",
+              "name": "Mayonesa Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.4,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 2,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 1,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 12.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 12.7,
+          "totalBs": 565.15,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 6.35,
+              "amountUsd": 6.35,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 282.58,
+              "amountUsd": 6.35,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1050,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-4",
+          "timestamp": "2026-06-25T19:47:17.000Z",
+          "items": [
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 2,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 7.8,
+          "discountAmountUsd": 0,
+          "totalUsd": 7.8,
+          "totalBs": 347.1,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 2.2,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1051,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-5",
+          "timestamp": "2026-06-25T09:18:30.000Z",
+          "items": [
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 1,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 6.55,
+          "discountAmountUsd": 0,
+          "totalUsd": 6.55,
+          "totalBs": 291.47,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 291.47,
+              "amountUsd": 6.55,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1052,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-6",
+          "timestamp": "2026-06-25T16:26:20.000Z",
+          "items": [
+            {
+              "id": "prod-05",
+              "name": "Mayonesa Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.4,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 2,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 4,
+          "discountAmountUsd": 0,
+          "totalUsd": 4,
+          "totalBs": 178,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 178,
+              "amountUsd": 4,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1053,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-7",
+          "timestamp": "2026-06-25T19:17:10.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 2,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 1,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 6.45,
+          "discountAmountUsd": 0,
+          "totalUsd": 6.45,
+          "totalBs": 287.03,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 3.55,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1054,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-8",
+          "timestamp": "2026-06-25T14:46:36.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 2,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 2,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 5.4,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.4,
+          "totalBs": 240.3,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 4.6,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1055,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-9",
+          "timestamp": "2026-06-25T10:09:20.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 8.1,
+          "discountAmountUsd": 0,
+          "totalUsd": 8.1,
+          "totalBs": 360.45,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 1.9,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1056,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-10",
+          "timestamp": "2026-06-25T10:22:53.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 2.95,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.95,
+          "totalBs": 131.28,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 2.05,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1057,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-11",
+          "timestamp": "2026-06-25T15:15:26.000Z",
+          "items": [
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 1,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 2,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 21.9,
+          "discountAmountUsd": 0,
+          "totalUsd": 21.9,
+          "totalBs": 974.55,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10.95,
+              "amountUsd": 10.95,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 487.28,
+              "amountUsd": 10.95,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1058,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-12",
+          "timestamp": "2026-06-25T19:11:21.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 1,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 10.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 10.2,
+          "totalBs": 453.9,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5.1,
+              "amountUsd": 5.1,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 226.95,
+              "amountUsd": 5.1,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1059,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-13",
+          "timestamp": "2026-06-25T09:46:21.000Z",
+          "items": [
+            {
+              "id": "prod-15",
+              "name": "Cloro Los Tres Elefantes 1L",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 1.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 1.2,
+          "totalBs": 53.4,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 3.8,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1060,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-14",
+          "timestamp": "2026-06-25T17:27:03.000Z",
+          "items": [
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 1,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 1,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 2,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 22.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 22.7,
+          "totalBs": 1010.15,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 11.35,
+              "amountUsd": 11.35,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 505.08,
+              "amountUsd": 11.35,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1061,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-25-15",
+          "timestamp": "2026-06-25T16:51:59.000Z",
+          "items": [
+            {
+              "id": "prod-15",
+              "name": "Cloro Los Tres Elefantes 1L",
+              "qty": 2,
+              "priceUsd": 1.2,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-15",
+              "name": "Cloro Los Tres Elefantes 1L",
+              "qty": 2,
+              "priceUsd": 1.2,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 10.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 10.7,
+          "totalBs": 476.15,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 476.15,
+              "amountUsd": 10.7,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1062,
+          "shiftId": "shift-2026-06-25"
+        },
+        {
+          "id": "sale-2026-06-26-0",
+          "timestamp": "2026-06-26T11:22:37.000Z",
+          "items": [
+            {
+              "id": "prod-15",
+              "name": "Cloro Los Tres Elefantes 1L",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 1.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 1.2,
+          "totalBs": 53.4,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 0.6,
+              "amountUsd": 0.6,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 26.7,
+              "amountUsd": 0.6,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1063,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-1",
+          "timestamp": "2026-06-26T10:03:43.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 2.95,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.95,
+          "totalBs": 131.28,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 131.28,
+              "amountUsd": 2.95,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1064,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-2",
+          "timestamp": "2026-06-26T14:23:53.000Z",
+          "items": [
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 1,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 4.5,
+          "discountAmountUsd": 0,
+          "totalUsd": 4.5,
+          "totalBs": 200.25,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 4.5,
+              "amountUsd": 4.5,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1065,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-3",
+          "timestamp": "2026-06-26T09:24:23.000Z",
+          "items": [
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 2,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 2,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 1,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 21.9,
+          "discountAmountUsd": 0,
+          "totalUsd": 21.9,
+          "totalBs": 974.55,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": -1.9,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 20,
+              "amountUsd": 20,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1066,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-4",
+          "timestamp": "2026-06-26T17:32:07.000Z",
+          "items": [
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 1,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 9,
+          "discountAmountUsd": 0,
+          "totalUsd": 9,
+          "totalBs": 400.5,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 4.5,
+              "amountUsd": 4.5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 200.25,
+              "amountUsd": 4.5,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1067,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-5",
+          "timestamp": "2026-06-26T10:55:34.000Z",
+          "items": [
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 1,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 2,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-15",
+              "name": "Cloro Los Tres Elefantes 1L",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 11,
+          "discountAmountUsd": 0,
+          "totalUsd": 11,
+          "totalBs": 489.5,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 489.5,
+              "amountUsd": 11,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1068,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-6",
+          "timestamp": "2026-06-26T14:04:15.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 1,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 1.35,
+          "discountAmountUsd": 0,
+          "totalUsd": 1.35,
+          "totalBs": 60.08,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 3.65,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1069,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-7",
+          "timestamp": "2026-06-26T13:53:44.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-02",
+              "name": "Arroz Mary Dorado 1kg",
+              "qty": 2,
+              "priceUsd": 0.98,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 10.81,
+          "discountAmountUsd": 0,
+          "totalUsd": 10.81,
+          "totalBs": 481.05,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 481.05,
+              "amountUsd": 10.81,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1070,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-8",
+          "timestamp": "2026-06-26T13:29:44.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 1,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-02",
+              "name": "Arroz Mary Dorado 1kg",
+              "qty": 1,
+              "priceUsd": 0.98,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 5.28,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.28,
+          "totalBs": 234.96,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 2.64,
+              "amountUsd": 2.64,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 117.48,
+              "amountUsd": 2.64,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1071,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-9",
+          "timestamp": "2026-06-26T11:31:05.000Z",
+          "items": [
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 5.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.7,
+          "totalBs": 253.65,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 5.7,
+              "amountUsd": 5.7,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1072,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-26-10",
+          "timestamp": "2026-06-26T14:47:38.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 1,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 2.95,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.95,
+          "totalBs": 131.28,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 2.95,
+              "amountUsd": 2.95,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1073,
+          "shiftId": "shift-2026-06-26"
+        },
+        {
+          "id": "sale-2026-06-27-0",
+          "timestamp": "2026-06-27T16:13:48.000Z",
+          "items": [
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 2,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 1,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 25.4,
+          "discountAmountUsd": 0,
+          "totalUsd": 25.4,
+          "totalBs": 1130.3,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": -5.4,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 20,
+              "amountUsd": 20,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1074,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-1",
+          "timestamp": "2026-06-27T09:46:31.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 5.9,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.9,
+          "totalBs": 262.55,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 4.1,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1075,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-2",
+          "timestamp": "2026-06-27T16:10:32.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 5.9,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.9,
+          "totalBs": 262.55,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 2.95,
+              "amountUsd": 2.95,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 131.28,
+              "amountUsd": 2.95,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1076,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-3",
+          "timestamp": "2026-06-27T13:00:23.000Z",
+          "items": [
+            {
+              "id": "prod-05",
+              "name": "Mayonesa Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.4,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 4.8,
+          "discountAmountUsd": 0,
+          "totalUsd": 4.8,
+          "totalBs": 213.6,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0.2,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1077,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-4",
+          "timestamp": "2026-06-27T08:00:29.000Z",
+          "items": [
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 1,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 4.5,
+          "discountAmountUsd": 0,
+          "totalUsd": 4.5,
+          "totalBs": 200.25,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 4.5,
+              "amountUsd": 4.5,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1078,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-5",
+          "timestamp": "2026-06-27T09:49:50.000Z",
+          "items": [
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 2,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 2,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 1,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 6.75,
+          "discountAmountUsd": 0,
+          "totalUsd": 6.75,
+          "totalBs": 300.38,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 6.75,
+              "amountUsd": 6.75,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1079,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-6",
+          "timestamp": "2026-06-27T19:02:33.000Z",
+          "items": [
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 1,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-04",
+              "name": "Pasta Capri 500g",
+              "qty": 2,
+              "priceUsd": 0.8,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 2.35,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.35,
+          "totalBs": 104.58,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 104.58,
+              "amountUsd": 2.35,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1080,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-7",
+          "timestamp": "2026-06-27T14:11:19.000Z",
+          "items": [
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 2,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-12",
+              "name": "Mantequilla Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.85,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 14.4,
+          "discountAmountUsd": 0,
+          "totalUsd": 14.4,
+          "totalBs": 640.8,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 7.2,
+              "amountUsd": 7.2,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 320.4,
+              "amountUsd": 7.2,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1081,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-8",
+          "timestamp": "2026-06-27T09:46:14.000Z",
+          "items": [
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 1,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 5.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.7,
+          "totalBs": 253.65,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 2.85,
+              "amountUsd": 2.85,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            },
+            {
+              "methodId": "pago_movil",
+              "amount": 126.83,
+              "amountUsd": 2.85,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1082,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-9",
+          "timestamp": "2026-06-27T14:13:54.000Z",
+          "items": [
+            {
+              "id": "prod-01",
+              "name": "Harina PAN 1kg",
+              "qty": 1,
+              "priceUsd": 1.2,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 1.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 1.2,
+          "totalBs": 53.4,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 3.8,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1083,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-27-10",
+          "timestamp": "2026-06-27T14:10:27.000Z",
+          "items": [
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 2,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-14",
+              "name": "Detergente Ariel regular 1kg",
+              "qty": 2,
+              "priceUsd": 3.9,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 11.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 11.2,
+          "totalBs": 498.4,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 498.4,
+              "amountUsd": 11.2,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1084,
+          "shiftId": "shift-2026-06-27"
+        },
+        {
+          "id": "sale-2026-06-28-0",
+          "timestamp": "2026-06-28T13:59:35.000Z",
+          "items": [
+            {
+              "id": "prod-05",
+              "name": "Mayonesa Mavesa 500g",
+              "qty": 2,
+              "priceUsd": 2.4,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 2,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-10",
+              "name": "Queso Llanero Blanco",
+              "qty": 2,
+              "priceUsd": 4.5,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 16.8,
+          "discountAmountUsd": 0,
+          "totalUsd": 16.8,
+          "totalBs": 747.6,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 3.2,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 20,
+              "amountUsd": 20,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1085,
+          "shiftId": "shift-2026-06-28"
+        },
+        {
+          "id": "sale-2026-06-28-1",
+          "timestamp": "2026-06-28T19:53:56.000Z",
+          "items": [
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 2,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 3,
+          "discountAmountUsd": 0,
+          "totalUsd": 3,
+          "totalBs": 133.5,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 2,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1086,
+          "shiftId": "shift-2026-06-28"
+        },
+        {
+          "id": "sale-2026-06-28-2",
+          "timestamp": "2026-06-28T17:32:23.000Z",
+          "items": [
+            {
+              "id": "prod-13",
+              "name": "Jabón Azul Las Llaves 250g",
+              "qty": 2,
+              "priceUsd": 1.35,
+              "category": "Limpieza"
+            }
+          ],
+          "cartSubtotalUsd": 2.7,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.7,
+          "totalBs": 120.15,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 2.3,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 5,
+              "amountUsd": 5,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1087,
+          "shiftId": "shift-2026-06-28"
+        },
+        {
+          "id": "sale-2026-06-28-3",
+          "timestamp": "2026-06-28T18:00:08.000Z",
+          "items": [
+            {
+              "id": "prod-07",
+              "name": "Coca-Cola Sabor Original 2L",
+              "qty": 1,
+              "priceUsd": 2.2,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 2.2,
+          "discountAmountUsd": 0,
+          "totalUsd": 2.2,
+          "totalBs": 97.9,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 2.2,
+              "amountUsd": 2.2,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1088,
+          "shiftId": "shift-2026-06-28"
+        },
+        {
+          "id": "sale-2026-06-28-4",
+          "timestamp": "2026-06-28T16:41:17.000Z",
+          "items": [
+            {
+              "id": "prod-15",
+              "name": "Cloro Los Tres Elefantes 1L",
+              "qty": 2,
+              "priceUsd": 1.2,
+              "category": "Limpieza"
+            },
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 1,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 4.1,
+          "discountAmountUsd": 0,
+          "totalUsd": 4.1,
+          "totalBs": 182.45,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "cashea",
+              "amount": 4.1,
+              "amountUsd": 4.1,
+              "currency": "USD",
+              "methodLabel": "Cashea"
+            }
+          ],
+          "customerId": "cust-03",
+          "customerName": "Ana Martínez (Cashea)",
+          "sellerName": "Administrador",
+          "saleNumber": 1089,
+          "shiftId": "shift-2026-06-28"
+        },
+        {
+          "id": "sale-2026-06-28-5",
+          "timestamp": "2026-06-28T08:09:46.000Z",
+          "items": [
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 1,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            },
+            {
+              "id": "prod-11",
+              "name": "Jamón Plumrose Cocido",
+              "qty": 2,
+              "priceUsd": 9,
+              "category": "Charcutería"
+            }
+          ],
+          "cartSubtotalUsd": 27,
+          "discountAmountUsd": 0,
+          "totalUsd": 27,
+          "totalBs": 1201.5,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 1201.5,
+              "amountUsd": 27,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1090,
+          "shiftId": "shift-2026-06-28"
+        },
+        {
+          "id": "sale-2026-06-28-6",
+          "timestamp": "2026-06-28T08:04:38.000Z",
+          "items": [
+            {
+              "id": "prod-06",
+              "name": "Salsa de Tomate Pampero 397g",
+              "qty": 2,
+              "priceUsd": 1.5,
+              "category": "Víveres"
+            },
+            {
+              "id": "prod-08",
+              "name": "Malta Polar Botella 250ml",
+              "qty": 1,
+              "priceUsd": 0.75,
+              "category": "Bebidas"
+            },
+            {
+              "id": "prod-09",
+              "name": "Jugo del Valle Naranja 1L",
+              "qty": 2,
+              "priceUsd": 1.7,
+              "category": "Bebidas"
+            }
+          ],
+          "cartSubtotalUsd": 7.15,
+          "discountAmountUsd": 0,
+          "totalUsd": 7.15,
+          "totalBs": 318.18,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 2.85,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "efectivo_usd",
+              "amount": 10,
+              "amountUsd": 10,
+              "currency": "USD",
+              "methodLabel": "Efectivo $"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1091,
+          "shiftId": "shift-2026-06-28"
+        },
+        {
+          "id": "sale-2026-06-28-7",
+          "timestamp": "2026-06-28T10:37:47.000Z",
+          "items": [
+            {
+              "id": "prod-03",
+              "name": "Aceite Mazeite 1L",
+              "qty": 2,
+              "priceUsd": 2.95,
+              "category": "Víveres"
+            }
+          ],
+          "cartSubtotalUsd": 5.9,
+          "discountAmountUsd": 0,
+          "totalUsd": 5.9,
+          "totalBs": 262.55,
+          "rate": 44.5,
+          "tipo": "VENTA",
+          "status": "COMPLETADA",
+          "changeUsd": 0,
+          "changeBs": 0,
+          "payments": [
+            {
+              "methodId": "pago_movil",
+              "amount": 262.55,
+              "amountUsd": 5.9,
+              "currency": "BS",
+              "methodLabel": "Pago Movil"
+            }
+          ],
+          "customerId": null,
+          "customerName": "Consumidor Final",
+          "sellerName": "Administrador",
+          "saleNumber": 1092,
+          "shiftId": "shift-2026-06-28"
+        }
+      ],
+      "my_categories_v1": [
+        "Víveres",
+        "Bebidas",
+        "Charcutería",
+        "Limpieza",
+        "Otros"
+      ]
+    },
+    "ls": {
+      "business_name": "Abasto & Bodega La Bendición",
+      "business_rif": "J-12345678-9",
+      "street_rate_bs": "44.80",
+      "bodega_custom_rate": "45.00",
+      "tasa_cop": "3950",
+      "cop_enabled": "true",
+      "auto_cop_enabled": "true",
+      "bodega_use_auto_rate": "true",
+      "catalog_show_cash_price": "true",
+      "catalog_use_auto_usdt": "true",
+      "cop_primary": "false"
+    }
+  }
+}

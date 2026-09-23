@@ -1,0 +1,106 @@
+/**
+ * animations.css — Animaciones del design system.
+ *
+ * - reveal: fade-up al entrar al viewport (vía IntersectionObserver en useReveal.js)
+ * - skeleton: shimmer tone-matched (marrón cálido, no gris)
+ * - scrollbar: tone-matched con el tema
+ * - utilidades existentes: shake, spin-slow, cart-scroll-shadow
+ */
+
+/* ── Reveal on scroll ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+/* Stagger dinámico en grupos */
+.reveal:nth-child(2) { transition-delay: 60ms; }
+.reveal:nth-child(3) { transition-delay: 120ms; }
+.reveal:nth-child(4) { transition-delay: 180ms; }
+.reveal:nth-child(5) { transition-delay: 240ms; }
+.reveal:nth-child(6) { transition-delay: 300ms; }
+
+/* ── Skeleton shimmer (tone-matched) ── */
+.skeleton {
+  background: linear-gradient(90deg,
+    oklch(0.89 0.018 85) 25%,
+    oklch(0.965 0.014 85) 50%,
+    oklch(0.89 0.018 85) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius);
+}
+[data-theme="dark"] .skeleton,
+.dark .skeleton {
+  background: linear-gradient(90deg,
+    oklch(0.25 0.012 85) 25%,
+    oklch(0.20 0.010 85) 50%,
+    oklch(0.25 0.012 85) 75%);
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Scrollbar tone-matched ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.80 0.025 85);
+  border-radius: var(--radius-full);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb,
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.38 0.018 85);
+}
+
+/* ── Scrollbar hide (utility) ── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ── Cart scroll gradient mask ── */
+.cart-scroll-shadow {
+  mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent);
+}
+.horizontal-scroll-mask {
+  mask-image: linear-gradient(to right, black calc(100% - 32px), transparent);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 32px), transparent);
+}
+
+/* ── Pull to Refresh ── */
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spin-slow 1s linear infinite; }
+
+/* ── Shake (error feedback) ── */
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+.animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+
+/* ── Fade / slide utilities (compat) ── */
+@keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes slideUp {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+.animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }

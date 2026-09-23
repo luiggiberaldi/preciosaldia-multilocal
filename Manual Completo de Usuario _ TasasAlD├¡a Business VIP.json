@@ -1,0 +1,161 @@
+{
+    "manual_info": {
+        "title": "Manual Completo de Usuario | TasasAlDía Business VIP",
+        "version": "3.0 Fénix",
+        "last_update": "Febrero 2026",
+        "compliance": "PDA Compliance Checked"
+    },
+    "welcome_message": "Bienvenido al futuro de la gestión financiera inteligente. Este manual es tu mapa para dominar TasasAlDía y blindar tu negocio contra la volatilidad.",
+    "sections": [
+        {
+            "id": "activation",
+            "title": "🎯 Primeros Pasos: Activación",
+            "steps": [
+                "Acepta los Términos y Condiciones deslizando hasta el final.",
+                "IMPORTANTE: El Modo Demo es de uso único (24h). No reactivable.",
+                "Copia tu ID de Instalación (Formato: TASAS-XXXX).",
+                "Solicita tu Código de Activación al soporte VIP.",
+                "Ingresa el código (Formato: ACTIV-XXXX-XXXX) y valida."
+            ]
+        },
+        {
+            "id": "section_1",
+            "title": "📊 Sección 1: Monitor de Mercado",
+            "description": "Tu torre de control con el pulso económico en tiempo real.",
+            "features": [
+                {
+                    "name": "Indicadores Principales",
+                    "details": "Tasa BCV (Oficial), Tasa USDT (Paralelo P2P) y Euro BCV."
+                },
+                {
+                    "name": "La Brecha (%)",
+                    "details": "Diferencia porcentual entre BCV y Paralelo. Si sube, protege tus precios."
+                },
+                {
+                    "name": "Indicadores de Tendencia",
+                    "details": "Flechas y colores (Verde/Rojo) que indican variaciones recientes en las tasas."
+                },
+                {
+                    "name": "Modo Kiosco",
+                    "details": "Botón de 'Pantalla Completa' para exhibir la tasa en grande en tu local."
+                },
+                {
+                    "name": "Captura de Pantalla",
+                    "details": "Icono de cámara en Modo Kiosco para guardar una imagen compartible de la tasa del día."
+                }
+            ]
+        },
+        {
+            "id": "section_2",
+            "title": "🧮 Sección 2: Calculadora y Chat IA",
+            "description": "Calculadora híbrida con modos Manual y Chat Inteligente.",
+            "features": [
+                {
+                    "name": "Modo Manual",
+                    "details": "Calculadora tradicional. Selecciona USD o VES, ingresa monto y elige la tasa (BCV, Paralelo, Promedio)."
+                },
+                {
+                    "name": "Mister Cambio (Asistente IA)",
+                    "details": "Habla o escribe en lenguaje natural. Ej: '50 dólares a bolos' o 'Precio de 2 harinas'."
+                },
+                {
+                    "name": "Control de Voz",
+                    "details": "Activa/Desactiva la respuesta de voz tocando el ícono de micrófono/altavoz en la cabecera de la calculadora."
+                },
+                {
+                    "name": "Tarjetas de Respuesta",
+                    "details": "Resultados visuales grandes con botón de copiar rápido."
+                }
+            ]
+        },
+        {
+            "id": "section_3",
+            "title": "🏪 Sección 3: Catálogo 'Blindado'",
+            "description": "Inventario que ajusta precios en Bolívares automáticamente.",
+            "features": [
+                {
+                    "name": "Precios en Dólares Fijos",
+                    "details": "Fijas el precio en USD una vez. La app calcula los Bs diarios según la tasa."
+                },
+                {
+                    "name": "Calibración de Efectivo",
+                    "details": "Herramienta 'Calibrar Tasa Efectivo' para ajustar la paridad del dólar físico vs USDT."
+                },
+                {
+                    "name": "Cotizaciones Flash",
+                    "details": "Selecciona productos -> Ver Pedido -> Cotizar por WhatsApp. Genera un mensaje listo para enviar."
+                }
+            ]
+        },
+        {
+            "id": "section_4",
+            "title": "💳 Sección 4: Billetera (Mis Cuentas)",
+            "description": "Gestiona tus datos de pago para compartir rápido.",
+            "features": [
+                {
+                    "name": "Gestión de Cuentas",
+                    "details": "Guarda Pago Móvil, Transferencias, Zelle y Binance."
+                },
+                {
+                    "name": "Compartir Datos",
+                    "details": "Envía tus datos bancarios por WhatsApp o muestra un código QR generado al instante."
+                },
+                {
+                    "name": "Calculadora de Cobro",
+                    "details": "Al compartir, puedes agregar un monto en Bs y la app calcula el equivalente en divisas (si aplica)."
+                }
+            ]
+        },
+        {
+            "id": "section_5",
+            "title": "🔧 Sección 5: Configuración y Datos",
+            "features": [
+                {
+                    "name": "Tema",
+                    "details": "Alterna entre Modo Claro y Oscuro con el ícono de sol/luna."
+                },
+                {
+                    "name": "Respaldo (Backup)",
+                    "details": "En el ícono de engranaje (Catálogo), puedes Exportar e Importar todos tus productos y cuentas."
+                },
+                {
+                    "name": "Modo Offline",
+                    "details": "Funciona sin internet mostrando la última tasa guardada (alerta visual de datos antiguos)."
+                }
+            ]
+        },
+        {
+            "id": "section_6",
+            "title": "👁️ Sección 6: Modo Supervisor (Monitoreo en Vivo)",
+            "description": "Visualiza ventas y el estado de la caja de tu negocio en tiempo real desde cualquier dispositivo móvil o PC (requiere internet).",
+            "features": [
+                {
+                    "name": "Monitoreo Remoto en Vivo",
+                    "details": "Permite ver el total vendido en dólares (USD), bolívares (Bs) y ganancias del turno activo, además del cajero de turno. NOTA: Este monitoreo remoto requiere conexión a internet tanto en la Caja como en el celular del supervisor."
+                },
+                {
+                    "name": "Requerimiento de Internet",
+                    "details": "A diferencia del Punto de Venta (Caja) que funciona 100% sin conexión (offline-first), la sincronización en vivo del Modo Supervisor requiere que ambos dispositivos tengan conexión a internet (WiFi o Datos Móviles) para transmitir y recibir las actualizaciones en tiempo real."
+                },
+                {
+                    "name": "Arqueo y Cierre de Caja en Vivo",
+                    "details": "Al realizar un cierre de caja en la Caja principal, se actualizará y mostrará automáticamente una zona de resumen de cierre en la pantalla del Supervisor con los totales definitivos conciliados (requiere internet)."
+                },
+                {
+                    "name": "Cómo Vincular Dispositivo (Paso a Paso)",
+                    "details": "1. En el dispositivo principal (Caja), ve a Configuración (icono engranaje) -> pestaña 'Sistema' -> sección 'Celular del Supervisor'. Pulsa en 'Vincular Monitor' para generar un código QR y un código de 6 dígitos.\n2. En el dispositivo del Supervisor (teléfono o tablet), abre la aplicación.\n3. En la pantalla inicial de inicio de sesión, pulsa en el botón 'Modo Supervisor (Ver Monitoreo)'.\n4. Escanea el código QR de la Caja con la cámara del dispositivo o escribe el código manual de 6 dígitos.\n5. Presiona 'Vincular' y el monitor se conectará en vivo mostrando las cifras del local."
+                },
+                {
+                    "name": "Desvinculación y Seguridad",
+                    "details": "Los datos están protegidos. Puedes desvincular el dispositivo monitor en cualquier momento desde el botón 'Cerrar Sesión/Salir' en la esquina superior del panel del supervisor, deteniendo la transmisión de inmediato."
+                }
+            ]
+        }
+    ],
+    "tips": [
+        "Usa el micrófono en horas pico para conversiones rápidas.",
+        "Comparte tu lista de precios actualizada cada mañana desde el Catálogo.",
+        "Realiza un respaldo semanal de tus datos desde configuración.",
+        "Usa la Calibración de Efectivo para no perder dinero aceptando dólares físicos."
+    ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "preciosaldia-desktop",
+  "version": "1.1.0",
+  "description": "Aplicación de escritorio para Precios al Día Bodega",
+  "main": "main.js",
+  "type": "commonjs",
+  "author": "Precios al Día",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.0.2",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.preciosaldia.bodega",
+    "productName": "Precios Al Día Bodega",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      {
+        "from": "../dist",
+        "to": "dist"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "../public/pwa-512x512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Precios al Día Bodega"
+    }
+  }
+}
