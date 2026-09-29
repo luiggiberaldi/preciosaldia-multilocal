@@ -6,7 +6,46 @@ import { ToastProvider } from './components/Toast.jsx'
 import { SecurityProvider } from './hooks/useSecurity.jsx'
 import { supabaseCloud } from './config/supabaseCloud.js'
 import { registerSW } from 'virtual:pwa-register'
+import { bootNegocios } from './utils/bootNegocios'
 import './index.css'
+
+// ── FASE 1 MULTI-NEGOCIO: arrancar el registro/migración ANTES del primer render ──
+// bootNegocios() migra las claves existentes al namespace del negocio "Mi negocio",
+// fija el negocio activo en memoria y sincroniza el espejo fiscal. Recién después
+// se rehidratan los stores persistentes (negocios, auth) y se monta React.
+// La app no renderiza hasta que esto termina: garantiza que ningún store lea
+// datos del namespace equivocado.
+async function startApp() {
+  try {
+    await bootNegocios();
+  } catch (e) {
+    console.error('[bootNegocios] Falló el arranque multi-negocio:', e);
+  }
+  try {
+    const { useNegociosStore } = await import('./hooks/store/useNegociosStore');
+    await useNegociosStore.persist.rehydrate();
+  } catch (e) {
+    console.error('[bootNegocios] Rehidratación de negocios falló:', e);
+  }
+  try {
+    const { useAuthStore } = await import('./hooks/store/useAuthStore');
+    // El adapter de persistencia enruta por negocio activo (routeAuthKey),
+    // así que la rehidratación lee el usuario/PIN del negocio correcto.
+    await useAuthStore.persist.rehydrate();
+  } catch (e) {
+    console.error('[bootNegocios] Rehidratación de auth falló:', e);
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <ToastProvider>
+        <SecurityProvider>
+          <AppRouter />
+        </SecurityProvider>
+      </ToastProvider>
+    </React.StrictMode>,
+  );
+}
 
 // ── Interceptor global de Fetch para Electron (protocolo file://) ──
 if (window.location.protocol === 'file:') {
@@ -147,13 +186,4 @@ function AppRouter() {
   return <App />;
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ToastProvider>
-      <SecurityProvider>
-        <AppRouter />
-      </SecurityProvider>
-    </ToastProvider>
-  </React.StrictMode>,
-)
-
+startApp();

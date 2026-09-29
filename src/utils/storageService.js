@@ -2,6 +2,7 @@ import localforage from 'localforage';
 import { queueCloudSync } from '../hooks/useCloudSync';
 import { shadowBackupService } from './shadowBackupService';
 import { isSyncingFromCloud } from './syncFlags';
+import { routeStorageKey, getNegocioActivoId, NEGOCIO_KEY_PREFIX } from './negocioContext';
 
 localforage.config({
     name: 'BodegaApp',
@@ -20,11 +21,17 @@ export const storageService = {
      * Obtiene un item de IndexedDB.
      * Si no existe, intenta leerlo de localStorage (Retrocompatibilidad),
      * lo guarda en IndexedDB y lo borra de localStorage.
+     *
+     * MULTI-NEGOCIO (Fase 1): la clave se enruta con `routeStorageKey()` —
+     * las claves de datos del negocio activo llevan el prefijo `nb_<id>:`.
+     * `key` sigue siendo la clave LÓGICA para el resto de la app.
      */
     async getItem(key, defaultValue = null) {
         try {
+            // 0. Router multi-negocio: clave física namespaced por negocio.
+            const rkey = routeStorageKey(key);
             // 1. Intentar leer de IndexedDB
-            const value = await localforage.getItem(key);
+            const value = await localforage.getItem(rkey);
 
             if (value !== null) {
                 return value;
@@ -46,8 +53,8 @@ export const storageService = {
                         });
                         const oldVal = await oldStore.getItem(oldKey);
                         if (oldVal !== null) {
-                            await localforage.setItem(key, oldVal);
-                            console.log(`[Migración Auto] Recuperado ${oldKey} -> ${key}`);
+                            await localforage.setItem(rkey, oldVal);
+                            console.log(`[Migración Auto] Recuperado ${oldKey} -> ${rkey}`);
                             return oldVal;
                         }
                     }
@@ -56,7 +63,8 @@ export const storageService = {
                 console.error("Error intentando recuperar datos antiguos", e);
             }
 
-            // 2. Si no existe, revisar LocalStorage (Migración al vuelo)
+            // 2. Si no existe, revisar LocalStorage (Migración al vuelo).
+            //    Los residuos viejos están con la clave lógica sin prefijo.
             const fallbackValue = localStorage.getItem(key);
             if (fallbackValue !== null) {
                 let parsedValue;
@@ -66,7 +74,7 @@ export const storageService = {
                     parsedValue = fallbackValue;
                 }
 
-                await localforage.setItem(key, parsedValue);
+                await localforage.setItem(rkey, parsedValue);
                 localStorage.removeItem(key);
                 return parsedValue;
             }
@@ -91,10 +99,13 @@ export const storageService = {
      * 2. Shadow Snapshots: guarda una copia espejo en IndexedDB antes de cada sobrescritura.
      */
     async setItem(key, value) {
+        // 0. Router multi-negocio (Fase 1). `key` = clave lógica;
+        //    `rkey` = clave física namespaced por negocio.
+        const rkey = routeStorageKey(key);
         try {
             // 🧱 CAPA 1: DISYUNTOR DE ALMACENAMIENTO (Circuit Breaker para Catálogo)
             if (key === 'bodega_products_v1') {
-                const currentCatalog = await localforage.getItem(key);
+                const currentCatalog = await localforage.getItem(rkey);
                 if (Array.isArray(currentCatalog) && currentCatalog.length > 5) {
                     const incomingCount = Array.isArray(value) ? value.length : 0;
                     const ratio = incomingCount / currentCatalog.length;
@@ -104,7 +115,7 @@ export const storageService = {
                         if (confirmed) {
                             localStorage.removeItem('confirm_bulk_delete_catalog_flag');
                             // Guardar copia de sombra del catálogo completo antes del borrado intencional
-                            await shadowBackupService.saveShadow(key, currentCatalog);
+                            await shadowBackupService.saveShadow(rkey, currentCatalog);
                         } else {
                             if (typeof window !== 'undefined') {
                                 window.dispatchEvent(new CustomEvent('circuit_breaker_triggered', {
@@ -115,12 +126,12 @@ export const storageService = {
                         }
                     } else {
                         // Guardar copia de sombra previa a la modificación válida
-                        await shadowBackupService.saveShadow(key, currentCatalog);
+                        await shadowBackupService.saveShadow(rkey, currentCatalog);
                     }
                 }
             }
 
-            await localforage.setItem(key, value);
+            await localforage.setItem(rkey, value);
             localStorage.removeItem(key);
             if (typeof window !== "undefined") {
                 window.dispatchEvent(new CustomEvent("app_storage_update", { detail: { key } }));
@@ -138,7 +149,9 @@ export const storageService = {
             }
 
             if (_isQuotaError(error)) {
-                _dispatchQuotaExceeded(key, value, error);
+                // La cola de reintentos guarda la clave FÍSICA (rkey) para no
+                // escribir fuera del namespace del negocio al reintentar.
+                _dispatchQuotaExceeded(rkey, value, error);
                 try {
                     localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
                     if (typeof window !== "undefined") {
@@ -148,7 +161,7 @@ export const storageService = {
                     return;
                 } catch (lsErr) {
                     if (_isQuotaError(lsErr)) {
-                        _dispatchQuotaExceeded(key, value, lsErr);
+                        _dispatchQuotaExceeded(rkey, value, lsErr);
                     }
                     console.error(`[Storage CRÍTICO] Ni IndexedDB ni LocalStorage aceptan ${key}. Operación encolada para reintento.`, lsErr);
                     return;
@@ -167,40 +180,54 @@ export const storageService = {
     },
 
     /**
-     * Elimina un item
+     * Elimina un item (enrutado al namespace del negocio activo).
      */
     async removeItem(key) {
         try {
-            await localforage.removeItem(key);
-            localStorage.removeItem(key); // Por si acaso quedó algún residuo
+            await localforage.removeItem(routeStorageKey(key));
+            localStorage.removeItem(key); // Por si acaso quedó algún residuo sin prefijo
         } catch (error) {
             console.error(`[Storage Error] Borrando ${key}:`, error);
         }
     },
 
     /**
-     * Limpieza total para restauración desde backup.
-     * Borra todas las claves de la app en IndexedDB y localStorage.
-     * Preserva SOLO la sesión de Supabase (sb-*) para no desloguear al usuario.
+     * Limpieza para restauración desde backup.
+     * MULTI-NEGOCIO (Fase 1): borra SOLO las claves del negocio activo en
+     * IndexedDB (las namespaced `nb_<id>:`), nunca las de otros negocios.
+     * Preserva la sesión de Supabase (sb-*) y las claves globales.
      */
     async clearAllData() {
         try {
-            // 1. Limpiar IndexedDB completo de la app
-            await localforage.clear();
-            console.log('[clearAllData] IndexedDB limpiado.');
-
-            // 2. Limpiar claves de app en localStorage (preservando sesión de auth)
-            const appLsKeys = [
-                'street_rate_bs', 'catalog_use_auto_usdt', 'catalog_custom_usdt_price',
-                'catalog_show_cash_price', 'monitor_rates_v12', 'business_name', 'business_rif',
-                'printer_paper_width', 'allow_negative_stock', 'cop_enabled', 'auto_cop_enabled',
-                'tasa_cop', 'bodega_use_auto_rate', 'bodega_custom_rate', 'bodega_inventory_view',
-                'premium_token', 'abasto-auth-storage',
-            ];
-            for (const key of appLsKeys) {
-                localStorage.removeItem(key);
+            // 1. Limpiar solo el namespace del negocio activo en IndexedDB
+            const negocioId = getNegocioActivoId();
+            if (negocioId) {
+                const prefix = `${NEGOCIO_KEY_PREFIX}${negocioId}:`;
+                const keys = await localforage.keys();
+                for (const k of keys) {
+                    if (typeof k === 'string' && k.startsWith(prefix)) {
+                        try { await localforage.removeItem(k); } catch { /* noop */ }
+                    }
+                }
+                console.log('[clearAllData] IndexedDB del negocio limpiado.');
+            } else {
+                await localforage.clear();
+                console.log('[clearAllData] IndexedDB limpiado.');
             }
-            console.log('[clearAllData] LocalStorage de la app limpiado.');
+
+            // 2. Limpiar claves del NEGOCIO ACTIVO en localStorage (namespaced).
+            //    Las globales (tasas, business_*, premium_token, registro) se
+            //    preservan: no pertenecen a un negocio.
+            if (negocioId) {
+                const prefix = `${NEGOCIO_KEY_PREFIX}${negocioId}:`;
+                const doomed = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith(prefix)) doomed.push(k);
+                }
+                doomed.forEach((k) => { try { localStorage.removeItem(k); } catch { /* noop */ } });
+                console.log('[clearAllData] LocalStorage del negocio limpiado.');
+            }
 
             // HOOK-007: tras limpiar, flush de la cola de reintentos por si había ops pendientes.
             _flushRetryQueue();

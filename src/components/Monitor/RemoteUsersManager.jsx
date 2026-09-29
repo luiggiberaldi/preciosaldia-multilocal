@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, KeyRound, Shield, ShoppingCart, Trash2, Edit2, Check, X } from 'lucide-react';
 import { storageService } from '../../utils/storageService';
+import { routeAuthKey } from '../../utils/negocioContext';
 import { showToast } from '../Toast';
 import { SUPERVISOR_REMOTE_MUTATIONS_ENABLED } from '../../config/supervisorPolicy';
 import { sendSupervisorCommand } from '../../services/supervisorCommandService';
@@ -28,7 +29,7 @@ export default function RemoteUsersManager({ targetDeviceId }) {
             if (Array.isArray(savedCatalog) && savedCatalog.length > 0) {
                 setUsers(savedCatalog);
             } else {
-                const savedAuth = await storageService.getItem('abasto-auth-storage', null);
+                const savedAuth = await storageService.getItem(routeAuthKey('abasto-auth-storage'), null); // FASE 1: usuarios del negocio activo
                 if (savedAuth?.state?.usuarios) {
                     setUsers(savedAuth.state.usuarios);
                 } else {

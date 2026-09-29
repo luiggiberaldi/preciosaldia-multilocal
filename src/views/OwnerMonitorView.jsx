@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useProductContext } from '../context/ProductContext';
 import { useMonitorSync } from '../hooks/useMonitorSync';
 import { storageService } from '../utils/storageService';
+import { routeAuthKey } from '../utils/negocioContext';
 import { supabaseCloud } from '../config/supabaseCloud';
 import { showToast } from '../components/Toast';
 import { 
@@ -172,7 +173,7 @@ export default function OwnerMonitorView({ theme, toggleTheme, triggerHaptic, ra
         try {
             const [savedSales, savedAuth] = await Promise.all([
                 storageService.getItem('bodega_sales_v1', []),
-                storageService.getItem('abasto-auth-storage', null)
+                storageService.getItem(routeAuthKey('abasto-auth-storage'), null) // FASE 1: usuarios del negocio activo
             ]);
 
             setSales(savedSales);

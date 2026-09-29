@@ -23,9 +23,10 @@
  */
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { logEvent } from '../../services/auditService';
 import { hashPin, verifyPin } from '../../utils/crypto';
+import { routeAuthKey } from '../../utils/negocioContext';
 import {
     PIN_POLICY,
     LOGIN_RATE_LIMIT,
@@ -128,15 +129,17 @@ function _validateSessionShape(obj) {
  * @returns {object|null}
  */
 function _readPersistedSession() {
+    // FASE 1: la sesión es por negocio — la clave se enruta dinámicamente.
+    const routedSessionKey = routeAuthKey(SESSION_KEY);
     try {
-        const saved = localStorage.getItem(SESSION_KEY);
+        const saved = localStorage.getItem(routedSessionKey);
         if (!saved) return null;
         const parsed = JSON.parse(saved);
         const sane = _validateSessionShape(parsed);
         if (!sane) {
             // Estructura inválida o manipulada → descartar.
             console.warn('[useAuthStore] Sesión persistida inválida, descartando (SEC-018).');
-            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem(routedSessionKey);
             return null;
         }
         return sane;
@@ -289,7 +292,7 @@ export const useAuthStore = create(
                         consecutiveLockouts: 0,
                         lastFailedAttemptTs: 0,
                     });
-                    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+                    localStorage.setItem(routeAuthKey(SESSION_KEY), JSON.stringify(session));
 
                     // SEC-005: re-hashear PIN legacy con PBKDF2 en login exitoso.
                     if (needsRehash || legacy) {
@@ -400,7 +403,7 @@ export const useAuthStore = create(
                 const { usuarioActivo } = get();
                 if (usuarioActivo) logEvent('AUTH', 'LOGOUT', `${usuarioActivo.nombre} cerro sesion`, usuarioActivo);
                 set({ usuarioActivo: null });
-                localStorage.removeItem(SESSION_KEY);
+                localStorage.removeItem(routeAuthKey(SESSION_KEY));
             },
 
             /**
@@ -578,7 +581,7 @@ export const useAuthStore = create(
                     consecutiveLockouts: 0,
                     lastFailedAttemptTs: 0,
                 });
-                localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+                localStorage.setItem(routeAuthKey(SESSION_KEY), JSON.stringify(session));
                 logEvent('AUTH', 'LOGIN_DIRECTO', `${target.nombre} inicio sesion (sin PIN)`, session);
                 return { success: true };
             },
@@ -614,6 +617,14 @@ export const useAuthStore = create(
         }),
         {
             name: 'abasto-auth-storage',
+            // FASE 1: usuarios/PIN por negocio. El nombre se enruta por negocio
+            // activo EN CADA OPERACIÓN, así cambiar de negocio rehidrata el
+            // personal correcto sin recrear el store.
+            storage: createJSONStorage(() => ({
+                getItem: (name) => localStorage.getItem(routeAuthKey(name)),
+                setItem: (name, value) => localStorage.setItem(routeAuthKey(name), value),
+                removeItem: (name) => localStorage.removeItem(routeAuthKey(name)),
+            })),
             partialize: (state) => ({
                 usuarios: state.usuarios,
                 requireLogin: state.requireLogin,

@@ -1,4 +1,5 @@
 import localforage from 'localforage';
+import { routeStorageKey } from './negocioContext';
 
 const shadowStore = localforage.createInstance({
     name: 'BodegaApp',
@@ -7,6 +8,9 @@ const shadowStore = localforage.createInstance({
 });
 
 const SHADOW_SUFFIX = '_shadow_backup';
+
+// MULTI-NEGOCIO (Fase 1): las sombras se guardan namespaced por negocio para
+// que la copia de un negocio nunca pise ni se lea desde otro.
 
 export const shadowBackupService = {
     /**
@@ -18,7 +22,7 @@ export const shadowBackupService = {
         if (Array.isArray(value) && value.length === 0) return; // No guardar listas vacías sobre sombras válidas
 
         try {
-            const shadowKey = `${key}${SHADOW_SUFFIX}`;
+            const shadowKey = `${routeStorageKey(key)}${SHADOW_SUFFIX}`;
             const payload = {
                 timestamp: new Date().toISOString(),
                 count: Array.isArray(value) ? value.length : 1,
@@ -36,7 +40,7 @@ export const shadowBackupService = {
      */
     async readShadow(key) {
         try {
-            const shadowKey = `${key}${SHADOW_SUFFIX}`;
+            const shadowKey = `${routeStorageKey(key)}${SHADOW_SUFFIX}`;
             const shadowPayload = await shadowStore.getItem(shadowKey);
             return shadowPayload; // { timestamp, count, data }
         } catch (e) {
