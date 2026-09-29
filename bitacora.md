@@ -127,3 +127,10 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 - Fase 1 completa según ROADMAP: multi-negocio operativo local, selector en
   header, sync cloud por negocio, datos fiscales por negocio. Pendiente de
   luigi: Supabase nuevo (config cloud real) y verificación visual en su teléfono.
+
+## 2026-09-29 — vercel.json para preview deploy
+- Se agrega `vercel.json` con rewrite `/(.*) → /index.html` (SPA: el router del
+  cliente maneja las rutas; Vercel sirve primero los archivos estáticos que
+  existen, así que `/assets/*`, PWA y demás no se ven afectados).
+- Por qué: luigi autorizó subir un preview a Vercel para probar la Fase 1 en su
+  teléfono (el sandbox no puede verificar visualmente apps locales).
