@@ -118,3 +118,12 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   negocio activo ni el último; al crear, se sugiere cambiarse desde el selector.
 - UI: modal redondeado, sin `<select>` nativo, sin alert/confirm/prompt, iconos
   lucide, una sola señal de foco (`focus:ring-brand/50`).
+
+## 2026-09-29 — Push Fase 1 completa
+- 4 commits pusheados a `main` (fast-forward, vía git-push.py):
+  `045cfb0` → `7fd75f1` → `b2829dd` → `175f61b`.
+- Build `npm run build` ok (15s, PWA). Suite: 619 pasan, 4 fallos preexistentes
+  sin cambios. `BRIEF-FASE1.md` eliminado antes del push.
+- Fase 1 completa según ROADMAP: multi-negocio operativo local, selector en
+  header, sync cloud por negocio, datos fiscales por negocio. Pendiente de
+  luigi: Supabase nuevo (config cloud real) y verificación visual en su teléfono.
