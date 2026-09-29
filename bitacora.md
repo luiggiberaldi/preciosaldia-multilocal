@@ -176,3 +176,29 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   a minúsculas): el modo supervisor por pairing —congelado, no se toca— compara
   esos strings literalmente, y migrarlos rompería RemoteUsersManager y varios
   servicios. El significado documentado de `ADMIN` pasa a ser "supervisor del negocio".
+
+## 2026-09-29 — Fase 1.5 (3/5): login del dueño + vista Supervisión
+- Qué (login): `MasterPinSetupModal.jsx` — creación única del PIN maestro
+  (se muestra al arrancar si `requireLogin` está activo y no hay PIN; bloquea
+  hasta crearlo). `LockScreen.jsx` — botón "Soy el dueño" (solo si hay PIN
+  maestro) que abre el PIN pad y llama `loginAsDueno`. `EmergencyPinResetModal`
+  ahora incluye "Dueño (PIN maestro)" en la lista y `resetPinEmergency('dueno')`
+  restablece el PIN maestro (misma clave de emergencia de 7 toques al logo).
+  `App.jsx` — redirección por rol al iniciar sesión (`roles.landingTab`:
+  cajero→ventas, dueño→supervisión, supervisor→inicio).
+- Qué (Supervisión): `src/utils/supervisionData.js` — lectura cross-negocio de
+  SOLO LECTURA: lee `nb_<id>:bodega_{sales,customers,products}_v1` directo de
+  IndexedDB sin cambiar el negocio activo; `summarizeSales` (hoy/7 días/mes/
+  ticket) con el mismo criterio de filtrado que `useDashboardMetrics`.
+  `src/views/SupervisionView.jsx` — tab "Supervisión" (icono Building2): el dueño
+  ve píldoras [Consolidado] + cada sede; el supervisor ve solo su sede. Por sede:
+  KPIs (hoy/semana/mes/ticket), top 5 productos, stock bajo/agotado, fiados
+  pendientes (reusa `useDashboardMetrics` por sede). Consolidado: tabla
+  comparativa por sede + fila de totales, 100% lectura. Botón "Entrar a la sede"
+  (solo dueño) para operar — cambia de negocio con `activarNegocio`.
+- Por qué: el dueño necesita ver todas las sedes sin entrar a cada una; el
+  supervisor necesita su panel sin salir de su sede. La lectura directa evita
+  el reload de Fase 1 para un caso que es solo consulta.
+- Decisión: tras "Entrar a la sede" la app recarga (Fase 1) y el login se pierde
+  (regla existente: reload = logout) — el dueño reingresa su PIN. Se mantiene
+  así por seguridad antes que por comodidad.

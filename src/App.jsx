@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
-import { Home, ShoppingCart, Store, Users, Download, FlaskConical, Moon, Sun, BarChart3, WifiOff, X, Settings, Clock } from 'lucide-react';
+import { Home, ShoppingCart, Store, Users, Download, FlaskConical, Moon, Sun, BarChart3, WifiOff, X, Settings, Clock, Building2 } from 'lucide-react';
 
 import DashboardView from './views/DashboardView';
 
@@ -11,6 +11,7 @@ const ProductsView = lazyWithRetry(() => import('./views/ProductsView'), 'Produc
 const SettingsView = lazyWithRetry(() => import('./views/SettingsView'), 'SettingsView');
 const CustomersView = lazyWithRetry(() => import('./views/CustomersView'), 'CustomersView');
 const ReportsView = lazyWithRetry(() => import('./views/ReportsView'), 'ReportsView');
+const SupervisionView = lazyWithRetry(() => import('./views/SupervisionView'), 'SupervisionView');
 const TesterView = lazyWithRetry(() => import('./views/TesterView').then(m => ({ default: m.TesterView })), 'TesterView');
 const AIAssistantWidget = lazyWithRetry(() => import('./components/AIAssistantWidget'), 'AIAssistantWidget');
 
@@ -27,6 +28,9 @@ import { useAutoBackup } from './hooks/useAutoBackup';
 import { useRemoteCommands } from './hooks/useRemoteCommands';
 import CommandPalette from './components/CommandPalette';
 import LockScreen from './components/security/LockScreen';
+import MasterPinSetupModal from './components/security/MasterPinSetupModal';
+import { isMasterPinSetup } from './utils/duenoAuth';
+import { visibleTabIds, landingTab, isCashier, isOwner, hasAdminAccess, canManageBusinesses } from './utils/roles';
 import { useAutoLock } from './hooks/useAutoLock';
 import { useAuthStore } from './hooks/store/useAuthStore';
 import { LogOut } from 'lucide-react';
@@ -71,19 +75,22 @@ export default function App() {
   const { logout } = useAuthStore();
   useAutoLock();
 
+  // Fase 1.5: si el login está activo y aún no existe PIN maestro, pedir
+  // crearlo una sola vez antes de mostrar la pantalla de bloqueo.
+  const [showMasterSetup, setShowMasterSetup] = useState(
+    () => requireLogin && !isMasterPinSetup()
+  );
+
   // Al recargar la página, cerrar sesión si el login está activado
   useEffect(() => {
     if (requireLogin) logout();
   }, []);
 
-  // Al iniciar sesión, redirigir al punto de venta si es cajero, o a inicio si es admin
+  // Al iniciar sesión, redirigir según el rol (Fase 1.5: cajero→ventas,
+  // dueño→supervisión, supervisor→inicio).
   useEffect(() => {
     if (usuarioActivo) {
-      if (usuarioActivo.rol === 'CAJERO') {
-        setActiveTab('ventas');
-      } else {
-        setActiveTab('inicio');
-      }
+      setActiveTab(landingTab({ requireLogin, usuarioActivo }));
     }
   }, [usuarioActivo]);
 
@@ -280,7 +287,11 @@ export default function App() {
     };
   }, []);
 
-  const isCajero = requireLogin && usuarioActivo?.rol === 'CAJERO';
+  // Fase 1.5: tabs visibles según el rol (roles.visibleTabIds).
+  const allowedTabIds = useMemo(
+    () => new Set(visibleTabIds({ requireLogin, usuarioActivo })),
+    [requireLogin, usuarioActivo]
+  );
 
   const ALL_TABS = [
     { id: 'inicio', label: 'Inicio', icon: Home },
@@ -289,9 +300,12 @@ export default function App() {
     { id: 'clientes', label: 'Clientes', icon: Users },
     { id: 'reportes', label: 'Reportes', icon: BarChart3, adminOnly: true },
     { id: 'ajustes', label: 'Ajustes', icon: Settings, adminOnly: true },
+    { id: 'supervision', label: 'Supervisión', icon: Building2 },
   ];
   const TABS = ALL_TABS.filter(tab =>
-    (!tab.premiumOnly || isPremium) && (!tab.adminOnly || !isCajero)
+    allowedTabIds.has(tab.id)
+    && (!tab.premiumOnly || isPremium)
+    && (!tab.adminOnly || hasAdminAccess(usuarioActivo) || !requireLogin)
   );
 
   if (isMonitorMode) {
@@ -317,8 +331,16 @@ export default function App() {
       <TermsOverlay onAccept={forceHeartbeat} />
 
 
+      {/* Fase 1.5: creación única del PIN maestro del dueño (antes del lock) */}
+      {showMasterSetup && (
+        <MasterPinSetupModal
+          isOpen={showMasterSetup}
+          onDone={() => setShowMasterSetup(false)}
+        />
+      )}
+
       {/* Lock Screen — solo si login está activado y no hay sesión activa */}
-      {requireLogin && !usuarioActivo && (
+      {requireLogin && !usuarioActivo && !showMasterSetup && (
         <LockScreen
           onOpenPairing={() => setShowPairingScan(true)}
           installPrompt={installPrompt}
@@ -451,7 +473,7 @@ export default function App() {
 
         <div className={`flex-1 flex flex-col ${activeTab === 'inicio' ? '' : 'hidden'}`}>
           <ErrorBoundary>
-            <DashboardView rates={rates} triggerHaptic={triggerHaptic} onNavigate={(tab) => { if (tab === 'ajustes') { if (!isCajero) setActiveTab('ajustes'); } else { setActiveTab(tab); } }} theme={theme} toggleTheme={toggleTheme} isActive={activeTab === 'inicio'} isDemo={isDemo} demoTimeLeft={demoTimeLeft} />
+            <DashboardView rates={rates} triggerHaptic={triggerHaptic} onNavigate={(tab) => { if (tab === 'ajustes') { if (hasAdminAccess(usuarioActivo) || !requireLogin) setActiveTab('ajustes'); } else { setActiveTab(tab); } }} theme={theme} toggleTheme={toggleTheme} isActive={activeTab === 'inicio'} isDemo={isDemo} demoTimeLeft={demoTimeLeft} />
           </ErrorBoundary>
         </div>
 
@@ -485,6 +507,14 @@ export default function App() {
                   isTab={true}
                   rates={rates}
                 />
+              </ErrorBoundary>
+            </div>
+          )}
+          {/* Fase 1.5: Supervisión — dueño (todas las sedes + consolidado) y supervisor (su sede) */}
+          {(activeTab === 'supervision' || mountedViews.supervision) && (
+            <div data-view="supervision" className={`flex-1 flex flex-col ${activeTab === 'supervision' ? '' : 'hidden'}`}>
+              <ErrorBoundary>
+                <SupervisionView rates={rates} triggerHaptic={triggerHaptic} isActive={activeTab === 'supervision'} />
               </ErrorBoundary>
             </div>
           )}

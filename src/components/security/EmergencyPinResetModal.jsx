@@ -50,7 +50,8 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
 
         setIsSubmitting(true);
         try {
-            const res = await onResetPin(Number(selectedUserId), newPin);
+            // Fase 1.5: 'dueno' restablece el PIN maestro global (no se convierte a número).
+            const res = await onResetPin(selectedUserId === 'dueno' ? 'dueno' : Number(selectedUserId), newPin);
             if (res?.ok) {
                 setSuccessMessage('¡PIN restablecido con éxito! Ya puedes iniciar sesión.');
                 setTimeout(() => {

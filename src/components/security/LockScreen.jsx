@@ -1,19 +1,31 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Download, CheckCircle2, X } from 'lucide-react';
+import { Download, CheckCircle2, X, Crown } from 'lucide-react';
 import { useAuthStore } from '../../hooks/store/useAuthStore';
 import UserCard from './UserCard';
 import LoginPinModal from './LoginPinModal';
 import EmergencyPinResetModal from './EmergencyPinResetModal';
+import { isMasterPinSetup } from '../../utils/duenoAuth';
+
+const DUENO_PSEUDO_USER = { id: 'dueno', nombre: 'Dueño' };
 
 export default function LockScreen({ onOpenPairing, installPrompt, onInstall, showIOSButton, onShowIOSInstall, onOpenRemotion }) {
-  const { usuarios, login, loginDirect, requireCajeroPin, requireAdminPin, resetPinEmergency } = useAuthStore();
+  const { usuarios, login, loginDirect, requireCajeroPin, requireAdminPin, resetPinEmergency, loginAsDueno } = useAuthStore();
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showDuenoPin, setShowDuenoPin] = useState(false);
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const [logoClickCount, setLogoClickCount] = useState(0);
   const clickTimeoutRef = useRef(null);
   const [showWelcome, setShowWelcome] = useState(() => {
     return localStorage.getItem('pda_welcome_dismissed') !== 'true';
   });
+  // Fase 1.5: el PIN maestro se crea una sola vez (modal previo); si existe,
+  // el dueño puede entrar desde aquí. También se puede recuperar por emergencia.
+  const [masterPinExists] = useState(() => isMasterPinSetup());
+  const emergencyUsuarios = useMemo(() => (
+    masterPinExists
+      ? [{ id: 'dueno', nombre: 'Dueño (PIN maestro)' }, ...(usuarios || [])]
+      : (usuarios || [])
+  ), [masterPinExists, usuarios]);
 
   const handleLogoClick = () => {
     if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
@@ -49,6 +61,14 @@ export default function LockScreen({ onOpenPairing, installPrompt, onInstall, sh
     const result = await login(pin, userId);
     if (result?.success) {
       setSelectedUser(null);
+    }
+    return result;
+  };
+
+  const handleDuenoPinSubmit = async (pin) => {
+    const result = await loginAsDueno(pin);
+    if (result?.success) {
+      setShowDuenoPin(false);
     }
     return result;
   };
@@ -147,6 +167,17 @@ export default function LockScreen({ onOpenPairing, installPrompt, onInstall, sh
           Recargar
         </button>
 
+        {/* Fase 1.5: entrada del dueño global con PIN maestro */}
+        {masterPinExists && (
+          <button
+            onClick={() => setShowDuenoPin(true)}
+            className="px-5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-700 dark:text-amber-400 border border-amber-500/30 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-2"
+          >
+            <Crown size={14} className="text-amber-500" />
+            Soy el dueño
+          </button>
+        )}
+
         <button
           onClick={onOpenPairing}
           className="mt-3 px-5 py-2.5 bg-slate-100 hover:bg-slate-200/80 active:scale-95 text-slate-600 hover:text-slate-800 border border-slate-200/60 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-2"
@@ -164,10 +195,18 @@ export default function LockScreen({ onOpenPairing, installPrompt, onInstall, sh
         onSubmit={handlePinSubmit}
       />
 
+      {/* PIN Modal del dueño (Fase 1.5) */}
+      <LoginPinModal
+        isOpen={showDuenoPin}
+        onClose={() => setShowDuenoPin(false)}
+        user={DUENO_PSEUDO_USER}
+        onSubmit={handleDuenoPinSubmit}
+      />
+
       {/* Emergency PIN Reset Modal */}
       {showEmergencyModal && (
         <EmergencyPinResetModal
-          usuarios={usuarios}
+          usuarios={emergencyUsuarios}
           onClose={() => setShowEmergencyModal(false)}
           onResetPin={resetPinEmergency}
         />

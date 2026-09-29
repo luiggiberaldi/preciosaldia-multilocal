@@ -29,6 +29,7 @@ import { hashPin, verifyPin } from '../../utils/crypto';
 import { routeAuthKey } from '../../utils/negocioContext';
 import {
     verifyMasterPin,
+    setMasterPin,
     getDuenoSession,
     setDuenoSession,
     clearDuenoSession,
@@ -455,13 +456,21 @@ export const useAuthStore = create(
 
             /**
              * Restablece el PIN de un usuario vía procedimiento de emergencia y limpia lockouts.
-             * @param {number} userId
+             * Fase 1.5: si `userId === 'dueno'`, restablece el PIN maestro global.
+             * @param {number|string} userId
              * @param {string} nuevoPin - PIN en claro (debe pasar validatePin).
              * @returns {Promise<{ ok: boolean, error?: string }>}
              */
             resetPinEmergency: async (userId, nuevoPin) => {
                 const err = validatePin(String(nuevoPin ?? ''));
                 if (err) return { ok: false, error: err };
+
+                // Fase 1.5: el PIN maestro también se puede recuperar por emergencia.
+                if (userId === 'dueno') {
+                    const res = await setMasterPin(String(nuevoPin));
+                    if (res.ok) logEvent('AUTH', 'PIN_MAESTRO_RESET', 'PIN maestro restablecido por emergencia.', null);
+                    return res;
+                }
 
                 try {
                     const hashedPin = await hashPin(String(nuevoPin));
