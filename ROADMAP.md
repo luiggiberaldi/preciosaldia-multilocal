@@ -36,7 +36,8 @@ Ambos usan el vertical BODEGA por ahora — los verticales no se tocan.
   `npm run build` verde; prueba manual en teléfono.
 
 ## Fase 1.5 — Roles y vista supervisor (aprobado por luigi 2026-09-29)
-**Estado: implementado 2026-09-29** (commits `5527c5b`–`a8c9418` + tests; build verde;
+**Estado: implementado 2026-09-29** (commits `5527c5b`–`ad00819`; build verde;
+suite 682/689 — 1 fallo preexistente no relacionado en `receivablesDeterministic`;
 pendiente prueba manual en teléfono de luigi).
 Evolución del "modo supervisor" por pairing (congelado: no se elimina, no se le
 invierte más) hacia un modelo de roles. El dueño abre su sesión y ve todo; los
