@@ -1,5 +1,5 @@
 import React from 'react';
-import localforage from 'localforage';
+import { appForage } from '../utils/appForage';
 
 /**
  * HOOK-026: ErrorBoundary con recuperación efectiva.
@@ -49,8 +49,7 @@ class ErrorBoundary extends React.Component {
       try {
         localStorage.removeItem('bodega_pending_cart_v1');
         localStorage.removeItem('bodega_cart');
-        localforage.config({ name: 'BodegaApp', storeName: 'bodega_app_data' });
-        await localforage.removeItem('bodega_pending_cart_v1').catch(() => {});
+        await appForage.removeItem('bodega_pending_cart_v1').catch(() => {}); // FASE 1: negocio activo
       } catch (e) {
         console.error('[ErrorBoundary] Error limpiando carrito corrupto:', e);
       }
@@ -71,11 +70,10 @@ class ErrorBoundary extends React.Component {
 
     this.setState({ clearing: true, clearMsg: 'Borrando datos críticos...' });
     try {
-      // Usar localforage estático
-      localforage.config({ name: 'BodegaApp', storeName: 'bodega_app_data' });
-      await localforage.removeItem('bodega_products_v1');
-      await localforage.removeItem('bodega_sales_v1');
-      await localforage.removeItem('bodega_pending_cart_v1');
+      // FASE 1: appForage ya apunta al store correcto y al negocio activo.
+      await appForage.removeItem('bodega_products_v1'); // FASE 1: negocio activo
+      await appForage.removeItem('bodega_sales_v1'); // FASE 1: negocio activo
+      await appForage.removeItem('bodega_pending_cart_v1'); // FASE 1: negocio activo
       // También purgar de localStorage por si estaban ahí como fallback.
       localStorage.removeItem('bodega_products_v1');
       localStorage.removeItem('bodega_sales_v1');
@@ -87,7 +85,7 @@ class ErrorBoundary extends React.Component {
       console.error('[ErrorBoundary] Fallo limpiando datos críticos:', e);
       this.setState({
         clearing: false,
-        clearMsg: 'No se pudo limpiar automáticamente. Usa la consola: localforage.removeItem("bodega_products_v1")',
+        clearMsg: 'No se pudo limpiar automáticamente.',
       });
     }
   };

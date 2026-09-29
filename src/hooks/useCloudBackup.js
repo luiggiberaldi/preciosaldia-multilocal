@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toCloudDocId } from '../utils/negocioContext';
 import { showToast } from '../components/Toast';
 import { supabaseCloud } from '../config/supabaseCloud';
 import { runWithoutEco } from '../utils/syncFlags';
@@ -133,7 +134,7 @@ export function useCloudBackup({
                 syncPayloads.push(buildSyncDocumentRow({
                     deviceId,
                     collection: 'store',
-                    docId: key,
+                    docId: toCloudDocId(key), // FASE 1: sync separado por negocio
                     data: { payload: value },
                 }));
             }
@@ -143,7 +144,7 @@ export function useCloudBackup({
                 syncPayloads.push(buildSyncDocumentRow({
                     deviceId,
                     collection: 'local',
-                    docId: key,
+                    docId: toCloudDocId(key), // FASE 1: globales quedan sin prefijo
                     data: { payload: finalVal },
                 }));
             }

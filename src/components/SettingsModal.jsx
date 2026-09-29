@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Download, AlertTriangle, Check, X, Database, Share2, Fingerprint, Copy, Store, LayoutGrid, Zap, Smartphone, Monitor } from 'lucide-react';
 import { storageService } from '../utils/storageService';
-import localforage from 'localforage';
+import { appForage } from '../utils/appForage';
 import { showToast } from '../components/Toast';
 import PaymentMethodsManager from './Settings/PaymentMethodsManager';
 
@@ -143,14 +143,14 @@ export default function SettingsModal({ isOpen, onClose, products, onImport, tri
                     throw new Error('El archivo no contiene una estructura de respaldo reconocida.');
                 }
 
-                const lf = localforage.createInstance({ name: 'BodegaApp', storeName: 'bodega_app_data' });
+                // FASE 1: appForage enruta al namespace del negocio activo.
 
                 // 3. Escribir todas las claves de IndexedDB
                 let restoredCount = 0;
                 for (const [key, val] of Object.entries(idbMap)) {
                     if (val !== null && val !== undefined) {
                         const parsedVal = typeof val === 'string' ? JSON.parse(val) : val;
-                        await lf.setItem(key, parsedVal);
+                        await appForage.setItem(key, parsedVal);
                         if (key === 'bodega_products_v1' && Array.isArray(parsedVal)) {
                             restoredCount = parsedVal.length;
                         }

@@ -423,9 +423,16 @@ export default function OwnerMonitorView({ theme, toggleTheme, triggerHaptic, ra
         localStorage.removeItem('business_rif');
         
         try {
+            // FASE 1: al desvincular se borran solo los datos namespaced (los que
+            // llegaron del primario), nunca el registro de negocios ni globales.
             const { default: localforage } = await import('localforage');
             localforage.config({ name: 'BodegaApp', storeName: 'bodega_app_data' });
-            await localforage.clear();
+            const keys = await localforage.keys();
+            for (const k of keys) {
+                if (typeof k === 'string' && k.startsWith('nb_')) {
+                    try { await localforage.removeItem(k); } catch { /* noop */ }
+                }
+            }
         } catch (e) {
             console.warn(e);
         }

@@ -18,7 +18,7 @@
  */
 
 import { storageService } from './storageService';
-import localforage from 'localforage';
+import { appForage } from './appForage';
 import { IDB_KEYS, LS_KEYS, PROTECTED_KEYS } from '../config/backupKeys';
 import { decompressString, isCompressionSupported } from './compression';
 import { runWithoutEco } from './syncFlags';
@@ -152,8 +152,9 @@ export async function decompressCloudBackup(cloudBackup) {
  * @param {'storageService'|'direct'} [options.writeMode='storageService']
  *   - 'storageService': escribe via storageService (quota fallback, eventos).
  *     Se envuelve en runWithoutEco para no re-enviar a la nube lo recibido.
- *   - 'direct': escribe via localforage crudo, sin eventos ni eco (usado por
- *     importación de archivo, que luego sincroniza via pda_backup_imported_flag).
+ *   - 'direct': escribe via appForage (enrutado al negocio activo, crudo:
+ *     sin eventos ni eco; usado por importación de archivo, que luego
+ *     sincroniza via pda_backup_imported_flag).
  * @returns {Promise<{idbKeys: string[], lsKeys: string[]}>}
  */
 export async function applyBackupToStorage(backup, { writeMode = 'storageService' } = {}) {
@@ -161,7 +162,8 @@ export async function applyBackupToStorage(backup, { writeMode = 'storageService
     const writeIdb = async (key, value) => {
         if (writeMode === 'direct') {
             const parsed = typeof value === 'string' ? safeParse(value) : value;
-            await localforage.setItem(key, parsed);
+            // FASE 1: appForage enruta la clave lógica al namespace del negocio activo.
+            await appForage.setItem(key, parsed);
         } else {
             await storageService.setItem(key, value);
         }
@@ -216,7 +218,7 @@ export async function clearAppKeysForRestore() {
     const removedLs = [];
     for (const key of IDB_KEYS) {
         if (PROTECTED_KEYS.includes(key)) continue;
-        try { await localforage.removeItem(key); removedIdb.push(key); } catch { /* noop */ }
+        try { await appForage.removeItem(key); removedIdb.push(key); } catch { /* noop */ } // FASE 1: solo el negocio activo
     }
     for (const key of LS_KEYS) {
         if (PROTECTED_KEYS.includes(key)) continue;

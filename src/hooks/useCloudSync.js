@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
-import localforage from 'localforage';
+import { appForage } from '../utils/appForage';
 import { supabaseCloud } from '../config/supabaseCloud';
 import { useAuthStore } from './store/useAuthStore';
+import { toCloudDocId, parseCloudDocId, isDocForActiveBusiness } from '../utils/negocioContext';
 import { SUPERVISOR_SYNC_KEYS, validateSupervisorSyncDocument } from '../services/supervisorContracts';
 import { ensureSupervisorSession } from '../services/supervisorAuth';
 import { mergeLedgerEntries, rebuildCustomersFromLedger } from '../utils/customerLedger';
@@ -45,6 +46,15 @@ function quickHash(value) {
 }
 
 const LAST_PUSH_HASH_PREFIX = 'bodega_last_periodic_push_hash_';
+
+// ─── FASE 1 MULTI-NEGOCIO ──────────────────────────────────────────────────
+// `doc_id = nb_<negocioId>:<clave>` (la columna `collection` ya separa
+// 'store'/'local', así que no se duplica en el doc_id). Las claves globales
+// (tasas, etc.) quedan sin prefijo y se comparten entre negocios.
+// El hash de último push también es por doc_id: cada negocio tiene su estado.
+function _pushHashKey(key) {
+    return LAST_PUSH_HASH_PREFIX + toCloudDocId(key);
+}
 
 // ─── Estado Global del Motor ───────────────────────────────────────────────
 let globalSubscription = null;
@@ -91,9 +101,12 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
     if (!_currentDeviceId) return { ok: false, skipped: true, error: 'Dispositivo no definido' };
 
     // SEC-002: jamás empujar `abasto-auth-storage` aunque accidentalmente lo pidan.
-    if (key === 'abasto-auth-storage') return { ok: false, skipped: true, error: 'Documento de autenticación bloqueado' };
+    if (key === 'abasto-auth-storage' || parseCloudDocId(key).key === 'abasto-auth-storage') {
+        return { ok: false, skipped: true, error: 'Documento de autenticación bloqueado' };
+    }
 
-    const hashKey = LAST_PUSH_HASH_PREFIX + key;
+    const docId = toCloudDocId(key);
+    const hashKey = _pushHashKey(key);
     const currentHash = quickHash(value);
     if (!forceUnconditional && localStorage.getItem(hashKey) === currentHash) {
         return { ok: true, skipped: true, reason: 'Sin cambios' };
@@ -104,7 +117,7 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
     const document = {
         device_id: _currentDeviceId,
         collection: collectionType,
-        doc_id: key,
+        doc_id: docId,
         data: buildSyncEnvelope(value, updatedAt),
         updated_at: updatedAt,
     };
@@ -176,10 +189,10 @@ export const forceSyncAllPOSData = async (overrideDeviceId, forceUnconditional =
     if (!isCloudSyncActive) return { ok: false, error: 'Sync no activo' };
 
     try {
-        const lf = localforage.createInstance({ name: 'BodegaApp', storeName: 'bodega_app_data' });
+        // FASE 1: appForage lee del namespace del negocio activo.
         const criticalKeys = ['bodega_sales_v1', 'bodega_products_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1', 'bodega_accounts_v2'];
         for (const key of criticalKeys) {
-            const val = await lf.getItem(key);
+            const val = await appForage.getItem(key);
             if (val !== null) {
                 await pushCloudSync(key, val, forceUnconditional);
             }
@@ -208,11 +221,20 @@ const STORE_SCHEMAS = {
 /**
  * Aplica un documento recibido de la nube al almacenamiento local.
  * Garantiza que isSyncingFromCloud esté activo durante toda la operación.
+ *
+ * FASE 1: el doc_id viene como `nb_<negocioId>:<clave>`. Solo se aplican los
+ * documentos del negocio activo (o globales). Los documentos legacy sin
+ * prefijo (pre-Fase 1) se ignoran: el push local los re-publica namespaced.
  */
 async function _applyFromCloud(docId, collection, data) {
     isSyncingFromCloud = true;
     try {
         if (!['store', 'local'].includes(collection)) return false;
+
+        // ── Filtro multi-negocio (Fase 1) + SEC-002 ──
+        if (!isDocForActiveBusiness(docId)) return false;
+        const { key } = parseCloudDocId(docId);
+
         const envelope = readSyncEnvelope(data);
         if (!envelope.valid) {
             console.warn(`[CloudSync] Envelope remoto rechazado: ${envelope.error}`);
@@ -221,7 +243,6 @@ async function _applyFromCloud(docId, collection, data) {
 
         const { payload } = envelope;
         let payloadToStore = payload;
-        if (docId === 'abasto-auth-storage') return false;
 
         const metadataKey = getSyncMetadataKey(docId);
         const previousUpdatedAt = localStorage.getItem(metadataKey);
@@ -231,26 +252,28 @@ async function _applyFromCloud(docId, collection, data) {
 
         // Contrato común del supervisor: incluso el primary debe rechazar
         // documentos no allowlisted antes de aplicarlos localmente.
-        const supervisorValidation = validateSupervisorSyncDocument(docId, payload);
+        // Se valida con la clave BASE (sin prefijo de negocio).
+        const supervisorValidation = validateSupervisorSyncDocument(key, payload);
         if (!supervisorValidation.valid) {
             console.warn(`[CloudSync] Documento remoto rechazado: ${supervisorValidation.error}`);
             return false;
         }
 
         // DATA-001: Validación de Schema antes de escribir en almacenamiento local
-        const validator = STORE_SCHEMAS[docId];
+        const validator = STORE_SCHEMAS[key];
         if (validator) {
             let dataToValidate = payload;
             if (typeof payload === 'string' && (payload.startsWith('[') || payload.startsWith('{'))) {
                 try { dataToValidate = JSON.parse(payload); } catch { /* silenciar parse error */ }
             }
             if (!validator(dataToValidate)) {
-                console.warn(`[CloudSync] Schema validation falló para ${docId}, ignorando payload remoto.`, payload);
+                console.warn(`[CloudSync] Schema validation falló para ${key}, ignorando payload remoto.`, payload);
                 return false;
             }
         }
 
         if (collection === 'local') {
+            // Colección 'local' = claves globales (tasas): docId sin prefijo.
             const stringPayload = typeof payload === 'string' ? payload : JSON.stringify(payload);
             originalSetItem(docId, stringPayload);   // Escribe sin pasar por interceptor (no existe ya)
             window.dispatchEvent(new StorageEvent('storage', {
@@ -258,30 +281,31 @@ async function _applyFromCloud(docId, collection, data) {
                 newValue: stringPayload,
                 storageArea: localStorage
             }));
-            window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: docId, source: 'remote' } }));
+            window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key, source: 'remote' } }));
         } else {
-            // Colección 'store' → IndexedDB directo, sin pasar por storageService.setItem.
+            // Colección 'store' → IndexedDB del negocio activo vía appForage
+            // (enruta la clave lógica al namespace correcto), sin pasar por
+            // storageService.setItem.
             // El ledger es append-only: nunca se reemplaza por un snapshot remoto.
-            const lf = localforage.createInstance({ name: 'BodegaApp', storeName: 'bodega_app_data' });
-            if (docId === 'bodega_customer_ledger_v1') {
-                const localLedger = await lf.getItem(docId);
+            if (key === 'bodega_customer_ledger_v1') {
+                const localLedger = await appForage.getItem(key);
                 const merged = mergeLedgerEntries(localLedger, payload);
                 payloadToStore = merged.ledger;
                 if (merged.conflicts.length > 0) {
                     console.warn(`[CloudSync] Conflictos de ledger retenidos localmente: ${merged.conflicts.length}`);
                 }
             }
-            await lf.setItem(docId, payloadToStore);
-            if (docId === 'bodega_customer_ledger_v1') {
-                const localCustomers = await lf.getItem('bodega_customers_v1');
+            await appForage.setItem(key, payloadToStore);
+            if (key === 'bodega_customer_ledger_v1') {
+                const localCustomers = await appForage.getItem('bodega_customers_v1');
                 if (Array.isArray(localCustomers)) {
-                    await lf.setItem('bodega_customers_v1', rebuildCustomersFromLedger(localCustomers, payloadToStore));
+                    await appForage.setItem('bodega_customers_v1', rebuildCustomersFromLedger(localCustomers, payloadToStore));
                     window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_customers_v1', source: 'remote' } }));
                 }
             }
 
-            // Notificar a los componentes React que lean este store
-            window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: docId, source: 'remote' } }));
+            // Notificar a los componentes React que lean este store (clave lógica)
+            window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key, source: 'remote' } }));
         }
 
         // Update local hash to prevent periodic push from re-uploading what we just downloaded
@@ -400,15 +424,13 @@ export function useCloudSync(deviceId) {
                 if (backupImported) {
                     console.log('[CloudSync] Detectado backup importado localmente. Subiendo incondicionalmente a la nube...');
                     isCloudSyncActive = true;
-                    const lf = localforage.createInstance({ name: 'BodegaApp', storeName: 'bodega_app_data' });
                     const criticalKeys = ['bodega_sales_v1', 'bodega_products_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1', 'bodega_accounts_v2'];
                     for (const key of criticalKeys) {
-                        const localValue = await lf.getItem(key);
+                        const localValue = await appForage.getItem(key);
                         if (localValue !== null) {
                             const result = await pushCloudSync(key, localValue);
                             if (result?.ok) {
-                                const hashKey = LAST_PUSH_HASH_PREFIX + key;
-                                localStorage.setItem(hashKey, quickHash(localValue));
+                                localStorage.setItem(_pushHashKey(key), quickHash(localValue));
                             }
                         }
                     }
@@ -427,8 +449,9 @@ export function useCloudSync(deviceId) {
 
                     if (docs.length > 0) {
                         for (const doc of docs) {
-                            // SEC-002: nunca aplicar `abasto-auth-storage` desde la nube.
-                            if (doc.doc_id === 'abasto-auth-storage') continue;
+                            // FASE 1 + SEC-002: solo documentos del negocio activo
+                            // (o globales); los legacy sin prefijo se ignoran.
+                            if (!isDocForActiveBusiness(doc.doc_id)) continue;
                             try {
                                 await _applyFromCloud(doc.doc_id, doc.collection, doc.data);
                             } catch (e) {
@@ -442,17 +465,17 @@ export function useCloudSync(deviceId) {
 
                 // ── Auto-recuperación: Purgar/subir datos locales que no llegaron a enviarse debido al bug anterior ──
                 try {
-                    const lf = localforage.createInstance({ name: 'BodegaApp', storeName: 'bodega_app_data' });
                     const criticalKeys = ['bodega_sales_v1', 'bodega_products_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1', 'bodega_accounts_v2'];
+                    // FASE 1: los doc_id en la nube van namespaced; comparar contra eso.
                     const existingCloudKeys = new Set((docs || []).map(d => d.doc_id));
 
                     for (const key of criticalKeys) {
-                        const localValue = await lf.getItem(key);
+                        const localValue = await appForage.getItem(key);
                         if (!localValue) continue;
 
-                        const hashKey = LAST_PUSH_HASH_PREFIX + key;
+                        const hashKey = _pushHashKey(key);
                         const currentHash = quickHash(localValue);
-                        if (existingCloudKeys.has(key) && localStorage.getItem(hashKey) === currentHash) continue;
+                        if (existingCloudKeys.has(toCloudDocId(key)) && localStorage.getItem(hashKey) === currentHash) continue;
 
                         // Subimos los datos locales a la base de datos para sincronizar el historial.
                         // El hash solo se confirma si el upsert fue aceptado.
@@ -494,13 +517,12 @@ export function useCloudSync(deviceId) {
         const forcePushLocalData = async () => {
             if (isSyncingFromCloud || !deviceId) return;
             try {
-                const lf = localforage.createInstance({ name: 'BodegaApp', storeName: 'bodega_app_data' });
                 const criticalKeys = ['bodega_sales_v1', 'bodega_products_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1', 'bodega_accounts_v2'];
                 for (const key of criticalKeys) {
-                    const localValue = await lf.getItem(key);
+                    const localValue = await appForage.getItem(key);
                     if (!localValue) continue;
 
-                    const hashKey = LAST_PUSH_HASH_PREFIX + key;
+                    const hashKey = _pushHashKey(key);
                     const currentHash = quickHash(localValue);
                     if (localStorage.getItem(hashKey) === currentHash) continue;
 

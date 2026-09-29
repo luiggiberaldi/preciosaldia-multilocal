@@ -174,6 +174,21 @@ export function parseCloudDocId(docId) {
     return { negocioId: m[1], key: m[2] };
 }
 
+/**
+ * ¿Debe aplicarse localmente un documento remoto con este doc_id?
+ * - Documentos de otro negocio → no.
+ * - Documentos legacy sin prefijo (pre-Fase 1) → solo si son globales
+ *   (tasas, etc.); los de datos se ignoran porque el push local los
+ *   re-publica namespaced.
+ * - `abasto-auth-storage` → nunca (SEC-002).
+ */
+export function isDocForActiveBusiness(docId) {
+    const { negocioId, key } = parseCloudDocId(docId);
+    if (key === 'abasto-auth-storage') return false;
+    if (negocioId) return negocioId === getNegocioActivoId();
+    return isGlobalKey(key);
+}
+
 /** Lee el registro crudo (sin depender del store). */
 function _readRegistryState() {
     try {

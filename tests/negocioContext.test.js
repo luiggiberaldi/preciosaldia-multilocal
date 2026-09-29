@@ -20,6 +20,7 @@ import {
     parseCloudDocId,
     syncFiscalMirror,
     NEGOCIOS_REGISTRY_KEY,
+    isDocForActiveBusiness,
 } from '../src/utils/negocioContext';
 
 const NEG_A = 'neg-a1';
@@ -117,6 +118,33 @@ describe('aislamiento entre dos negocios', () => {
         // Ninguna clave de A contiene el id de B ni viceversa.
         expect(keyA).not.toContain(NEG_B);
         expect(keyB).not.toContain(NEG_A);
+    });
+});
+
+describe('filtro de documentos cloud (isDocForActiveBusiness)', () => {
+    it('acepta docs del negocio activo y globales', () => {
+        setNegocioActivoId(NEG_A);
+        expect(isDocForActiveBusiness(`nb_${NEG_A}:bodega_products_v1`)).toBe(true);
+        expect(isDocForActiveBusiness('monitor_rates_v12')).toBe(true);
+        expect(isDocForActiveBusiness('bodega_custom_rate')).toBe(true);
+    });
+
+    it('rechaza docs de otro negocio', () => {
+        setNegocioActivoId(NEG_A);
+        expect(isDocForActiveBusiness(`nb_${NEG_B}:bodega_products_v1`)).toBe(false);
+        expect(isDocForActiveBusiness(`nb_${NEG_B}:bodega_sales_v1`)).toBe(false);
+    });
+
+    it('rechaza docs legacy sin prefijo que no sean globales', () => {
+        setNegocioActivoId(NEG_A);
+        expect(isDocForActiveBusiness('bodega_products_v1')).toBe(false);
+        expect(isDocForActiveBusiness('bodega_sales_v1')).toBe(false);
+    });
+
+    it('nunca acepta abasto-auth-storage (SEC-002)', () => {
+        setNegocioActivoId(NEG_A);
+        expect(isDocForActiveBusiness('abasto-auth-storage')).toBe(false);
+        expect(isDocForActiveBusiness(`nb_${NEG_A}:abasto-auth-storage`)).toBe(false);
     });
 });
 

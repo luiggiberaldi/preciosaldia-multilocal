@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import localforage from 'localforage';
+import { appForage } from '../utils/appForage';
 import { Share2, Download, X, Copy, Check, Loader2, AlertTriangle, Package, Users, ShoppingBag, Settings2, Database } from 'lucide-react';
 import { storageService } from '../utils/storageService';
 
@@ -163,7 +163,7 @@ export default function ShareInventoryModal({ isOpen, onClose }) {
         try {
             if (importResult.idb) {
                 for (const [key, value] of Object.entries(importResult.idb)) {
-                    await localforage.setItem(key, value);
+                    await appForage.setItem(key, value); // FASE 1: negocio activo
                 }
             }
             if (importResult.ls) {

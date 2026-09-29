@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabaseCloud } from '../config/supabaseCloud';
 import { runWithoutEco } from '../utils/syncFlags';
 import localforage from 'localforage';
+import { parseCloudDocId, isGlobalKey } from '../utils/negocioContext';
 import { validateSupervisorSyncDocument } from '../services/supervisorContracts';
 import { ensureSupervisorSession } from '../services/supervisorAuth';
 import {
@@ -80,7 +81,24 @@ export function useMonitorSync(pairedDeviceId) {
             return { applied: false, rejected: true, error: envelope.error };
         }
 
-        const validation = validateSupervisorSyncDocument(docId, envelope.payload);
+        // FASE 1: el doc_id viene como `nb_<negocioId>:<clave>`. Se valida con
+        // la clave BASE. Los documentos legacy sin prefijo (pre-Fase 1) se
+        // ignoran; el primario los re-publica namespaced. Se escribe con el
+        // docId COMPLETO (clave física): así los datos del primario quedan en
+        // el namespace de SU negocio y nunca se mezclan con el del monitor.
+        // FASE 1: el monitor acepta documentos de CUALQUIER negocio del primario
+        // pareado (es su única fuente; el primario solo publica su negocio activo).
+        // Se escriben con el docId completo (clave física) para no mezclarlos con
+        // los datos propios del monitor. Legacy sin prefijo y auth se rechazan.
+        const { negocioId, key } = parseCloudDocId(docId);
+        if (key === 'abasto-auth-storage') {
+            return { applied: false, rejected: true, error: 'Documento de autenticación bloqueado (SEC-002)' };
+        }
+        if (!negocioId && !isGlobalKey(key)) {
+            return { applied: false, rejected: true, error: 'Documento legacy pre-Fase 1 ignorado' };
+        }
+
+        const validation = validateSupervisorSyncDocument(key, envelope.payload);
         if (!validation.valid) {
             return { applied: false, rejected: true, error: validation.error };
         }
@@ -106,10 +124,10 @@ export function useMonitorSync(pairedDeviceId) {
                     newValue: stringPayload,
                     storageArea: localStorage,
                 }));
-                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: docId, source: 'remote' } }));
+                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key, source: 'remote' } }));
             } else {
                 await localforage.setItem(docId, envelope.payload);
-                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: docId, source: 'remote' } }));
+                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key, source: 'remote' } }));
             }
         });
 

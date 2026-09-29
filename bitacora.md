@@ -61,6 +61,33 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   `stockBatchModal`, `supervisorCommands`, `receivablesDeterministic`) ya fallaban
   antes de estos cambios (verificado con stash).
 
+## 2026-09-29 — Fase 1 (3/4): sync cloud y backups por negocio
+- Qué: `doc_id = nb_<negocioId>:<clave>` en `sync_documents` (la columna
+  `collection` ya existía, no se duplica en el doc_id). Las tasas y demás
+  claves globales quedan sin prefijo y se comparten.
+- Por qué: dos negocios no pueden pisarse los documentos en la nube.
+- Cambios:
+  - `useCloudSync.js`: `pushCloudSync` genera el doc_id namespaced; hash de
+    último push por doc_id (estado separado por negocio); pull inicial y
+    `_applyFromCloud` solo aplican docs del negocio activo o globales
+    (`isDocForActiveBusiness`); los docs legacy sin prefijo se ignoran (el push
+    local los re-publica namespaced); validación de supervisor y schemas con la
+    clave BASE; lecturas/escrituras vía `appForage` (namespace activo).
+  - `useMonitorSync.js`: valida con la clave base; escribe con el doc_id
+    completo (clave física) para no mezclar datos del primario con los del
+    monitor; rechaza legacy y auth (SEC-002). Limitación Fase 1: el monitor
+    muestra bien los datos cuando ambos dispositivos usan el mismo id de negocio
+    (caso común: `neg-1`); selección de negocio en el monitor queda a futuro.
+  - `useCloudBackup.js`: la inyección P2P en `sync_documents` usa doc_ids
+    namespaced.
+  - `backupRestoreService.js`, `SettingsModal` (restaurar archivo),
+    `ShareInventoryModal` (importar), `ErrorBoundary` (recuperación): accesos
+    directos a IndexedDB ahora vía `appForage` (namespace del negocio activo).
+  - `OwnerMonitorView` (desvincular): ya no hace `localforage.clear()` global;
+    borra solo claves `nb_*` (datos del primario), preserva registro y globales.
+- Tests: `isDocForActiveBusiness` cubierto (activo/globales/otro negocio/legacy/
+  auth). 20/20 en los tests nuevos.
+
 ## 2026-09-29 — Fase 1 (2/4): selector de negocio en el header
 - Qué: `src/components/NegocioSelector.jsx` (pill compacta en el header con el
   negocio activo + modal de gestión) y `src/components/NegocioModal.jsx`
