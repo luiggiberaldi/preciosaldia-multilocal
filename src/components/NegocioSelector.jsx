@@ -16,12 +16,19 @@ import { showToast } from './Toast';
 import ConfirmModal from './ConfirmModal';
 import NegocioModal from './NegocioModal';
 import { useNegociosStore } from '../hooks/store/useNegociosStore';
+import { useAuthStore } from '../hooks/store/useAuthStore';
+import { canManageBusinesses } from '../utils/roles';
 
 export default function NegocioSelector({ triggerHaptic }) {
     const negocios = useNegociosStore((s) => s.negocios);
     const negocioActivoId = useNegociosStore((s) => s.negocioActivoId);
     const activarNegocio = useNegociosStore((s) => s.activarNegocio);
     const eliminarNegocio = useNegociosStore((s) => s.eliminarNegocio);
+    // Fase 1.5: crear/editar/eliminar negocios (y sus datos fiscales) es solo
+    // del dueño global. El supervisor solo puede cambiar de sede.
+    const usuarioActivo = useAuthStore((s) => s.usuarioActivo);
+    const requireLogin = useAuthStore((s) => s.requireLogin);
+    const canManage = !requireLogin || canManageBusinesses(usuarioActivo);
 
     const [showManager, setShowManager] = useState(false);
     const [showForm, setShowForm] = useState(false);
@@ -145,6 +152,7 @@ export default function NegocioSelector({ triggerHaptic }) {
                                             className="p-2 text-slate-400 hover:text-brand rounded-xl hover:bg-white dark:hover:bg-slate-900 transition-colors shrink-0"
                                             title={`Editar ${n.nombre}`}
                                             aria-label={`Editar ${n.nombre}`}
+                                            hidden={!canManage}
                                         >
                                             <Pencil size={16} />
                                         </button>
@@ -154,6 +162,7 @@ export default function NegocioSelector({ triggerHaptic }) {
                                             className="p-2 text-slate-400 hover:text-red-500 rounded-xl hover:bg-white dark:hover:bg-slate-900 transition-colors shrink-0 disabled:opacity-30 disabled:pointer-events-none"
                                             title={isActive ? 'No se puede eliminar el negocio activo' : `Eliminar ${n.nombre}`}
                                             aria-label={`Eliminar ${n.nombre}`}
+                                            hidden={!canManage}
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -162,16 +171,19 @@ export default function NegocioSelector({ triggerHaptic }) {
                             })}
                         </div>
 
-                        <button
-                            onClick={() => { triggerHaptic && triggerHaptic(); setEditing(null); setShowForm(true); }}
-                            className="mt-4 w-full px-4 py-3 rounded-2xl font-bold text-sm bg-brand hover:bg-brand-dark text-white shadow-lg shadow-brand/25 transition-all active:scale-95 flex items-center justify-center gap-2 outline-none focus:ring-2 focus:ring-brand/50"
-                        >
-                            <Plus size={16} />
-                            Nuevo negocio
-                        </button>
+                        {canManage && (
+                            <button
+                                onClick={() => { triggerHaptic && triggerHaptic(); setEditing(null); setShowForm(true); }}
+                                className="mt-4 w-full px-4 py-3 rounded-2xl font-bold text-sm bg-brand hover:bg-brand-dark text-white shadow-lg shadow-brand/25 transition-all active:scale-95 flex items-center justify-center gap-2 outline-none focus:ring-2 focus:ring-brand/50"
+                            >
+                                <Plus size={16} />
+                                Nuevo negocio
+                            </button>
+                        )}
                         <p className="mt-3 text-[11px] text-center text-slate-400 dark:text-slate-500 leading-relaxed">
                             Cada negocio tiene sus propios productos, ventas, fiados y usuarios.
                             Cambiar de negocio recarga la app.
+                            {!canManage && ' Solo el dueño puede crear o modificar negocios.'}
                         </p>
                     </div>
                 </div>

@@ -202,3 +202,21 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 - Decisión: tras "Entrar a la sede" la app recarga (Fase 1) y el login se pierde
   (regla existente: reload = logout) — el dueño reingresa su PIN. Se mantiene
   así por seguridad antes que por comodidad.
+
+## 2026-09-29 — Fase 1.5 (4/5): enforcement de permisos en UI
+- Qué: tabs filtrados por rol en `App.jsx` (`roles.visibleTabIds`): cajero solo
+  ve Vender+Clientes; dueño y supervisor ven todo + Supervisión. `NegocioSelector`:
+  crear/editar/eliminar negocios solo para el dueño (`canManageBusinesses`); el
+  supervisor solo cambia de sede. `UsersManager`: el supervisor solo crea
+  cajeros (selector de rol filtrado + validación en `handleAdd`) y solo administra
+  filas de cajeros (`canManageUser`); cada quien conserva la gestión de su propia
+  fila (su PIN, su nombre, su acceso). Etiqueta visible `ADMIN`→"Supervisor" en
+  `UsersManager` y `UserCard`. `agregarUsuario` rechaza roles fuera de
+  `ADMIN`/`CAJERO` (el dueño nunca es usuario de negocio). Gates actualizados a
+  `hasAdminAccess` (dueño o supervisor): `CustomersView`, `SettingsView`,
+  `auditService.clearAuditLog`, `customerWalletService` (ajustes de cartera),
+  `useAutoLock` (timeout estricto también para el dueño).
+- Por qué: ocultar pestañas no basta; la matriz de permisos se aplica también a
+  nivel de servicio para que el dueño nunca quede degradado frente al supervisor.
+- Decisión: los strings almacenados siguen siendo `ADMIN`/`CAJERO` (compat con el
+  pairing congelado); solo cambia su significado documentado y las etiquetas.

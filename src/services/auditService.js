@@ -7,6 +7,7 @@
  */
 import { storageService } from '../utils/storageService';
 import { withLock } from '../utils/withLock';
+import { hasAdminAccess } from '../utils/roles';
 
 const AUDIT_KEY = 'abasto_audit_log_v1';
 const MAX_ENTRIES = 15000;
@@ -153,21 +154,20 @@ export async function purgeOldEntries() {
 }
 
 /**
- * Borra todo el audit log. Solo ADMIN.
+ * Borra todo el audit log. Solo roles con acceso admin.
  *
  * SEC-019: Antes esta función aceptaba `user = null` (cualquiera podía llamarla
  * sin argumentos) y solo validaba el rol si el caller pasaba `user`. Ahora:
  *   - Si `user` no se pasa, se intenta leer `usuarioActivo` de `useAuthStore`
  *     vía import dinámico (backward-compat con callers existentes que no pasan user).
- *   - Solo `rol === 'ADMIN'` (sin OWNER/SUPERADMIN inventados — la app solo
- *     usa ADMIN/CAJERO).
+ *   - Solo `hasAdminAccess(user)` (supervisor del negocio o dueño global — Fase 1.5).
  *   - El intento fallido se loguea (append-only) antes de lanzar el error.
  *
  * HOOK-008: serializar con lock para que no se mezcle con un logEvent en vuelo.
  *
  * @param {object} [user] - { id, nombre, rol } del usuario que solicita el borrado.
  * @returns {Promise<void>}
- * @throws {Error} Si no hay `user` con `rol === 'ADMIN'`.
+ * @throws {Error} Si no hay `user` con acceso admin.
  */
 export async function clearAuditLog(user) {
     // SEC-019: El usuario debe proporcionarse de forma explícita desde la UI
@@ -175,8 +175,8 @@ export async function clearAuditLog(user) {
         throw new Error('Permiso denegado: se requiere un usuario autenticado para realizar esta acción.');
     }
 
-    // SEC-019: rol debe ser ADMIN (no OWNER/SUPERADMIN inventados).
-    const isAllowed = user && user.rol === 'ADMIN';
+    // SEC-019: rol con acceso admin (supervisor del negocio o dueño global).
+    const isAllowed = hasAdminAccess(user);
 
     if (!isAllowed) {
         // Loguear el intento fallido (append-only audit log).

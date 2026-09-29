@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef, useState } from 'react';
 import { useAuthStore } from './store/useAuthStore';
 import { logEvent } from '../services/auditService';
 import { AUTOLOCK_POLICY } from '../utils/securityConstants';
+import { hasAdminAccess } from '../utils/roles';
 
 /**
  * useAutoLock — Bloqueo automático de sesión por inactividad o minimizar la app.
@@ -64,8 +65,8 @@ export function useAutoLock() {
         // Si la sesión está bloqueada, no reiniciar el timer hasta que se desbloquee.
         if (isLocked) return;
 
-        // Timeout más corto para ADMIN (politica más estricta).
-        const isAdmin = usuarioActivo.rol === 'ADMIN';
+        // Timeout más corto para supervisor/dueño (politica más estricta).
+        const isAdmin = hasAdminAccess(usuarioActivo);
         const defaultMs = isAdmin
             ? AUTOLOCK_POLICY.ADMIN_IDLE_TIMEOUT_MS
             : AUTOLOCK_POLICY.IDLE_TIMEOUT_MS;

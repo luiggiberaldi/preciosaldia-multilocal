@@ -3,14 +3,17 @@ import { useAuthStore } from '../../hooks/store/useAuthStore';
 import { showToast } from '../Toast';
 import { verifyPin } from '../../utils/crypto';
 import { PIN_POLICY } from '../../utils/securityConstants';
+import { canCreateRole, canManageUser, hasAdminAccess } from '../../utils/roles';
 import {
     UserPlus, Trash2, KeyRound, Shield, ShoppingCart,
     Crown, X, Check, Eye, EyeOff, AlertTriangle, Edit2, Lock, Unlock
 } from 'lucide-react';
 
 const ROLE_CONFIG = {
+    // Fase 1.5: ADMIN = supervisor del negocio (el pairing congelado sigue
+    // usando el string 'ADMIN'; aquí solo cambia la etiqueta visible).
     ADMIN: {
-        label: 'Administrador',
+        label: 'Supervisor',
         gradient: 'from-brand to-brand-dark',
         bg: 'bg-brand-light dark:bg-surface-800/20',
         text: 'text-brand-dark dark:text-brand',
@@ -69,12 +72,15 @@ function PinInput({ value, onChange, label, length = 6, showDigits = false }) {
 }
 
 // ─── User Row ──────────────────────────────────────
-function UserRow({ user, currentUserId, onChangePin, onDelete, onEditName, onTogglePin, triggerHaptic }) {
+function UserRow({ user, currentUserId, canManage, onChangePin, onDelete, onEditName, onTogglePin, triggerHaptic }) {
     const roleConf = ROLE_CONFIG[user.rol] || ROLE_CONFIG.CAJERO;
     const RoleIcon = roleConf.icon;
     const isCurrentUser = user.id === currentUserId;
     const isAdmin = user.rol === 'ADMIN';
     const requirePin = user.requirePin !== false;
+    // Fase 1.5: el supervisor solo administra cajeros; cada quien siempre
+    // puede gestionar su propia fila (cambiar su PIN, su nombre, su acceso).
+    const canAct = canManage || isCurrentUser;
 
     return (
         <div className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isCurrentUser ? 'bg-brand-light/50 dark:bg-surface-800/10 border-surface-300/50 dark:border-surface-800/30' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}>
@@ -106,33 +112,39 @@ function UserRow({ user, currentUserId, onChangePin, onDelete, onEditName, onTog
 
             {/* Actions */}
             <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                    onClick={() => { triggerHaptic?.(); onTogglePin(user); }}
-                    className={`px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold flex items-center gap-1.5 transition-all border active:scale-95 ${requirePin
-                        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20'
-                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                    }`}
-                    title={requirePin ? 'PIN Requerido — Clic para desactivar' : 'Acceso Directo (Sin PIN) — Clic para requerir PIN'}
-                >
-                    {requirePin ? <Lock size={12} /> : <Unlock size={12} />}
-                    <span>{requirePin ? 'Con PIN' : 'Sin PIN'}</span>
-                </button>
+                {canAct && (
+                    <button
+                        onClick={() => { triggerHaptic?.(); onTogglePin(user); }}
+                        className={`px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold flex items-center gap-1.5 transition-all border active:scale-95 ${requirePin
+                            ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                        }`}
+                        title={requirePin ? 'PIN Requerido — Clic para desactivar' : 'Acceso Directo (Sin PIN) — Clic para requerir PIN'}
+                    >
+                        {requirePin ? <Lock size={12} /> : <Unlock size={12} />}
+                        <span>{requirePin ? 'Con PIN' : 'Sin PIN'}</span>
+                    </button>
+                )}
 
-                <button
-                    onClick={() => { triggerHaptic?.(); onChangePin(user); }}
-                    className="p-2 rounded-lg text-slate-400 hover:text-brand hover:bg-brand-light dark:hover:bg-surface-800/20 transition-all active:scale-90"
-                    title="Cambiar PIN"
-                >
-                    <KeyRound size={16} />
-                </button>
-                <button
-                    onClick={() => { triggerHaptic?.(); onEditName(user); }}
-                    className="p-2 rounded-lg text-slate-400 hover:text-brand hover:bg-brand-light dark:hover:bg-surface-800/20 transition-all active:scale-90"
-                    title="Editar Nombre"
-                >
-                    <Edit2 size={16} />
-                </button>
-                {!isCurrentUser && (
+                {canAct && (
+                    <button
+                        onClick={() => { triggerHaptic?.(); onChangePin(user); }}
+                        className="p-2 rounded-lg text-slate-400 hover:text-brand hover:bg-brand-light dark:hover:bg-surface-800/20 transition-all active:scale-90"
+                        title="Cambiar PIN"
+                    >
+                        <KeyRound size={16} />
+                    </button>
+                )}
+                {canAct && (
+                    <button
+                        onClick={() => { triggerHaptic?.(); onEditName(user); }}
+                        className="p-2 rounded-lg text-slate-400 hover:text-brand hover:bg-brand-light dark:hover:bg-surface-800/20 transition-all active:scale-90"
+                        title="Editar Nombre"
+                    >
+                        <Edit2 size={16} />
+                    </button>
+                )}
+                {canManage && !isCurrentUser && (
                     <button
                         onClick={() => { triggerHaptic?.(); onDelete(user); }}
                         className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-90"
@@ -203,6 +215,8 @@ export default function UsersManager({ triggerHaptic }) {
         if (!newName.trim()) return showToast('Ingresa un nombre', 'error');
         if (newPin.length !== requiredLen) return showToast(`El PIN debe tener ${requiredLen} dígitos`, 'error');
         if (usuarios.some(u => u.pin === newPin)) return showToast('Ese PIN ya esta en uso', 'error');
+        // Fase 1.5: el supervisor solo puede crear cajeros.
+        if (!canCreateRole(usuarioActivo, newRole)) return showToast('No tienes permiso para crear ese rol', 'error');
 
         agregarUsuario(newName.trim(), newRole, newPin);
         showToast(`Usuario "${newName.trim()}" creado`, 'success');
@@ -307,6 +321,7 @@ export default function UsersManager({ triggerHaptic }) {
                         key={user.id}
                         user={user}
                         currentUserId={usuarioActivo?.id}
+                        canManage={canManageUser(usuarioActivo, user)}
                         onChangePin={u => {
                             setChangePinUser(u);
                             setPinValue('');
@@ -314,7 +329,7 @@ export default function UsersManager({ triggerHaptic }) {
                             setCurrentPinValue('');
                             setShowPin(false);
                             const isSelf = u.id === usuarioActivo?.id;
-                            const isBypass = u.requirePin === false || (!isSelf && usuarioActivo?.rol === 'ADMIN');
+                            const isBypass = u.requirePin === false || (!isSelf && hasAdminAccess(usuarioActivo));
                             setChangePinStep(isBypass ? 2 : 1);
                         }}
                         onEditName={u => { setEditNameUser(u); setEditNameValue(u.nombre); }}
@@ -393,11 +408,11 @@ export default function UsersManager({ triggerHaptic }) {
                         />
                     </div>
 
-                    {/* Role Selector */}
+                    {/* Role Selector — Fase 1.5: filtrado por lo que el gestor puede crear */}
                     <div>
                         <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">Rol</label>
                         <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(ROLE_CONFIG).map(([key, conf]) => {
+                            {Object.entries(ROLE_CONFIG).filter(([key]) => canCreateRole(usuarioActivo, key)).map(([key, conf]) => {
                                 const Icon = conf.icon;
                                 return (
                                     <button

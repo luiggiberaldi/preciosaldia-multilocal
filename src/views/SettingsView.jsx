@@ -21,6 +21,7 @@ import SettingsTabLicencia from '../components/Settings/tabs/SettingsTabLicencia
 import { useCloudBackup } from '../hooks/useCloudBackup';
 import { useDataImportExport } from '../hooks/useDataImportExport';
 import { useAuthStore } from '../hooks/store/useAuthStore';
+import { hasAdminAccess } from '../utils/roles';
 import WalletView from './WalletView';
 
 
@@ -50,7 +51,7 @@ export default function SettingsView({ onClose, theme, toggleTheme, triggerHapti
     const { requireLogin, setRequireLogin, usuarioActivo } = useAuthStore();
     const [autoLockMinutes, setAutoLockMinutes] = useState(() => localStorage.getItem('admin_auto_lock_minutes') || '3');
 
-    const isAdmin = !requireLogin || !usuarioActivo || usuarioActivo.rol === 'ADMIN';
+    const isAdmin = !requireLogin || !usuarioActivo || hasAdminAccess(usuarioActivo);
 
     const { deviceId, forceHeartbeat, isPremium, isDemo } = useSecurity();
     // LICENCIA-CLOUD: solo licencias completas (premium y no demo) acceden a la nube.

@@ -19,6 +19,7 @@ import SwipeableItem from '../components/SwipeableItem';
 import { useProductContext } from '../context/ProductContext';
 import { useAudit } from '../hooks/useAudit';
 import { useAuthStore } from '../hooks/store/useAuthStore';
+import { hasAdminAccess } from '../utils/roles';
 import { useSupplierManagement } from '../hooks/useSupplierManagement';
 import { usePagination } from '../hooks/usePagination';
 import PaginationBar from '../components/PaginationBar';
@@ -39,7 +40,7 @@ export default function CustomersView({ triggerHaptic, rates, isActive }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const usuarioActivo = useAuthStore(state => state.usuarioActivo);
-    const isAdmin = !usuarioActivo || usuarioActivo.rol === 'ADMIN';
+    const isAdmin = !usuarioActivo || hasAdminAccess(usuarioActivo);
     const isCajero = usuarioActivo?.rol === 'CAJERO';
 
     // Modal de Abono / Crédito

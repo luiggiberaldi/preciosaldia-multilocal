@@ -1,5 +1,6 @@
 import { storageService } from '../utils/storageService.js';
 import { withLock } from '../utils/withLock.js';
+import { hasAdminAccess } from '../utils/roles.js';
 import {
     CUSTOMER_LEDGER_KEY,
     CUSTOMER_MOVEMENT_TYPES,
@@ -19,8 +20,8 @@ function currentUser(user) {
 
 function validateMovement(movement, user) {
     if (!movement?.type) throw new Error('La operación de cartera requiere un tipo.');
-    if (movement.sourceType === 'ADMIN_ADJUSTMENT' && user?.rol && user.rol !== 'ADMIN') {
-        throw new Error('Solo ADMIN puede realizar ajustes administrativos de cartera.');
+    if (movement.sourceType === 'ADMIN_ADJUSTMENT' && user?.rol && !hasAdminAccess(user)) {
+        throw new Error('Solo el supervisor o el dueño pueden realizar ajustes administrativos de cartera.');
     }
     const amount = Number(movement.amountUsd);
     if (!Number.isFinite(amount) || amount < 0) {
