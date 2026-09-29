@@ -220,3 +220,13 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   nivel de servicio para que el dueño nunca quede degradado frente al supervisor.
 - Decisión: los strings almacenados siguen siendo `ADMIN`/`CAJERO` (compat con el
   pairing congelado); solo cambia su significado documentado y las etiquetas.
+
+## 2026-09-29 — Fase 1.5 (5/5): tests de supervisión + cierre de fase
+- Qué: `tests/supervisionData.test.js` (5 tests deterministas con fecha fija:
+  hoy/semana/mes/ticket, exclusión de anuladas/caja cerrada/no-ventas, ventana
+  de 7 días, ceros sin NaN, aislamiento entre sedes). `ROADMAP.md`: Fase 1.5
+  marcada como implementada.
+- Estado de la suite: 682 tests pasan; 1 fallo PREEXISTENTE y no relacionado
+  (`receivablesDeterministic.test.js` — falla igual con los cambios en stash;
+  test determinista sensible a la fecha). `npm run build` verde.
+  `src/config/tenant.js` intacto (sin cambios).
