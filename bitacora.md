@@ -134,3 +134,10 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   existen, así que `/assets/*`, PWA y demás no se ven afectados).
 - Por qué: luigi autorizó subir un preview a Vercel para probar la Fase 1 en su
   teléfono (el sandbox no puede verificar visualmente apps locales).
+
+## 2026-09-29 — Plan Fase 1.5: roles y vista supervisor
+- luigi aprobó evolucionar el modo supervisor (pairing) a un modelo de roles:
+  el modo actual se congela (no se elimina, no se le invierte más).
+- Se documenta la Fase 1.5 en ROADMAP.md: PIN maestro global del dueño, roles
+  `supervisor`/`cajero` por negocio, y vista Supervisión (por sede + consolidado
+  de solo lectura, adelanta la Fase 2).

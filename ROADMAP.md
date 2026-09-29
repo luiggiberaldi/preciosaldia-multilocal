@@ -35,6 +35,37 @@ Ambos usan el vertical BODEGA por ahora — los verticales no se tocan.
 - **Salida de fase:** 2 negocios con inventario, ventas, fiados y dashboard 100% aislados;
   `npm run build` verde; prueba manual en teléfono.
 
+## Fase 1.5 — Roles y vista supervisor (aprobado por luigi 2026-09-29)
+Evolución del "modo supervisor" por pairing (congelado: no se elimina, no se le
+invierte más) hacia un modelo de roles. El dueño abre su sesión y ve todo; los
+empleados ven solo su negocio con permisos según su rol.
+
+1. **PIN maestro global del dueño** — no pertenece a ningún negocio; vive como
+   clave global (hash PBKDF2, igual que los PIN actuales). Migración: si no
+   existe, al arrancar se pide crearlo una vez ("Crea tu PIN maestro de dueño").
+   En el login hay opción "Soy el dueño" → sesión global, no atada a negocio.
+2. **Roles por negocio** — campo `rol` en usuarios: `supervisor` | `cajero`
+   (el dueño ya es global, no necesita rol por negocio). Migración: usuarios
+   existentes quedan como `supervisor`.
+   - `cajero`: POS y sus ventas. Sin dashboard financiero, sin ajustes de
+     inventario, sin tasas, sin gestión de usuarios, sin ajustes del negocio.
+   - `supervisor`: lo del cajero + dashboard de su sede, ajustes de inventario,
+     tasas, gestión de usuarios cajero. Sin datos fiscales ni crear/eliminar
+     negocios.
+3. **Vista Supervisión** (adelanta la Fase 2) — visible para dueño (global) y
+   supervisor (su sede). Selector: Bodega / Cosméticos / Consolidado.
+   - Por sede: ventas hoy/semana/mes, ticket promedio, top productos, alertas
+     de stock bajo, fiados pendientes.
+   - Consolidado: comparativa por negocio (día/semana/mes), **solo lectura**.
+   - Lectura cross-negocio: lee namespaces `nb_*` directo, sin pasar por el
+     router del negocio activo (solo lectura). Acciones se hacen entrando a
+     cada sede.
+4. **Sync**: el teléfono del dueño hace pull de todos los negocios (ya funciona
+   por negocio); la vista lee en local.
+- **Salida de fase:** roles enforced en UI, PIN maestro crea/sesión global,
+  vista Supervisión con las 3 pestañas y datos correctos por sede,
+  `npm run build` verde, tests, push a `main` y redeploy.
+
 ## Fase 2 — Experiencia del dueño (upsell)
 - Resumen consolidado de solo lectura: ventas del día por negocio en una pantalla.
 - Reportes comparativos por negocio (semana/mes).
