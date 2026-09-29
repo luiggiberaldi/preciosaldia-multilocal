@@ -1,4 +1,4 @@
-# Tasas Al Día — Bodega (Punto de Venta)
+# PreciosAlDía Multilocal
 
 **Tasas Al Día — Bodega** es un Sistema Integral de Punto de Venta (POS) y Gestión Administrativa diseñado para operar de manera fluida y multiplataforma. Construido con una arquitectura "Offline-First", garantiza la continuidad del negocio sin importar la conectividad, con sincronización en la nube bidireccional cuando la conexión está disponible.
 

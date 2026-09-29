@@ -17,3 +17,12 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 - `BRIEF-FASE1.md` existió como guía de implementación y se eliminó tras
   volcarse su contenido esencial en el roadmap (era temporal, no se pushea).
 - Estado: en pausa por luigi antes de iniciar la implementación.
+
+## 2026-09-29 — Push inicial al repo oficial
+- Se fusionó el `init` del remoto (README de luigi) con el código base local
+  (historias sin ancestro común): merge con `--allow-unrelated-histories`.
+- Conflicto add/add en `README.md` resuelto conservando el cuerpo documental
+  local con el título del proyecto nuevo: `# PreciosAlDía Multilocal`.
+- Push inicial a `luiggiberaldi/preciosaldia-multilocal` vía git-push.py
+  (Git Database API, fast-forward). El repo remoto ya tiene el código base,
+  el roadmap y esta bitácora. `BRIEF-FASE1.md` no se pushea (temporal).
