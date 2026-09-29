@@ -5,7 +5,7 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 ---
 
 ## 2026-09-29 — Nace el proyecto
-- Se crea el repo privado `luiggiberaldi/preciosaldia-multi` como clon de
+- Se usa el repo `luiggiberaldi/preciosaldia-multilocal` (creado por luigi) como clon de
   `luiggiberaldi/preciosaldia2026` (commit base `09b5b6e`).
 - Decisión: repo nuevo + proyecto Supabase nuevo, separados del producto original.
   El cliente (dueño de 2 negocios: bodega + cosméticos) no comparte infraestructura

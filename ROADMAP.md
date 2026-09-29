@@ -11,7 +11,7 @@ Ambos usan el vertical BODEGA por ahora — los verticales no se tocan.
 ---
 
 ## Fase 0 — Fundación
-- [x] Repo privado `luiggiberaldi/preciosaldia-multi` creado (clon de preciosaldia2026)
+- [x] Repo `luiggiberaldi/preciosaldia-multilocal` (creado por luigi) creado (clon de preciosaldia2026)
 - [ ] Push inicial del código base al repo
 - [ ] Proyecto Supabase nuevo: crear proyecto, aplicar `supabase_cloud_schema.sql`
       + `supabase/migrations/001_device_own_row_rls.sql` (tablas `cloud_backups`,
