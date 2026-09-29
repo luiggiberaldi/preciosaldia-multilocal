@@ -156,3 +156,23 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   sede nunca lo pierda y el router de storage nunca lo cruce.
 - Decisión: se replicó la política de lockout exacta de `useAuthStore` en vez de
   inventar otra, para no tener dos reglas de seguridad distintas en la misma app.
+
+## 2026-09-29 — Fase 1.5 (2/5): sesión de dueño en useAuthStore + helpers de roles
+- Qué: `useAuthStore` ahora acepta la sesión global del dueño: `loginAsDueno(pin)`
+  verifica el PIN maestro y persiste la sesión en `pda-dueno-session` (global);
+  `_readPersistedSession` revisa la sesión global primero (sobrevive al cambio de
+  negocio); `logout` limpia también la sesión global; `_validateSessionShape`
+  acepta `{ id:'dueno', rol:'DUENO', global:true }` además del formato de usuarios.
+  Nuevo `src/utils/roles.js`: `isOwner/isSupervisor/isCashier`, `hasAdminAccess`
+  (dueño o supervisor — reemplaza los `rol === 'ADMIN'` dispersos), `canManageBusinesses`
+  (solo dueño), `canCreateRole`/`canManageUser` (dueño: todo; supervisor: solo cajeros),
+  `visibleTabIds` (cajero: solo ventas+clientes; dueño/supervisor: todo + supervisión),
+  `landingTab` (cajero→ventas, dueño→supervisión, supervisor→inicio). Tests:
+  `tests/roles.test.js` (11 tests).
+- Por qué: centralizar la matriz de permisos en un solo módulo evita que cada vista
+  reinvente qué puede cada rol. El dueño se trata como admin en todos los gates
+  existentes para no degradar su acceso.
+- Decisión: los valores almacenados siguen siendo `'ADMIN'`/`'CAJERO'` (no se migran
+  a minúsculas): el modo supervisor por pairing —congelado, no se toca— compara
+  esos strings literalmente, y migrarlos rompería RemoteUsersManager y varios
+  servicios. El significado documentado de `ADMIN` pasa a ser "supervisor del negocio".

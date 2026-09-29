@@ -28,6 +28,13 @@ import { logEvent } from '../../services/auditService';
 import { hashPin, verifyPin } from '../../utils/crypto';
 import { routeAuthKey } from '../../utils/negocioContext';
 import {
+    verifyMasterPin,
+    getDuenoSession,
+    setDuenoSession,
+    clearDuenoSession,
+    DUENO_SESSION,
+} from '../../utils/duenoAuth';
+import {
     PIN_POLICY,
     LOGIN_RATE_LIMIT,
     validatePin,
@@ -108,7 +115,9 @@ async function _ensureDefaultUsers(state, set) {
 // ── SEC-018: Validación de estructura de sesión persistida ───────────────────
 
 /**
- * Valida que el objeto sesión tenga la estructura mínima `{ id:number, nombre:string, rol:string }`.
+ * Valida que el objeto sesión tenga la estructura mínima.
+ * - Usuarios del negocio: `{ id:number, nombre:string, rol:string }`.
+ * - Dueño global (Fase 1.5): `{ id:'dueno', nombre:string, rol:'DUENO', global:true }`.
  * NO permite incluir `pin` ni otros campos (SEC-013).
  * @param {any} obj
  * @returns {object|null} El objeto saneado o `null` si no valida.
@@ -116,19 +125,36 @@ async function _ensureDefaultUsers(state, set) {
 function _validateSessionShape(obj) {
     if (!obj || typeof obj !== 'object') return null;
     const { id, nombre, rol } = obj;
-    if (typeof id !== 'number' || !Number.isFinite(id)) return null;
     if (typeof nombre !== 'string' || !nombre.trim()) return null;
     if (typeof rol !== 'string' || !rol.trim()) return null;
+    // Sesión del dueño global: id fijo 'dueno', rol 'DUENO', flag global.
+    if (rol === 'DUENO') {
+        if (id !== 'dueno' || obj.global !== true) return null;
+        return { id: 'dueno', nombre, rol: 'DUENO', global: true };
+    }
+    if (typeof id !== 'number' || !Number.isFinite(id)) return null;
     // SEC-013: devolver SOLO los campos mínimos.
     return { id, nombre, rol };
 }
 
 /**
- * Lee y valida la sesión persistida en localStorage.
+ * Lee y valida la sesión persistida.
+ * - Primero la sesión GLOBAL del dueño (Fase 1.5): sobrevive al cambio de
+ *   negocio porque su clave nunca se namespacing.
+ * - Luego la sesión por negocio (clave enrutada `routeAuthKey`).
  * Si el JSON no valida, lo elimina (SEC-018).
  * @returns {object|null}
  */
 function _readPersistedSession() {
+    // FASE 1.5: sesión global del dueño — se revisa primero.
+    try {
+        const dueno = getDuenoSession();
+        if (dueno) {
+            const sane = _validateSessionShape(dueno);
+            if (sane) return sane;
+            clearDuenoSession();
+        }
+    } catch { /* noop */ }
     // FASE 1: la sesión es por negocio — la clave se enruta dinámicamente.
     const routedSessionKey = routeAuthKey(SESSION_KEY);
     try {
@@ -330,6 +356,25 @@ export const useAuthStore = create(
             },
 
             /**
+             * Fase 1.5: login del dueño global con el PIN maestro.
+             * La sesión es global (no atada al negocio activo) y se persiste en
+             * la clave global `pda-dueno-session`.
+             *
+             * @param {string} pinInput - PIN maestro en claro.
+             * @returns {Promise<{ success: boolean, error?: string, locked?: boolean }>}
+             */
+            loginAsDueno: async (pinInput) => {
+                const res = await verifyMasterPin(String(pinInput ?? ''));
+                if (!res.ok) {
+                    return { success: false, error: res.error, locked: res.locked };
+                }
+                set({ usuarioActivo: { ...DUENO_SESSION } });
+                setDuenoSession();
+                logEvent('AUTH', 'LOGIN_DUENO', 'Dueno inicio sesion con PIN maestro', { ...DUENO_SESSION });
+                return { success: true };
+            },
+
+            /**
              * SEC-015: Re-valida el PIN del usuario activo para volver de un lock.
              * A diferencia de `login`, NO persiste una nueva sesión si ya hay una activa:
              * solo verifica que el PIN ingresado coincida con el usuario activo.
@@ -404,6 +449,8 @@ export const useAuthStore = create(
                 if (usuarioActivo) logEvent('AUTH', 'LOGOUT', `${usuarioActivo.nombre} cerro sesion`, usuarioActivo);
                 set({ usuarioActivo: null });
                 localStorage.removeItem(routeAuthKey(SESSION_KEY));
+                // Fase 1.5: la sesión del dueño es global — también hay que limpiarla.
+                clearDuenoSession();
             },
 
             /**
