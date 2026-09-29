@@ -77,6 +77,11 @@ export const GLOBAL_STORAGE_KEYS = new Set([
     'label_currency_mode',
     // Demo
     'pda_demo_flag_v1',
+    // PIN maestro global del dueño (Fase 1.5): jamás namespaced, jamás atado
+    // a un negocio. Ver utils/duenoAuth.js.
+    'pda-dueno-pin',
+    'pda-dueno-session',
+    'pda-dueno-pin-lock',
 ]);
 
 function _lsGet(key) {

@@ -141,3 +141,18 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 - Se documenta la Fase 1.5 en ROADMAP.md: PIN maestro global del dueño, roles
   `supervisor`/`cajero` por negocio, y vista Supervisión (por sede + consolidado
   de solo lectura, adelanta la Fase 2).
+
+## 2026-09-29 — Fase 1.5 (1/5): PIN maestro global del dueño
+- Qué: `src/utils/duenoAuth.js` — PIN maestro global del dueño: hash PBKDF2
+  (mismo `hashPin`/`verifyPin` que los usuarios), bloqueo progresivo por intentos
+  fallidos con la MISMA política `LOGIN_RATE_LIMIT` que el login de usuarios
+  (5 intentos, lockout 30s con backoff x2 hasta 15 min, ventana de reset 30 min),
+  y sesión global `{ id: 'dueno', nombre: 'Dueño', rol: 'DUENO', global: true }`.
+  Las 3 claves (`pda-dueno-pin`, `pda-dueno-session`, `pda-dueno-pin-lock`) se
+  registraron en `GLOBAL_STORAGE_KEYS` de `negocioContext.js`: ningún prefijo
+  `nb_<id>:` las toca jamás. Tests nuevos: `tests/duenoAuth.test.js` (12 tests).
+- Por qué: el dueño no está atado a ningún negocio (decisión de luigi 2026-09-29).
+  El PIN maestro vive fuera de los namespaces por negocio para que cambiar de
+  sede nunca lo pierda y el router de storage nunca lo cruce.
+- Decisión: se replicó la política de lockout exacta de `useAuthStore` en vez de
+  inventar otra, para no tener dos reglas de seguridad distintas en la misma app.
