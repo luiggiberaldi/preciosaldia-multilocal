@@ -230,3 +230,17 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   (`receivablesDeterministic.test.js` — falla igual con los cambios en stash;
   test determinista sensible a la fecha). `npm run build` verde.
   `src/config/tenant.js` intacto (sin cambios).
+
+## 2026-09-29 — Fase 1.5 (6/6): auto-lock del dueño + gate de vistas + reglas UI
+- Qué: `useAuthStore.unlock()` ahora verifica la sesión `DUENO` con
+  `verifyMasterPin` (antes fallaba con "Usuario no encontrado" porque el dueño
+  no vive en `usuarios`); el fallo cae al rate-limiting común del store.
+  `App.jsx`: gate que redirige cualquier `activeTab` no permitido por el rol a
+  su `landingTab` (ocultar pestañas ya no es la única defensa).
+  `EmergencyPinResetModal`: `<select>` nativo reemplazado por `CustomSelect`.
+  `MasterPinSetupModal`: input del PIN con una sola señal de foco
+  (solo `focus:border`, sin ring).
+- Decisión (criterio): el cajero conserva `['ventas', 'clientes']` — "POS y sus
+  ventas" incluye la lista operativa de clientes para el fiado; la parte
+  administrativa (proveedores, ajustes de cartera, tasas, usuarios) ya está
+  vetada para el cajero por `isCajero`/`hasAdminAccess`.

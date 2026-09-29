@@ -393,41 +393,64 @@ export const useAuthStore = create(
                     return { success: false, error: `Bloqueado. Intente en ${secsLeft}s` };
                 }
 
-                const user = usuarios.find(u => u.id === usuarioActivo.id);
-                if (!user) return { success: false, error: 'Usuario no encontrado' };
+                // Fase 1.5: la sesión del dueño no vive en `usuarios`; se verifica
+                // contra el PIN maestro global.
+                if (usuarioActivo.rol === 'DUENO') {
+                    try {
+                        const result = await verifyMasterPin(String(pinInput ?? ''));
+                        if (result.valid) {
+                            set({
+                                failedAttempts: 0,
+                                lockUntil: null,
+                                consecutiveLockouts: 0,
+                                lastFailedAttemptTs: 0,
+                            });
+                            logEvent('AUTH', 'SESION_DESBLOQUEADA', 'El dueño desbloqueó la sesión.', usuarioActivo);
+                            return { success: true };
+                        }
+                    } catch (e) {
+                        if (import.meta.env?.DEV) {
+                            console.warn('[useAuthStore] unlock verifyMasterPin lanzó:', e?.message ?? e);
+                        }
+                    }
+                    // Cae al manejo común de fallo (rate-limiting del store).
+                } else {
+                    const user = usuarios.find(u => u.id === usuarioActivo.id);
+                    if (!user) return { success: false, error: 'Usuario no encontrado' };
 
-                try {
-                    const result = await verifyPin(String(pinInput ?? ''), user.pin);
+                    try {
+                        const result = await verifyPin(String(pinInput ?? ''), user.pin);
 
-                    if (result.valid) {
-                        // Reset rate-limiting al desbloquear exitosamente.
-                        set({
-                            failedAttempts: 0,
-                            lockUntil: null,
-                            consecutiveLockouts: 0,
-                            lastFailedAttemptTs: 0,
-                        });
-                        logEvent('AUTH', 'SESION_DESBLOQUEADA', `${user.nombre} desbloqueó la sesión.`, usuarioActivo);
-                        // SEC-005: re-hashear si era legacy o primer arranque.
-                        if (result.needsRehash) {
-                            try {
-                                const newHash = await hashPin(String(pinInput));
-                                set((s) => ({
-                                    usuarios: s.usuarios.map(u =>
-                                        u.id === user.id ? { ...u, pin: newHash } : u
-                                    ),
-                                }));
-                            } catch (e) {
-                                if (import.meta.env?.DEV) {
-                                    console.warn('[useAuthStore] Re-hash en unlock falló:', e?.message ?? e);
+                        if (result.valid) {
+                            // Reset rate-limiting al desbloquear exitosamente.
+                            set({
+                                failedAttempts: 0,
+                                lockUntil: null,
+                                consecutiveLockouts: 0,
+                                lastFailedAttemptTs: 0,
+                            });
+                            logEvent('AUTH', 'SESION_DESBLOQUEADA', `${user.nombre} desbloqueó la sesión.`, usuarioActivo);
+                            // SEC-005: re-hashear si era legacy o primer arranque.
+                            if (result.needsRehash) {
+                                try {
+                                    const newHash = await hashPin(String(pinInput));
+                                    set((s) => ({
+                                        usuarios: s.usuarios.map(u =>
+                                            u.id === user.id ? { ...u, pin: newHash } : u
+                                        ),
+                                    }));
+                                } catch (e) {
+                                    if (import.meta.env?.DEV) {
+                                        console.warn('[useAuthStore] Re-hash en unlock falló:', e?.message ?? e);
+                                    }
                                 }
                             }
+                            return { success: true };
                         }
-                        return { success: true };
-                    }
-                } catch (e) {
-                    if (import.meta.env?.DEV) {
-                        console.warn('[useAuthStore] unlock verifyPin lanzó:', e?.message ?? e);
+                    } catch (e) {
+                        if (import.meta.env?.DEV) {
+                            console.warn('[useAuthStore] unlock verifyPin lanzó:', e?.message ?? e);
+                        }
                     }
                 }
 

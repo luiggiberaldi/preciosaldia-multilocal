@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ShieldAlert, KeyRound, CheckCircle2, AlertCircle, X, UserCheck } from 'lucide-react';
+import { ShieldAlert, KeyRound, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import CustomSelect from '../CustomSelect';
 
 /**
  * EmergencyPinResetModal Component
@@ -159,20 +160,15 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                 Seleccionar Usuario a Restablecer
                             </label>
-                            <div className="relative">
-                                <UserCheck size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <select
-                                    value={selectedUserId}
-                                    onChange={(e) => setSelectedUserId(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
-                                >
-                                    {usuarios.map(u => (
-                                        <option key={u.id} value={u.id}>
-                                            {u.nombre} ({u.rol})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            <CustomSelect
+                                value={selectedUserId}
+                                onChange={(v) => setSelectedUserId(v)}
+                                options={usuarios.map(u => ({
+                                    value: u.id,
+                                    label: `${u.nombre}${u.rol ? ` (${u.rol})` : ''}`,
+                                }))}
+                                placeholder="Seleccionar usuario"
+                            />
                         </div>
 
                         <div>

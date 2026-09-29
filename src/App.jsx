@@ -293,6 +293,15 @@ export default function App() {
     [requireLogin, usuarioActivo]
   );
 
+  // Fase 1.5: gate real — si el tab activo no está permitido para el rol
+  // (p. ej. un onNavigate interno lo pide), redirigir al landing del rol en
+  // vez de montar una vista prohibida.
+  useEffect(() => {
+    if (!allowedTabIds.has(activeTab)) {
+      setActiveTab(landingTab({ requireLogin, usuarioActivo }));
+    }
+  }, [activeTab, allowedTabIds, requireLogin, usuarioActivo]);
+
   const ALL_TABS = [
     { id: 'inicio', label: 'Inicio', icon: Home },
     { id: 'ventas', label: 'Vender', icon: ShoppingCart },

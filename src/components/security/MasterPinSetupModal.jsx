@@ -45,7 +45,7 @@ function PinBoxes({ value, onChange, idPrefix }) {
                     value={digits[i]?.trim() || ''}
                     onChange={(e) => handleChange(i, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(i, e)}
-                    className="w-11 h-13 py-3 text-center text-xl font-black bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 outline-none text-slate-800 dark:text-white transition-all"
+                    className="w-11 h-13 py-3 text-center text-xl font-black bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl focus:border-amber-500 outline-none text-slate-800 dark:text-white transition-all"
                 />
             ))}
         </div>
