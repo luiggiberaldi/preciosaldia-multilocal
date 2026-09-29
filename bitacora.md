@@ -60,3 +60,18 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   pérdida). Los 4 archivos de test que fallan en el repo (`dailyCloseDetail`,
   `stockBatchModal`, `supervisorCommands`, `receivablesDeterministic`) ya fallaban
   antes de estos cambios (verificado con stash).
+
+## 2026-09-29 — Fase 1 (2/4): selector de negocio en el header
+- Qué: `src/components/NegocioSelector.jsx` (pill compacta en el header con el
+  negocio activo + modal de gestión) y `src/components/NegocioModal.jsx`
+  (formulario crear/editar: nombre obligatorio, RIF, dirección, teléfono).
+- Por qué: el dueño cambia, crea, edita y elimina negocios desde el header sin
+  salir del flujo. Eliminar pide ConfirmModal y purga los datos namespaced del
+  negocio (no deja huérfanos en IndexedDB/localStorage).
+- Integrado en `DashboardView.jsx`: fila dedicada bajo la fila superior del
+  header sticky, visible en móvil y escritorio.
+- Decisiones: cambiar de negocio recarga la app a propósito (rehidratación total
+  de stores/contextos, cero fuga entre negocios); no se permite eliminar el
+  negocio activo ni el último; al crear, se sugiere cambiarse desde el selector.
+- UI: modal redondeado, sin `<select>` nativo, sin alert/confirm/prompt, iconos
+  lucide, una sola señal de foco (`focus:ring-brand/50`).

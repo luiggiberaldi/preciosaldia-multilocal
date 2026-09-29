@@ -29,6 +29,7 @@ import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 import { TicketClientModal, DeleteHistoryModal, RecycleOfferModal } from '../components/Dashboard/DashboardModals';
 import { useReveal } from '../hooks/useReveal';
 import MonitorView from './MonitorView';
+import NegocioSelector from '../components/NegocioSelector';
 import { useOfflineQueue } from '../hooks/useOfflineQueue';
 import { useGastosInternos } from '../hooks/useGastosInternos';
 import GastosInternosModal from '../components/GastosInternos/GastosInternosModal';
@@ -477,6 +478,11 @@ export default function DashboardView({ rates, triggerHaptic, onNavigate, theme,
                             </button>
                         )}
                     </div>
+                </div>
+
+                {/* Fila Negocio (Fase 1 multi-negocio): selector del negocio activo */}
+                <div className="flex justify-center mt-1.5">
+                    <NegocioSelector triggerHaptic={triggerHaptic} />
                 </div>
 
                 {/* Fila Inferior: 4 Fichas Pro (Visibles en Tablet/Desktop sm:grid) */}
