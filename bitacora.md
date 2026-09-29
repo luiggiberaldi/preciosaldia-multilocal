@@ -14,5 +14,6 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   Experiencia del dueño → Futuro (vertical cosméticos, sucursales).
 - Alcance Fase 1 fijado con luigi: mismo vertical BODEGA en ambos negocios;
   el requerimiento es puro multi-negocio con datos aislados.
-- `BRIEF-FASE1.md` (guía de implementación, temporal, no se pushea).
+- `BRIEF-FASE1.md` existió como guía de implementación y se eliminó tras
+  volcarse su contenido esencial en el roadmap (era temporal, no se pushea).
 - Estado: en pausa por luigi antes de iniciar la implementación.
