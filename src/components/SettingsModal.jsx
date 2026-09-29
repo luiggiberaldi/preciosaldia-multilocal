@@ -40,8 +40,12 @@ export default function SettingsModal({ isOpen, onClose, products, onImport, tri
     };
 
     const handleSaveBusinessData = () => {
-        localStorage.setItem('business_name', businessName);
-        localStorage.setItem('business_rif', businessRif);
+        // FASE 1: el registro de negocios es la fuente de verdad; actualizarNegocio
+        // refresca el espejo fiscal business_* automáticamente.
+        const { negocioActivoId, actualizarNegocio } = useNegociosStore.getState();
+        if (negocioActivoId) actualizarNegocio(negocioActivoId, { nombre: businessName, rif: businessRif });
+        localStorage.setItem('business_name', businessName); // espejo fiscal
+        localStorage.setItem('business_rif', businessRif);   // espejo fiscal
         localStorage.setItem('printer_paper_width', paperWidth);
         forceHeartbeat();
         showToast("Datos del negocio guardados correctamente", "success");

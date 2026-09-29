@@ -63,9 +63,10 @@ export const storageService = {
                 console.error("Error intentando recuperar datos antiguos", e);
             }
 
-            // 2. Si no existe, revisar LocalStorage (Migración al vuelo).
-            //    Los residuos viejos están con la clave lógica sin prefijo.
-            const fallbackValue = localStorage.getItem(key);
+            // 2. Si no existe, revisar LocalStorage.
+            //    Primero la contingencia namespaced (rkey), luego los residuos
+            //    viejos con la clave lógica sin prefijo (migración al vuelo).
+            const fallbackValue = localStorage.getItem(rkey) ?? localStorage.getItem(key);
             if (fallbackValue !== null) {
                 let parsedValue;
                 try {
@@ -75,6 +76,7 @@ export const storageService = {
                 }
 
                 await localforage.setItem(rkey, parsedValue);
+                localStorage.removeItem(rkey);
                 localStorage.removeItem(key);
                 return parsedValue;
             }
@@ -83,7 +85,7 @@ export const storageService = {
 
         } catch (error) {
             console.error(`[Storage Error] Leyendo ${key}:`, error);
-            const backup = localStorage.getItem(key);
+            const backup = localStorage.getItem(rkey) ?? localStorage.getItem(key);
             if (backup) {
                 try { return JSON.parse(backup); } catch (e) { return backup; }
             }
@@ -132,7 +134,8 @@ export const storageService = {
             }
 
             await localforage.setItem(rkey, value);
-            localStorage.removeItem(key);
+            localStorage.removeItem(rkey); // FASE 1: contingencia namespaced
+            localStorage.removeItem(key); // residuo legacy
             if (typeof window !== "undefined") {
                 window.dispatchEvent(new CustomEvent("app_storage_update", { detail: { key } }));
             }
@@ -153,7 +156,8 @@ export const storageService = {
                 // escribir fuera del namespace del negocio al reintentar.
                 _dispatchQuotaExceeded(rkey, value, error);
                 try {
-                    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+                    // FASE 1: la contingencia también va namespaced.
+                    localStorage.setItem(rkey, typeof value === 'string' ? value : JSON.stringify(value));
                     if (typeof window !== "undefined") {
                         window.dispatchEvent(new CustomEvent("app_storage_update", { detail: { key } }));
                     }
@@ -169,7 +173,7 @@ export const storageService = {
             }
             console.error(`[Storage Error] Guardando ${key}:`, error);
             try {
-                localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+                localStorage.setItem(rkey, typeof value === 'string' ? value : JSON.stringify(value)); // FASE 1
                 if (typeof window !== "undefined") {
                     window.dispatchEvent(new CustomEvent("app_storage_update", { detail: { key } }));
                 }

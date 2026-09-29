@@ -28,7 +28,13 @@ export default function TermsOverlay({ onAccept }) {
     const handleFinish = () => {
         const trimmedName = businessName.trim();
         const trimmedEmail = marketingEmail.trim();
-        localStorage.setItem('business_name', trimmedName);
+        // FASE 1: el nombre va al registro del negocio activo (fuente de verdad);
+        // el espejo fiscal business_* se refresca solo.
+        try {
+            const { negocioActivoId, actualizarNegocio } = useNegociosStore.getState();
+            if (negocioActivoId && trimmedName) actualizarNegocio(negocioActivoId, { nombre: trimmedName });
+        } catch { /* boot aún no corrió: el espejo queda como fallback */ }
+        localStorage.setItem('business_name', trimmedName); // espejo fiscal
         localStorage.setItem('marketing_email', trimmedEmail);
         localStorage.setItem('pda_terms_accepted', 'true');
         setHasAccepted(true);

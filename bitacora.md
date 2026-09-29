@@ -88,6 +88,22 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 - Tests: `isDocForActiveBusiness` cubierto (activo/globales/otro negocio/legacy/
   auth). 20/20 en los tests nuevos.
 
+## 2026-09-29 — Fase 1 (4/4): datos fiscales por negocio, auditoría y docs
+- Qué: los formularios que escribían `business_name`/`business_rif` directo
+  (Ajustes, términos iniciales) ahora actualizan el negocio activo en el
+  registro (`actualizarNegocio`), que refresca el espejo fiscal solo.
+- Por qué: el registro es la fuente de verdad fiscal; antes había dos fuentes
+  (registro vs espejo) que podían divergir.
+- Además:
+  - `storageService.js`: el fallback de localStorage por cuota/error ahora usa
+    la clave física namespaced (`rkey`); antes escribía con la clave lógica y
+    fugaba datos entre negocios en ese caso borde. La lectura intenta `rkey`
+    primero y luego el residuo legacy.
+  - Auditoría completa de accesos directos: los restantes (`bootNegocios`,
+    `eliminarNegocio`, monitor, router) son intencionales y documentados.
+- Docs: `docs/storage-scope.md` (globales vs por negocio, reglas de sync,
+  backup y fiscal).
+
 ## 2026-09-29 — Fase 1 (2/4): selector de negocio en el header
 - Qué: `src/components/NegocioSelector.jsx` (pill compacta en el header con el
   negocio activo + modal de gestión) y `src/components/NegocioModal.jsx`
