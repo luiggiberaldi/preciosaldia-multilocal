@@ -265,3 +265,38 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 **Qué cambió:** Se eliminó el botón "Entrar en Modo Supervisor" de `LockScreen.jsx` (y el prop `onOpenPairing` que solo él usaba). En `App.jsx` se retiró el estado `showPairingScan` y el render de `PairingScanScreen`, que solo eran alcanzables desde ese botón. Los archivos del modo pairing (`PairingScanScreen.jsx`, `PairingManager.jsx`, etc.) se conservan intactos: congelado, no eliminado.
 
 **Por qué:** luigi reportó que el botón seguía saliendo en la pantalla de bloqueo. El modo supervisor por pairing está congelado desde Fase 1.5 (la supervisión ahora es por roles: dueño/supervisor/cajero), así que no debe ofrecerse en la UI. Nota: en Ajustes → Sistema sigue visible la sección "Celular del Supervisor" (PairingManager) solo para admin — pendiente decidir con luigi si también se oculta.
+
+## 2026-09-29 — Fase B "Modo Jefe": renombre a administrador + monitor monetario en vivo
+
+**Qué cambió:**
+1. **Renombre supervisor → administrador** (`src/utils/roles.js`): `ROL_ADMINISTRADOR`,
+   `isAdministrador`, `TABS_DUENO_ADMIN`. Los valores guardados `'ADMIN'`/`'CAJERO'` no
+   cambian (compat con datos existentes); se dejan alias deprecated una versión.
+   UI actualizada: `UsersManager` (label del rol), `UserCard` (tarjeta de perfil),
+   comentarios en `LockScreen`, `SupervisionView`, `useAuthStore`. No se tocó el
+   modo pairing congelado (`services/supervisor*`, otro concepto).
+2. **Motor `src/utils/modoJefe.js`** (funciones puras, sin I/O): plata de hoy con
+   desglose por moneda (USD/Bs/COP desde `payments[]`) y por método de pago,
+   descuentos, anuladas, mejor hora; fiados otorgados vs cobrados; movimiento de
+   caja (apertura + ventas cobradas + cobros − egresos = caja esperada); feed de
+   últimas ventas; comparativas ayer/hace 7 días; alertas (anuladas, descuento
+   ≥15% o ≥$5, caja sin apertura); `combinarPlata` para el consolidado.
+3. **UI `src/views/ModoJefePanel.jsx`**: bloques "Plata de hoy · detalle",
+   "En vivo" (feed), "Ojo de jefe", "Fiados en movimiento", "Comparativas" y
+   "Alertas" por sede; `ConsolidadoJefe` para el dueño (agregados + ranking de
+   sedes + alertas de todas). Integrado en `SupervisionView` (sede y consolidado).
+4. **Railes:** R1 solo lectura (ningún botón del monitor muta datos); R2 refresco
+   cada 10 s solo con la vista activa y pestaña visible, sin parpadeo del loader;
+   R3 helper `num()` anti-NaN; R4 el cajero nunca recibe el tab supervisión;
+   R5 badge "actualizado hace Xs".
+5. **Arneses:** `tests/modoJefe.test.js` con 23 tests (fixtures: contado,
+   multi-método, fiada, anulada, cobro, gastos con/sin afectaCaja, apertura,
+   descuento alto, cashea, COP, ayer, hace 7 días, caja cerrada).
+
+**Por qué:** luigi pidió que la Supervisión sea "lo más de jefe posible": monitor
+en vivo y máximo detalle monetario; y confirmó la terna dueño/administrador/cajero
+(el nombre "supervisor" chocaba con el modo pairing congelado).
+
+**Verificación:** 706 tests pasan (682 previos + 24 nuevos); 1 fallo preexistente no
+relacionado (`receivablesDeterministic`, sensible a fecha). Build verde. Plan
+detallado en `docs/PLAN-FASE-B-MODO-JEFE.md`.

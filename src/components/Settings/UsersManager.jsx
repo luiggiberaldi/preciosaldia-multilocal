@@ -10,10 +10,10 @@ import {
 } from 'lucide-react';
 
 const ROLE_CONFIG = {
-    // Fase 1.5: ADMIN = supervisor del negocio (el pairing congelado sigue
-    // usando el string 'ADMIN'; aquí solo cambia la etiqueta visible).
+    // Fase B: ADMIN = administrador del negocio (renombrado de "supervisor";
+    // el pairing congelado sigue usando el string 'ADMIN').
     ADMIN: {
-        label: 'Supervisor',
+        label: 'Administrador',
         gradient: 'from-brand to-brand-dark',
         bg: 'bg-brand-light dark:bg-surface-800/20',
         text: 'text-brand-dark dark:text-brand',
@@ -78,7 +78,7 @@ function UserRow({ user, currentUserId, canManage, onChangePin, onDelete, onEdit
     const isCurrentUser = user.id === currentUserId;
     const isAdmin = user.rol === 'ADMIN';
     const requirePin = user.requirePin !== false;
-    // Fase 1.5: el supervisor solo administra cajeros; cada quien siempre
+    // Fase B: el administrador solo administra cajeros; cada quien siempre
     // puede gestionar su propia fila (cambiar su PIN, su nombre, su acceso).
     const canAct = canManage || isCurrentUser;
 
@@ -215,7 +215,7 @@ export default function UsersManager({ triggerHaptic }) {
         if (!newName.trim()) return showToast('Ingresa un nombre', 'error');
         if (newPin.length !== requiredLen) return showToast(`El PIN debe tener ${requiredLen} dígitos`, 'error');
         if (usuarios.some(u => u.pin === newPin)) return showToast('Ese PIN ya esta en uso', 'error');
-        // Fase 1.5: el supervisor solo puede crear cajeros.
+        // Fase B: el administrador solo puede crear cajeros.
         if (!canCreateRole(usuarioActivo, newRole)) return showToast('No tienes permiso para crear ese rol', 'error');
 
         agregarUsuario(newName.trim(), newRole, newPin);

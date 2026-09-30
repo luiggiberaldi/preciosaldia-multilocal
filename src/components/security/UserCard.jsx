@@ -68,7 +68,7 @@ export default function UserCard({ user, onClick }) {
               {toTitleCase(user.nombre)}
             </h3>
             <span className={`block text-[9px] font-black uppercase tracking-[0.2em] ${isAdmin ? 'text-brand' : 'text-emerald-600'}`}>
-              {user.rol === 'ADMIN' ? 'Supervisor' : 'Cajero'}
+              {user.rol === 'ADMIN' ? 'Administrador' : 'Cajero'}
             </span>
           </CardItem>
 

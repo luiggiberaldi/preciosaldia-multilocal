@@ -554,7 +554,7 @@ export const useAuthStore = create(
             agregarUsuario: (nombre, rol, pin) => {
                 const err = validatePin(String(pin ?? ''));
                 if (err) return { ok: false, error: err };
-                // Fase 1.5: en un negocio solo existen supervisores (ADMIN) y
+                // Fase B: en un negocio solo existen administradores (ADMIN) y
                 // cajeros (CAJERO). El dueño (DUENO) nunca es usuario de negocio.
                 if (rol !== 'ADMIN' && rol !== 'CAJERO') {
                     return { ok: false, error: 'Rol inválido' };

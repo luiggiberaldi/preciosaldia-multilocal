@@ -69,6 +69,31 @@ empleados ven solo su negocio con permisos según su rol.
   vista Supervisión con las 3 pestañas y datos correctos por sede,
   `npm run build` verde, tests, push a `main` y redeploy.
 
+## Fase B — Modo Jefe (aprobado por luigi 2026-09-29)
+**Estado: implementado 2026-09-29** (plan en `docs/PLAN-FASE-B-MODO-JEFE.md`).
+La vista Supervisión se convierte en el monitor del dueño: lo más detallado
+posible en lo monetario, con pulso en vivo.
+
+1. **Renombre supervisor → administrador** — terna final: dueño, administrador,
+   cajero. Valores guardados `'ADMIN'`/`'CAJERO'` intactos (compat); alias
+   deprecated en `utils/roles.js` (`ROL_SUPERVISOR`, `isSupervisor`,
+   `TABS_DUENO_SUPERVISOR`).
+2. **Motor `utils/modoJefe.js`** (puro, testeable): plata de hoy (total,
+   tickets, ticket prom., desglose por moneda USD/Bs/COP desde `payments[]`,
+   desglose por método de pago, descuentos, anuladas, mejor hora), fiados en
+   movimiento (otorgados vs cobrados), movimiento de caja (apertura + cobradas
+   + cobros − egresos = esperado), feed en vivo, comparativas (ayer / hace 7
+   días), alertas (anuladas, descuento ≥15% o ≥$5, caja sin apertura),
+   `combinarPlata` para el consolidado.
+3. **UI `views/ModoJefePanel.jsx`** — por sede (dueño y administrador) y
+   `ConsolidadoJefe` (dueño: agregados + ranking de sedes + alertas de todas).
+4. **Railes:** R1 solo lectura (ningún botón muta), R2 refresco 10 s solo con
+   vista activa y pestaña visible, R3 `num()` anti-NaN, R4 cajero sin tab
+   supervisión, R5 badge "actualizado hace Xs".
+5. **Arneses:** `tests/modoJefe.test.js` (23 tests, fixtures completas).
+- **Límites honestos:** sin vendedor por ticket (vive en audit log) y sin en
+  vivo multi-dispositivo (requiere sync nube) — Fase C.
+
 ## Fase 2 — Experiencia del dueño (upsell)
 - Resumen consolidado de solo lectura: ventas del día por negocio en una pantalla.
 - Reportes comparativos por negocio (semana/mes).

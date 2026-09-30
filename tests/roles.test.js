@@ -1,16 +1,21 @@
 /**
- * roles.test.js — Tests del modelo de roles Fase 1.5.
+ * roles.test.js — Tests del modelo de roles (Fase 1.5, renombre Fase B).
  *
- * Cubren la matriz de permisos: dueño global, supervisor (ADMIN) y cajero
+ * Cubren la matriz de permisos: dueño global, administrador (ADMIN) y cajero
  * (CAJERO). Los valores almacenados siguen siendo 'ADMIN'/'CAJERO' por
- * compatibilidad con el pairing congelado; aquí se verifica el significado.
+ * compatibilidad; aquí se verifica el significado. Los alias deprecated
+ * (ROL_SUPERVISOR, isSupervisor, TABS_DUENO_SUPERVISOR) se verifican una vez.
  */
 import { describe, it, expect } from 'vitest';
 import {
     ROL_DUENO,
-    ROL_SUPERVISOR,
+    ROL_ADMINISTRADOR,
     ROL_CAJERO,
+    ROL_SUPERVISOR,
+    TABS_DUENO_ADMIN,
+    TABS_DUENO_SUPERVISOR,
     isOwner,
+    isAdministrador,
     isSupervisor,
     isCashier,
     hasAdminAccess,
@@ -22,57 +27,65 @@ import {
 } from '../src/utils/roles';
 
 const DUENO = { id: 'dueno', nombre: 'Dueño', rol: 'DUENO', global: true };
-const SUPERVISOR = { id: 1, nombre: 'Admin', rol: 'ADMIN' };
+const ADMIN = { id: 1, nombre: 'Admin', rol: 'ADMIN' };
 const CAJERO = { id: 2, nombre: 'Caja', rol: 'CAJERO' };
 
 describe('identidad de roles', () => {
-    it('distingue dueño / supervisor / cajero', () => {
+    it('distingue dueño / administrador / cajero', () => {
         expect(isOwner(DUENO)).toBe(true);
-        expect(isSupervisor(SUPERVISOR)).toBe(true);
+        expect(isAdministrador(ADMIN)).toBe(true);
         expect(isCashier(CAJERO)).toBe(true);
-        expect(isOwner(SUPERVISOR)).toBe(false);
-        expect(isSupervisor(CAJERO)).toBe(false);
+        expect(isOwner(ADMIN)).toBe(false);
+        expect(isAdministrador(CAJERO)).toBe(false);
         expect(isCashier(DUENO)).toBe(false);
     });
 
-    it('hasAdminAccess: dueño y supervisor sí, cajero no', () => {
+    it('hasAdminAccess: dueño y administrador sí, cajero no', () => {
         expect(hasAdminAccess(DUENO)).toBe(true);
-        expect(hasAdminAccess(SUPERVISOR)).toBe(true);
+        expect(hasAdminAccess(ADMIN)).toBe(true);
         expect(hasAdminAccess(CAJERO)).toBe(false);
         expect(hasAdminAccess(null)).toBe(false);
+    });
+
+    it('aliases deprecated (Fase B) siguen resolviendo al mismo valor', () => {
+        expect(ROL_SUPERVISOR).toBe(ROL_ADMINISTRADOR);
+        expect(ROL_SUPERVISOR).toBe('ADMIN');
+        expect(TABS_DUENO_SUPERVISOR).toBe(TABS_DUENO_ADMIN);
+        expect(isSupervisor(ADMIN)).toBe(true);
+        expect(isSupervisor(CAJERO)).toBe(false);
     });
 });
 
 describe('gestión de negocios', () => {
     it('solo el dueño puede crear/editar/eliminar negocios', () => {
         expect(canManageBusinesses(DUENO)).toBe(true);
-        expect(canManageBusinesses(SUPERVISOR)).toBe(false);
+        expect(canManageBusinesses(ADMIN)).toBe(false);
         expect(canManageBusinesses(CAJERO)).toBe(false);
     });
 });
 
 describe('gestión de usuarios', () => {
-    it('el dueño puede crear supervisores y cajeros (nunca otro dueño)', () => {
-        expect(canCreateRole(DUENO, ROL_SUPERVISOR)).toBe(true);
+    it('el dueño puede crear administradores y cajeros (nunca otro dueño)', () => {
+        expect(canCreateRole(DUENO, ROL_ADMINISTRADOR)).toBe(true);
         expect(canCreateRole(DUENO, ROL_CAJERO)).toBe(true);
         expect(canCreateRole(DUENO, ROL_DUENO)).toBe(false);
     });
 
-    it('el supervisor solo puede crear cajeros', () => {
-        expect(canCreateRole(SUPERVISOR, ROL_CAJERO)).toBe(true);
-        expect(canCreateRole(SUPERVISOR, ROL_SUPERVISOR)).toBe(false);
-        expect(canCreateRole(SUPERVISOR, ROL_DUENO)).toBe(false);
+    it('el administrador solo puede crear cajeros', () => {
+        expect(canCreateRole(ADMIN, ROL_CAJERO)).toBe(true);
+        expect(canCreateRole(ADMIN, ROL_ADMINISTRADOR)).toBe(false);
+        expect(canCreateRole(ADMIN, ROL_DUENO)).toBe(false);
     });
 
     it('el cajero no puede crear usuarios', () => {
         expect(canCreateRole(CAJERO, ROL_CAJERO)).toBe(false);
     });
 
-    it('el dueño puede administrar a cualquiera; el supervisor solo a cajeros', () => {
-        expect(canManageUser(DUENO, SUPERVISOR)).toBe(true);
+    it('el dueño puede administrar a cualquiera; el administrador solo a cajeros', () => {
+        expect(canManageUser(DUENO, ADMIN)).toBe(true);
         expect(canManageUser(DUENO, CAJERO)).toBe(true);
-        expect(canManageUser(SUPERVISOR, CAJERO)).toBe(true);
-        expect(canManageUser(SUPERVISOR, SUPERVISOR)).toBe(false);
+        expect(canManageUser(ADMIN, CAJERO)).toBe(true);
+        expect(canManageUser(ADMIN, ADMIN)).toBe(false);
         expect(canManageUser(CAJERO, CAJERO)).toBe(false);
     });
 });
@@ -85,8 +98,8 @@ describe('tabs visibles', () => {
         expect(tabs).toContain('supervision');
     });
 
-    it('dueño y supervisor ven todo incl. supervisión', () => {
-        for (const s of [DUENO, SUPERVISOR]) {
+    it('dueño y administrador ven todo incl. supervisión', () => {
+        for (const s of [DUENO, ADMIN]) {
             const tabs = visibleTabIds({ requireLogin: true, usuarioActivo: s });
             expect(tabs).toEqual(
                 expect.arrayContaining(['inicio', 'ventas', 'catalogo', 'clientes', 'reportes', 'ajustes', 'supervision'])
@@ -101,10 +114,10 @@ describe('tabs visibles', () => {
 });
 
 describe('tab de aterrizaje', () => {
-    it('cajero → ventas, dueño → supervisión, supervisor → inicio', () => {
+    it('cajero → ventas, dueño → supervisión, administrador → inicio', () => {
         expect(landingTab({ requireLogin: true, usuarioActivo: CAJERO })).toBe('ventas');
         expect(landingTab({ requireLogin: true, usuarioActivo: DUENO })).toBe('supervision');
-        expect(landingTab({ requireLogin: true, usuarioActivo: SUPERVISOR })).toBe('inicio');
+        expect(landingTab({ requireLogin: true, usuarioActivo: ADMIN })).toBe('inicio');
         expect(landingTab({ requireLogin: false, usuarioActivo: null })).toBe('inicio');
     });
 });

@@ -24,3 +24,8 @@ Aprendizajes reutilizables del proyecto. Lo operativo del día a día va en `bit
   migración sin necesidad de fake-indexeddb.
 - `persist.clearStorage()` de zustand BORRA el estado persistido — nunca usarlo
   como "limpiar caché" antes de un rehydrate.
+
+## 2026-09-29 — Verificar nombres de iconos lucide contra la versión instalada
+`ReceiptX` no existe en la versión de lucide-react del repo y rompió el build
+(vite-plugin-pwa/rollup falla con "not exported"). Antes de usar un icono
+nuevo, verificar con `node -e "import('lucide-react').then(l => console.log(typeof l.Icono))"`.

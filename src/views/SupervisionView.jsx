@@ -2,7 +2,7 @@
  * SupervisionView.jsx — Vista Supervisión (Fase 1.5).
  *
  * - Dueño global: selector por sede + Consolidado (comparación entre negocios).
- * - Supervisor: solo su sede (negocio activo), sin selector.
+ * - Administrador: solo su sede (negocio activo), sin selector.
  * - Todo es SOLO LECTURA: los datos se leen directo de `nb_<id>:<clave>` vía
  *   `utils/supervisionData` sin cambiar el negocio activo. Las acciones
  *   operativas requieren entrar a la sede ("Entrar a esta sede", solo dueño).
@@ -10,10 +10,16 @@
  * Métricas por sede: ventas hoy / semana / mes (USD), ticket promedio, top
  * productos, stock bajo/agotado y fiados pendientes.
  *
+ * Fase B — Modo Jefe: cada sede suma el bloque monetario detallado
+ * (`views/ModoJefePanel.jsx`, motor puro en `utils/modoJefe.js`): plata de hoy
+ * por moneda y método de pago, feed en vivo (refresco 10 s, pausado con la
+ * pestaña oculta), ojo de jefe (descuentos, anuladas, caja esperada, egresos),
+ * fiados en movimiento, comparativas y alertas. El consolidado agrega todo.
+ *
  * UI: todo redondeado, sin <select> nativo (píldoras), sin alert/confirm/prompt,
  * iconos lucide.
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     Building2, LayoutGrid, Store, TrendingUp, CalendarDays, CalendarRange,
     Receipt, Trophy, AlertTriangle, PackageX, HandCoins, Loader2,
@@ -24,8 +30,9 @@ import { useNegociosStore } from '../hooks/store/useNegociosStore';
 import { useProductContext } from '../context/ProductContext';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 import { readNegocioData, summarizeSales } from '../utils/supervisionData';
-import { isOwner, isSupervisor } from '../utils/roles';
+import { isOwner, isAdministrador } from '../utils/roles';
 import { formatUsd } from '../utils/calculatorUtils';
+import { ModoJefePanel, ConsolidadoJefe, FrescuraBadge } from './ModoJefePanel';
 
 function KpiCard({ icon: Icon, label, value, sub, tone }) {
     return (
@@ -59,10 +66,11 @@ function SectionTitle({ icon: Icon, children, count }) {
 }
 
 /**
- * Panel de una sede: KPIs + top productos + alertas + fiados.
+ * Panel de una sede: KPIs + Modo Jefe (detalle monetario en vivo) + top
+ * productos + alertas + fiados.
  * Usa el mismo motor de métricas que el dashboard (useDashboardMetrics).
  */
-function SedePanel({ negocio, data, bcvRate, isOwnerView, onEnterSede }) {
+function SedePanel({ negocio, data, bcvRate, isOwnerView, onEnterSede, updatedAt }) {
     const { sales, customers, products } = data;
     const metrics = useDashboardMetrics(sales, customers, products, bcvRate);
     const summary = useMemo(() => summarizeSales(sales), [sales]);
@@ -103,6 +111,9 @@ function SedePanel({ negocio, data, bcvRate, isOwnerView, onEnterSede }) {
                     tone="bg-amber-500/10 text-amber-600 dark:text-amber-400"
                 />
             </div>
+
+            {/* Modo Jefe (Fase B): detalle monetario + en vivo, solo lectura */}
+            <ModoJefePanel sales={sales} updatedAt={updatedAt} />
 
             {/* Top productos */}
             <div>
@@ -282,31 +293,49 @@ export default function SupervisionView({ triggerHaptic, isActive }) {
 
     // Sin login no hay sesión: acceso total (comportamiento legacy).
     const owner = isOwner(usuarioActivo) || !requireLogin;
-    const supervisor = isSupervisor(usuarioActivo);
+    const administrador = isAdministrador(usuarioActivo);
 
     const [selected, setSelected] = useState(() => (owner ? 'consolidado' : negocioActivoId));
     const [dataById, setDataById] = useState(null);
+    const [updatedAt, setUpdatedAt] = useState(null);
+    const [tick, setTick] = useState(0);
+    const firstLoad = useRef(true);
+
+    // R2: refresco en vivo cada 10 s — solo con la vista activa y la pestaña
+    // visible (ahorra batería); limpieza al desmontar/ocultar.
+    useEffect(() => {
+        if (!isActive) return;
+        const id = setInterval(() => {
+            if (!document.hidden) setTick((t) => t + 1);
+        }, 10000);
+        return () => clearInterval(id);
+    }, [isActive]);
 
     useEffect(() => {
         if (!isActive) return;
         let cancelled = false;
-        setDataById(null);
+        // Loader solo en la primera carga: los refrescos en vivo no parpadean.
+        if (firstLoad.current) setDataById(null);
         (async () => {
             try {
                 const ids = owner ? negocios.map((n) => n.id) : [negocioActivoId];
                 const entries = await Promise.all(
                     ids.map(async (id) => [id, await readNegocioData(id)])
                 );
-                if (!cancelled) setDataById(Object.fromEntries(entries));
+                if (!cancelled) {
+                    setDataById(Object.fromEntries(entries));
+                    setUpdatedAt(Date.now());
+                    firstLoad.current = false;
+                }
             } catch {
-                if (!cancelled) setDataById({});
+                if (!cancelled && firstLoad.current) setDataById({});
             }
         })();
         return () => { cancelled = true; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isActive, negocioActivoId]);
+    }, [isActive, negocioActivoId, tick]);
 
-    if (!owner && !supervisor) return null;
+    if (!owner && !administrador) return null;
 
     const handleEnterSede = (id) => {
         triggerHaptic && triggerHaptic();
@@ -373,7 +402,10 @@ export default function SupervisionView({ triggerHaptic, isActive }) {
                         <p className="text-xs font-bold text-slate-400">Cargando datos de las sedes…</p>
                     </div>
                 ) : selected === 'consolidado' && owner ? (
-                    <ConsolidadoTable negocios={negocios} dataById={dataById} />
+                    <div className="space-y-5">
+                        <ConsolidadoJefe negocios={negocios} dataById={dataById} updatedAt={updatedAt} />
+                        <ConsolidadoTable negocios={negocios} dataById={dataById} />
+                    </div>
                 ) : (
                     (() => {
                         const sedeId = owner ? selected : negocioActivoId;
@@ -387,6 +419,7 @@ export default function SupervisionView({ triggerHaptic, isActive }) {
                                 bcvRate={bcvRate}
                                 isOwnerView={owner}
                                 onEnterSede={handleEnterSede}
+                                updatedAt={updatedAt}
                             />
                         );
                     })()

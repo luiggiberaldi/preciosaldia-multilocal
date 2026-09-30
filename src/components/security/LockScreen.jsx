@@ -180,7 +180,7 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
 
         {/* NOTA: el "Modo Supervisor" por pairing está congelado (Fase 1.5):
             el código se conserva pero ya no se ofrece en la UI. La supervisión
-            ahora es por roles (dueño/supervisor/cajero). */}
+            ahora es por roles (dueño/administrador/cajero). */}
       </div>
 
       {/* PIN Modal */}
