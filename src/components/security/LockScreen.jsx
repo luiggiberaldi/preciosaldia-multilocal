@@ -8,7 +8,7 @@ import { isMasterPinSetup } from '../../utils/duenoAuth';
 
 const DUENO_PSEUDO_USER = { id: 'dueno', nombre: 'Dueño' };
 
-export default function LockScreen({ onOpenPairing, installPrompt, onInstall, showIOSButton, onShowIOSInstall, onOpenRemotion }) {
+export default function LockScreen({ installPrompt, onInstall, showIOSButton, onShowIOSInstall, onOpenRemotion }) {
   const { usuarios, login, loginDirect, requireCajeroPin, requireAdminPin, resetPinEmergency, loginAsDueno } = useAuthStore();
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDuenoPin, setShowDuenoPin] = useState(false);
@@ -178,13 +178,9 @@ export default function LockScreen({ onOpenPairing, installPrompt, onInstall, sh
           </button>
         )}
 
-        <button
-          onClick={onOpenPairing}
-          className="mt-3 px-5 py-2.5 bg-slate-100 hover:bg-slate-200/80 active:scale-95 text-slate-600 hover:text-slate-800 border border-slate-200/60 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-          Entrar en Modo Supervisor
-        </button>
+        {/* NOTA: el "Modo Supervisor" por pairing está congelado (Fase 1.5):
+            el código se conserva pero ya no se ofrece en la UI. La supervisión
+            ahora es por roles (dueño/supervisor/cajero). */}
       </div>
 
       {/* PIN Modal */}

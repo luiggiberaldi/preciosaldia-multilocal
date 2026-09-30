@@ -259,3 +259,9 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 3. `src/App.jsx`: nuevo orden de primer arranque — Términos → PIN maestro → configuración del primer negocio → app. Flag `pda_business_config_done`; instalaciones que ya aceptaron términos con el flujo anterior no ven el paso de nuevo (migración silenciosa).
 
 **Por qué:** la auditoría del flujo de bienvenida mostró que el onboarding seguía pensado para un solo negocio (copy en singular, T&C con licenciamiento obsoleto de la app original) y tenía un bug real que impedía guardar el nombre en el registro de negocios.
+
+## 2026-09-29 — Ocultar "Entrar en Modo Supervisor" del lock screen
+
+**Qué cambió:** Se eliminó el botón "Entrar en Modo Supervisor" de `LockScreen.jsx` (y el prop `onOpenPairing` que solo él usaba). En `App.jsx` se retiró el estado `showPairingScan` y el render de `PairingScanScreen`, que solo eran alcanzables desde ese botón. Los archivos del modo pairing (`PairingScanScreen.jsx`, `PairingManager.jsx`, etc.) se conservan intactos: congelado, no eliminado.
+
+**Por qué:** luigi reportó que el botón seguía saliendo en la pantalla de bloqueo. El modo supervisor por pairing está congelado desde Fase 1.5 (la supervisión ahora es por roles: dueño/supervisor/cajero), así que no debe ofrecerse en la UI. Nota: en Ajustes → Sistema sigue visible la sección "Celular del Supervisor" (PairingManager) solo para admin — pendiente decidir con luigi si también se oculta.

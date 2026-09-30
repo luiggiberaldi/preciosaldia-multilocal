@@ -46,7 +46,7 @@ import {
 } from './config/supervisorPolicy';
 
 const OwnerMonitorView = lazyWithRetry(() => import('./views/OwnerMonitorView'), 'OwnerMonitorView');
-import PairingScanScreen from './components/PairingScanScreen';
+// NOTA: PairingScanScreen se conserva en el repo (modo pairing congelado, no eliminado).
 import SplashScreenPlayer from './remotion/SplashScreenPlayer';
 import { getLocalISODate } from './utils/dateHelpers';
 
@@ -55,7 +55,6 @@ export default function App() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showIOSInstall, setShowIOSInstall] = useState(false);
   const [mountedViews, setMountedViews] = useState({});
-  const [showPairingScan, setShowPairingScan] = useState(false);
   const isMonitorMode = localStorage.getItem('pda_pairing_mode') === 'monitor';
 
   useEffect(() => {
@@ -378,7 +377,6 @@ export default function App() {
       {/* Lock Screen — solo si login está activado y no hay sesión activa */}
       {requireLogin && !usuarioActivo && !showMasterSetup && (
         <LockScreen
-          onOpenPairing={() => setShowPairingScan(true)}
           installPrompt={installPrompt}
           onInstall={handleInstall}
           showIOSButton={showIOSButton}
@@ -387,10 +385,8 @@ export default function App() {
         />
       )}
 
-      {showPairingScan && (
-        <PairingScanScreen onCancel={() => setShowPairingScan(false)} triggerHaptic={triggerHaptic} />
-      )}
-
+      {/* NOTA: PairingScanScreen se conserva (modo pairing congelado, no eliminado)
+          pero ya no tiene punto de entrada en la UI. */}
 
       {/* Offline Banner */}
       {!isOnline && (
