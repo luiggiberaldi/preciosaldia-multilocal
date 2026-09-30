@@ -5,7 +5,6 @@ import { IDB_KEYS, LS_KEYS } from '../config/backupKeys';
 import { compressString, isCompressionSupported } from '../utils/compression';
 import { uploadToGoogleDrive } from '../utils/driveBackupUploader';
 import { validateBackupJson, applyBackupToStorage } from '../utils/backupRestoreService';
-import { buildCloudBackupsRow } from '../config/cloudSchema';
 import {
     isDeviceBackendDown,
     markDeviceBackendDown,
@@ -19,6 +18,28 @@ import {
 const BACKUP_INTERVAL_MS = 30 * 60 * 1000; // 30 minutos
 const BACKUP_KEY = 'bodega_autobackup_v1';
 const LAST_UPLOAD_HASH_KEY = 'bodega_last_upload_hash';
+
+/**
+ * Marca una solicitud de respaldo como fallida con el motivo.
+ * Tolerante a que la columna `error` aún no exista (migración pendiente):
+ * si el UPDATE con `error` falla, reintenta solo con `status`.
+ */
+async function markBackupRequestFailed(requestId, reason) {
+    if (!supabaseCloud || !requestId) return;
+    const shortReason = String(reason ?? 'error desconocido').slice(0, 500);
+    const mark = async (withError) => supabaseCloud.from('backup_requests')
+        .update(withError ? { status: 'failed', error: shortReason } : { status: 'failed' })
+        .eq('id', requestId);
+    const first = await mark(true);
+    if (first.error) {
+        const second = await mark(false);
+        if (second.error) {
+            console.error(`[AutoBackup] No se pudo marcar la solicitud ${requestId} como fallida:`, second.error);
+            return;
+        }
+    }
+    console.warn(`[AutoBackup] Respaldo ${requestId} marcado como fallido: ${shortReason}`);
+}
 
 /** Hash ligero para detectar cambios sin comparar objetos enteros */
 function quickHash(obj) {
@@ -189,28 +210,24 @@ export function useAutoBackup(isPremium, isDemo, deviceId) {
                         }
                     }
 
-                    // Fallback directo a Supabase en cloud_backups (con manejo silencioso de 403/RLS)
-                    if (!apiSuccess && supabaseCloud) {
-                        try {
-                            const sessionRes = await supabaseCloud.auth.getSession().catch(() => null);
-                            if (sessionRes?.data?.session) {
-                                // Contrato de esquema: builder con allowlist de columnas.
-                                await supabaseCloud.from('cloud_backups').upsert(
-                                    buildCloudBackupsRow({ deviceId: devId, backupData: metadataPayload }),
-                                    { onConflict: 'device_id' }
-                                ).catch(() => null);
-                            }
-                        } catch (sErr) {
-                            // Omitir silenciosamente si no hay permisos/sesión activa
-                        }
-                    }
-
                     localStorage.setItem(LAST_UPLOAD_HASH_KEY, currentHash);
                     localStorage.setItem('bodega_last_daily_backup_date', todayStr);
+
+                    if (!apiSuccess) {
+                        // La estación no aceptó los metadatos: NO reportar éxito falso.
+                        return {
+                            ok: false,
+                            driveUrl: driveResult?.downloadUrl || null,
+                            error: 'La estación rechazó los metadatos (401/403: secreto compartido no coincide o falta)'
+                        };
+                    }
+                    return { ok: true, driveUrl: driveResult?.downloadUrl || null, error: null };
                 }
 
+                return { ok: false, error: 'Sin deviceId o sin cliente de nube' };
             } catch (e) {
                 console.error('[AutoBackup] Error:', e);
+                return { ok: false, error: String(e?.message || e) };
             }
     }, []);
 
@@ -286,19 +303,27 @@ export function useAutoBackup(isPremium, isDemo, deviceId) {
 
                     try {
                         console.log(`[AutoBackup] Solicitud de backup pendiente detectada (${data.id}). Ejecutando...`);
-                        await performBackupRef.current?.(true);
+                        const result = await performBackupRef.current?.(true);
 
-                        // ARNES V3: marcar como procesado SOLO después de éxito
-                        processedIdsRef.current.add(data.id);
-                        if (typeof sessionStorage !== 'undefined') {
-                            try { sessionStorage.setItem(sessionKey, '1'); } catch {}
+                        if (result?.ok) {
+                            // ARNES V3: marcar como procesado SOLO después de éxito real
+                            processedIdsRef.current.add(data.id);
+                            if (typeof sessionStorage !== 'undefined') {
+                                try { sessionStorage.setItem(sessionKey, '1'); } catch {}
+                            }
+                            const upd = await supabaseCloud.from('backup_requests').update({
+                                status: 'completed',
+                                completed_at: new Date().toISOString()
+                            }).eq('id', data.id);
+                            if (upd.error) {
+                                console.error(`[AutoBackup] Respaldo ${data.id} completado pero NO se pudo marcar completed:`, upd.error);
+                            } else {
+                                console.log('[AutoBackup] Backup pendiente procesado.');
+                            }
+                        } else {
+                            // Fracaso honesto: la estación lo verá como fallido con el motivo.
+                            await markBackupRequestFailed(data.id, result?.error || 'error desconocido');
                         }
-
-                        await supabaseCloud.from('backup_requests').update({
-                            status: 'completed',
-                            completed_at: new Date().toISOString()
-                        }).eq('id', data.id);
-                        console.log('[AutoBackup] Backup pendiente procesado exitosamente.');
                     } catch (backupErr) {
                         console.error('[AutoBackup] Backup falló, se reintentará:', backupErr);
                     }

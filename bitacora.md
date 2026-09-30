@@ -336,3 +336,35 @@ en vivo y máximo detalle monetario; y confirmó la terna dueño/administrador/c
 **Verificación:** 706 tests pasan (682 previos + 24 nuevos); 1 fallo preexistente no
 relacionado (`receivablesDeterministic`, sensible a fecha). Build verde. Plan
 detallado en `docs/PLAN-FASE-B-MODO-JEFE.md`.
+
+---
+
+## 2026-09-30 — Fix respaldos silenciosos (lado POS, rama Pro)
+
+**Qué:** `useAutoBackup.js` ahora reporta honestamente:
+
+1. `performBackup()` devuelve `{ ok, driveUrl, error }` en vez de `undefined`.
+2. Eliminado el fallback muerto a Supabase directo (requería sesión Auth que el
+   POS anónimo nunca tiene; los errores se silenciaban con `.catch(() => null)`).
+3. Si la estación rechaza los metadatos (`!res.ok` en `/api/backup/complete`),
+   se devuelve `ok:false` con el motivo en vez de fingir éxito.
+4. Nuevo helper `markBackupRequestFailed(requestId, reason)`: marca la solicitud
+   `failed` (reintenta sin la columna `error` si la migración aún no está
+   aplicada).
+5. El procesamiento de solicitudes (poll + realtime) solo marca `completed`
+   cuando el respaldo tuvo éxito real; revisa el resultado del UPDATE; en fallo
+   marca `failed` con el motivo en vez de imprimir "procesado exitosamente".
+
+**Por qué:** el pipeline convertía cualquier fallo en estado invisible:
+solicitudes `pending` eternas, cero completadas históricamente, y la estación
+mostrando "Solicitado" para siempre.
+
+**Pendiente (IMPORTANTE):** este fix vive en el multilocal (Pro). Los equipos
+en campo hoy corren **Lite (la app original)**, que aún tiene el código viejo
+con éxito falso. luigi debe decidir si se porta el fix al repo original o se
+migra el campo a Pro antes de reactivar solicitudes de respaldo. Además falta
+sincronizar `VITE_ESTACION_BACKUP_SECRET` (POS) con `BACKUP_SHARED_SECRET`
+(Estación) — el endpoint es fail-closed si no coinciden.
+
+**Verificación:** 31 tests de backup pasan (backupRelay + backupRestore).
+`node --check` limpio.
