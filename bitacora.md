@@ -368,6 +368,66 @@ sincronizar `VITE_ESTACION_BACKUP_SECRET` (POS) con `BACKUP_SHARED_SECRET`
 
 **Verificación:** 31 tests de backup pasan (backupRelay + backupRestore).
 `node --check` limpio.
+
+---
+
+## 2026-09-30 — Botón Importar Excel en Pro (sede activa)
+
+**Qué:** nuevo flujo para cargar el inventario de una sede desde un archivo
+`.xlsx`, sin tocar la otra sede:
+
+1. `src/utils/excelImport.js` (nuevo): lógica pura y testeable.
+   - `detectarColumnas()`: localiza la fila de encabezado y mapea
+     PRODUCTO→nombre, CODIGO→código, VENTA*→precio USD, EXISTENCIA→stock.
+     Tolera variantes ("VENTA USD" en bodega, "VENTA " en cosméticos).
+   - `parseNumero()`: entiende es-VE ("160,00", "1.234,56") y US ("1,234.56").
+   - `mapInventarioRows()`: reglas de limpieza —
+     * filas sin nombre se omiten;
+     * código duplicado dentro del archivo: el primero lo conserva, los demás
+       se importan SIN código (evita que el POS cobre el producto equivocado);
+     * existencia negativa se importa tal cual (dato fiel) y se reporta;
+     * existencia decimal se redondea a entero (la app solo admite decimales
+       en granel);
+     * nombres en MAYÚSCULAS se normalizan a formato título;
+     * códigos grandes se preservan como texto (sin notación científica).
+   - Construye el payload con `buildProductPayload()` (mismo esquema que el
+     formulario manual) + `id: crypto.randomUUID()`.
+2. `src/components/Products/ExcelImportModal.jsx` (nuevo): modal en 3 pasos —
+   elegir archivo → vista previa (stats, advertencias, muestra de 8 filas y
+   selector Agregar/Reemplazar si la sede ya tiene productos) → resultado.
+   Usa el `Modal` propio de la app y iconos lucide (`FileSpreadsheet`).
+3. `ProductsView.jsx`: estado `isExcelImportOpen`, handler `handleExcelImport`
+   que persiste con `storageService.setItem('bodega_products_v1', …)` — la
+   clave ya va prefijada por negocio (`nb_<id>:`), así que la importación
+   **siempre cae en la sede activa**. En modo agregar omite códigos que ya
+   existen en la sede. Registra auditoría `INVENTARIO / IMPORTACION_EXCEL`.
+   El `EmptyState` de inventario vacío ganó acción secundaria "IMPORTAR EXCEL".
+4. `ProductsToolbar.jsx`: ítem "Importar Excel" en el menú Herramientas
+   (icono violeta `FileSpreadsheet`).
+5. Nueva dependencia `xlsx@^0.18.5` (solo se usa en el cliente al elegir
+   archivo; el parseo ocurre 100% local, nada se sube).
+
+**Por qué:** el cliente multi-negocio (bodega + cosméticos) entregó sus
+inventarios en Excel (2.423 y 2.988 productos). Cargarlos a mano es inviable;
+el importador los deja listos en minutos, por sede, con vista previa y sin
+confirmaciones del navegador (regla de UI: sin `confirm()`).
+
+**Verificación:** 14 tests nuevos en `tests/excelImport.test.js` (encabezados
+de ambos archivos, duplicados, negativos, decimales, precios cero,
+códigos alfanuméricos como `M01`). Suite completa: 729 pasan; 3 fallos
+preexistentes no relacionados (`modoJefe` ×2, `receivablesDeterministic` ×1 —
+fallan también en árbol limpio). Build de producción verde. Prueba con los
+Excel reales de luigi: bodega 2.423 importados (18 duplicados sin código,
+996 negativos, 5 precio $0, 152 decimales redondeados); cosméticos 2.988
+(1 duplicado, 2.147 negativos, 1 precio $0, 2 decimales) — cifras idénticas
+al informe PDF entregado. Cero códigos en notación científica.
+
+**Pendiente (NO pusheado):** commit y push a `luiggiberaldi/preciosaldia-multilocal`
+cuando luigi lo autorice; luego él prueba la importación real desde su
+teléfono en cada sede.
+
+---
+
 ## 2026-09-30 — Distintivo PRO dorado en la pantalla de acceso
 
 **Qué:** badge "PRO" en dorado pegado debajo del logo en `LockScreen.jsx`
@@ -429,3 +489,48 @@ sigue usándose en Supervisión.
 
 **Verificación:** build de producción verde. Revisión visual final en el
 teléfono de luigi.
+
+## 2026-09-30 — Pro: optimización de cuotas Supabase (tier gratis) + plan de purga
+
+**Qué:** auditoría de consumo vs cuotas gratis (500MB DB, 5GB egress/mes, 1GB
+Storage) con 5.000+ productos y fotos por sede. Implementado:
+
+- **Sync delta de productos (QUOTA-001):** nuevo doc `bodega_stock_v1`
+  (`{productId: stock}`, ~40KB) que se empuja en cada venta; el catálogo
+  completo `bodega_products_v1` (~3MB) solo viaja cuando cambia algo
+  estructural (precio/nombre/foto/alta/baja), detectado por hash que ignora
+  `stock`/`updatedAt`. Fusión al recibir en POS (`_applyFromCloud`) y en el
+  monitor (`applyDocToLocal`): el stock nunca reemplaza el catálogo.
+- **Ventas podadas a 90 días (QUOTA-002):** el push envía la ventana reciente;
+  el receptor fusiona por id (`mergeSales`, gana la más nueva), así la poda
+  jamás borra historial local ni del monitor.
+- **Audit log fuera del sync:** `abasto_audit_log_v1` sale de
+  `SYNC_VALIDATORS` (era diagnóstico por dispositivo que crecía sin cota y se
+  re-subía entero). Su retención local no se toca: respeta la regla fiscal
+  (5 años, VENTA/CLIENTE/PAGO intocables).
+- **Reintento de fotos (`imageMaintenance.js`):** las fotos que quedaron en
+  base64 por falta de internet se suben a Storage al abrir la app y al
+  recuperar red (tope 25 por ejecución).
+- **Purga diaria (`purgeService.js`):** 1 vez al día, negocio activo. Tickets
+  con más de 12 meses se compactan a resúmenes mensuales (totales por moneda
+  y método; el detalle vive en los respaldos). SEGURO: solo corre con
+  respaldo exitoso < 24h.
+- **Purga mensual de huérfanas de Storage:** borra objetos de
+  `product-images` que ningún producto de ningún negocio referencia; solo
+  corre con sesión del dueño.
+- Constantes centralizadas en `retentionPolicy.js`; 19 tests nuevos
+  (`syncDelta`, `purgeService`); suite completa 746/758 (2 fallos
+  preexistentes verificados sin estos cambios).
+
+**Por qué:** con el esquema anterior, cada venta re-subía el doc de productos
+completo y el monitor lo recibía por Realtime (~180MB/día → ~5,4GB/mes,
+por encima de la cuota gratis). Ahora una venta típica mueve ~40KB.
+
+**Archivos:** `src/utils/syncDelta.js`, `retentionPolicy.js`,
+`purgeService.js`, `imageMaintenance.js` (nuevos);
+`src/services/supervisorContracts.js`, `src/hooks/useCloudSync.js`,
+`src/hooks/useMonitorSync.js`, `src/App.jsx`; `tests/syncDelta.test.js`,
+`tests/purgeService.test.js`.
+
+**Verificación:** build de producción verde. Prueba real desde los teléfonos
+de las sedes pendiente.

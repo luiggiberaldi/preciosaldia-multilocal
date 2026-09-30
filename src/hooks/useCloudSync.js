@@ -6,6 +6,16 @@ import { toCloudDocId, parseCloudDocId, isDocForActiveBusiness } from '../utils/
 import { SUPERVISOR_SYNC_KEYS, validateSupervisorSyncDocument } from '../services/supervisorContracts';
 import { ensureSupervisorSession } from '../services/supervisorAuth';
 import { mergeLedgerEntries, rebuildCustomersFromLedger } from '../utils/customerLedger';
+// QUOTA-001: sincronización delta (stock liviano vs catálogo) + poda de ventas.
+import {
+    applyStockMap,
+    buildStockMap,
+    catalogHash,
+    isValidStockMap,
+    mergeSales,
+    pruneSalesForSync,
+} from '../utils/syncDelta';
+import { RETENTION } from '../utils/retentionPolicy';
 import {
     buildSyncEnvelope,
     getSyncMetadataKey,
@@ -80,7 +90,8 @@ let isCloudSyncActive = false;   // Evita empujar a la nube si el dispositivo no
 const originalSetItem = localStorage.setItem.bind(localStorage);
 
 // Keys pesadas (arrays grandes con imágenes) usan debounce más largo para agrupar ediciones
-const HEAVY_KEYS = ['bodega_products_v1', 'bodega_sales_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1', 'abasto_audit_log_v1'];
+// QUOTA-002: `abasto_audit_log_v1` salió del sync (diagnóstico local, crecía sin cota).
+const HEAVY_KEYS = ['bodega_products_v1', 'bodega_stock_v1', 'bodega_sales_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1'];
 const DEBOUNCE_LIGHT_MS = 300;
 const DEBOUNCE_HEAVY_MS = 3000;
 
@@ -105,6 +116,28 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
         return { ok: false, skipped: true, error: 'Documento de autenticación bloqueado' };
     }
 
+    // QUOTA-001: hash del catálogo pendiente de confirmación (se escribe solo
+    // si el upsert del documento completo tiene éxito).
+    let pendingCatalogHash = null;
+
+    // QUOTA-001: el 99% de los cambios en productos es SOLO stock (cada venta).
+    // En ese caso se empuja únicamente el mapa liviano `bodega_stock_v1`
+    // (~40KB) y se omite el catálogo completo (~3MB). El catálogo solo viaja
+    // cuando cambia algo estructural (precio, nombre, foto, alta/baja).
+    if (key === 'bodega_products_v1' && Array.isArray(value)) {
+        const stockResult = await pushCloudSync('bodega_stock_v1', buildStockMap(value), forceUnconditional);
+        if (!forceUnconditional) {
+            const chKey = `${LAST_PUSH_HASH_PREFIX}catalog:${toCloudDocId(key)}`;
+            const ch = catalogHash(value);
+            if (localStorage.getItem(chKey) === ch) {
+                return { ok: true, skipped: true, reason: 'Solo cambió stock (delta)', stock: stockResult };
+            }
+            // Se confirma abajo, solo si Supabase acepta el upsert.
+            pendingCatalogHash = { chKey, ch };
+        }
+        // Sigue abajo: empuja el catálogo completo (cambió algo estructural).
+    }
+
     const docId = toCloudDocId(key);
     const hashKey = _pushHashKey(key);
     const currentHash = quickHash(value);
@@ -112,13 +145,19 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
         return { ok: true, skipped: true, reason: 'Sin cambios' };
     }
 
+    // QUOTA-002: las ventas viajan podadas a los últimos 90 días. El receptor
+    // fusiona por id (mergeSales), así que la ventana nunca borra historial.
+    const payloadValue = (key === 'bodega_sales_v1' && Array.isArray(value))
+        ? pruneSalesForSync(value, RETENTION.SALES_SYNC_DAYS)
+        : value;
+
     const collectionType = LOCAL_KEYS.includes(key) ? 'local' : 'store';
     const updatedAt = new Date().toISOString();
     const document = {
         device_id: _currentDeviceId,
         collection: collectionType,
         doc_id: docId,
-        data: buildSyncEnvelope(value, updatedAt),
+        data: buildSyncEnvelope(payloadValue, updatedAt),
         updated_at: updatedAt,
     };
 
@@ -131,8 +170,11 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
             return response;
         });
 
-        // Solo confirmar el hash después de que Supabase confirmó el upsert.
+        // Solo confirmar los hashes después de que Supabase confirmó el upsert.
         localStorage.setItem(hashKey, currentHash);
+        if (pendingCatalogHash) {
+            localStorage.setItem(pendingCatalogHash.chKey, pendingCatalogHash.ch);
+        }
         return { ok: true, skipped: false, updatedAt, data: result.data ?? null };
     } catch (error) {
         console.warn('[CloudSync] No se pudo confirmar el push:', error?.message ?? error);
@@ -205,6 +247,8 @@ export const forceSyncAllPOSData = async (overrideDeviceId, forceUnconditional =
 // ─── Validación de Esquema para Sincronización Remota (DATA-001) ─────────────
 const STORE_SCHEMAS = {
     'bodega_products_v1': (data) => Array.isArray(data),
+    // QUOTA-001: mapa liviano { productId: stock }.
+    'bodega_stock_v1': (data) => isValidStockMap(data),
     'bodega_sales_v1': (data) => Array.isArray(data),
     'bodega_customers_v1': (data) => Array.isArray(data),
     'bodega_customer_ledger_v1': (data) => Array.isArray(data) && data.every(movement => Boolean(movement?.id && movement?.customerId)
@@ -294,6 +338,28 @@ async function _applyFromCloud(docId, collection, data) {
                 if (merged.conflicts.length > 0) {
                     console.warn(`[CloudSync] Conflictos de ledger retenidos localmente: ${merged.conflicts.length}`);
                 }
+            }
+            // QUOTA-001: el mapa de stock se fusiona sobre el catálogo local.
+            // Nunca reemplaza productos: solo actualiza existencias.
+            if (key === 'bodega_stock_v1' && payload && typeof payload === 'object') {
+                const localProducts = await appForage.getItem('bodega_products_v1');
+                if (Array.isArray(localProducts)) {
+                    const mergedProducts = applyStockMap(localProducts, payload);
+                    if (mergedProducts !== localProducts) {
+                        await appForage.setItem('bodega_products_v1', mergedProducts);
+                        window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_products_v1', source: 'remote' } }));
+                    }
+                }
+                const hashKey = LAST_PUSH_HASH_PREFIX + docId;
+                localStorage.setItem(hashKey, quickHash(payload));
+                if (envelope.updatedAt) localStorage.setItem(metadataKey, envelope.updatedAt);
+                return true;
+            }
+            // QUOTA-002: las ventas remotas llegan podadas (90 días); se
+            // fusionan por id para jamás perder historial local.
+            if (key === 'bodega_sales_v1' && Array.isArray(payload)) {
+                const localSales = await appForage.getItem(key);
+                payloadToStore = mergeSales(localSales, payload);
             }
             await appForage.setItem(key, payloadToStore);
             if (key === 'bodega_customer_ledger_v1') {

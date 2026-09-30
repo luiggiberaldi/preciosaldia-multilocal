@@ -5,6 +5,8 @@ import localforage from 'localforage';
 import { parseCloudDocId, isGlobalKey } from '../utils/negocioContext';
 import { validateSupervisorSyncDocument } from '../services/supervisorContracts';
 import { ensureSupervisorSession } from '../services/supervisorAuth';
+// QUOTA-001/002: fusión delta al recibir (stock liviano, ventas podadas).
+import { applyStockMap, mergeSales, physicalDocId } from '../utils/syncDelta';
 import {
     getSyncMetadataKey,
     isNewerSyncDocument,
@@ -114,7 +116,26 @@ export function useMonitorSync(pairedDeviceId) {
         }
 
         await runWithoutEco(async () => {
-            if (collection === 'local') {
+            // QUOTA-001: el mapa de stock se fusiona sobre el catálogo del
+            // negocio pareado; nunca reemplaza productos.
+            if (key === 'bodega_stock_v1' && envelope.payload && typeof envelope.payload === 'object') {
+                const productsDocId = physicalDocId(negocioId, 'bodega_products_v1');
+                const current = await localforage.getItem(productsDocId);
+                if (Array.isArray(current)) {
+                    const merged = applyStockMap(current, envelope.payload);
+                    if (merged !== current) {
+                        await localforage.setItem(productsDocId, merged);
+                        window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_products_v1', source: 'remote' } }));
+                    }
+                }
+            } else if (key === 'bodega_sales_v1' && Array.isArray(envelope.payload)) {
+                // QUOTA-002: las ventas llegan podadas (90 días); fusión por id
+                // para no perder historial en el monitor.
+                const current = await localforage.getItem(docId);
+                const merged = mergeSales(current, envelope.payload);
+                await localforage.setItem(docId, merged);
+                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key, source: 'remote' } }));
+            } else if (collection === 'local') {
                 const stringPayload = typeof envelope.payload === 'string'
                     ? envelope.payload
                     : JSON.stringify(envelope.payload);

@@ -39,3 +39,15 @@ volumen del log sino dejar de hacer las peticiones: detectar el primer 404
 "no implementado" con TTL (localStorage) y saltear las llamadas. Distinguir
 de errores de red/401/500, que NO deben marcar como caído. Al crear el
 backend después, el TTL expira y todo se reactiva solo, sin deploy.
+
+## 2026-09-30 — Sync delta en documentos JSON (patrón anti-cuota)
+
+Cuando un documento JSON completo se sincroniza por upsert en cada cambio,
+separar lo volátil de lo estable ahorra órdenes de magnitud: un mapa liviano
+(`{id: campo}`) para lo que cambia en cada operación + el documento completo
+solo cuando cambia lo estructural, detectado por hash que ignora los campos
+volátiles. Al recibir, FUSIONAR (merge por id / aplicar mapa sobre el array
+local), nunca reemplazar: así se puede podar la ventana enviada sin perder
+historial. Regla de oro: el receptor nunca debe poder borrar datos con un
+snapshot parcial. (Caso: `bodega_stock_v1` ~40KB vs catálogo ~3MB por venta;
+ventas podadas a 90 días con `mergeSales`.)

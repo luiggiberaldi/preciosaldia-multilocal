@@ -30,12 +30,16 @@ const isPlainObject = (value) => Boolean(value) && typeof value === 'object' && 
 
 const SYNC_VALIDATORS = Object.freeze({
     bodega_products_v1: Array.isArray,
+    // QUOTA-001: mapa liviano de stock { productId: stock }. Se empuja en cada
+    // venta en vez del catálogo completo (~3MB → ~40KB por push).
+    bodega_stock_v1: isPlainObject,
     bodega_customers_v1: Array.isArray,
     bodega_customer_ledger_v1: Array.isArray,
     bodega_sales_v1: Array.isArray,
     bodega_payment_methods_v1: Array.isArray,
     bodega_accounts_v2: Array.isArray,
-    abasto_audit_log_v1: Array.isArray,
+    // QUOTA-002: la bitácora de auditoría es diagnóstico por dispositivo;
+    // ya NO viaja a la nube (crecía sin cota y se re-subía entera).
     monitor_rates_v12: isPlainObject,
     bodega_custom_rate: (value) => {
         const parsed = typeof value === 'string' && value.trim() !== '' ? Number(value) : value;

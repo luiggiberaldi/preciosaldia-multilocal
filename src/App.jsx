@@ -36,6 +36,10 @@ import { useAutoLock } from './hooks/useAutoLock';
 import { useAuthStore } from './hooks/store/useAuthStore';
 import { LogOut } from 'lucide-react';
 import { purgeOldEntries } from './services/auditService';
+// QUOTA-003: purga diaria + higiene de imágenes (no bloquean el arranque).
+import { runDailyPurge, purgeOrphanImages } from './utils/purgeService';
+import { retryPendingImageUploads } from './utils/imageMaintenance';
+import { getDuenoSession } from './utils/duenoAuth';
 import { UpdateBanner } from './components/UpdateBanner';
 import { useCloudSync } from './hooks/useCloudSync';
 import { ImagePrecacheRunner } from './hooks/useImagePrecache';
@@ -64,6 +68,19 @@ export default function App() {
   const { isPremium, isDemo, demoTimeLeft, demoExpiredMsg, dismissExpiredMsg, deviceId, isMonthlyGracePeriod, monthlyGraceDaysLeft, forceHeartbeat } = useSecurity();
   const { isOnline, cacheRates } = useOfflineQueue();
   useAutoBackup(isPremium, isDemo, deviceId);
+  // QUOTA-003: mantenimiento silencioso — purga diaria del negocio activo,
+  // reintento de fotos que quedaron en base64 (offline) y purga mensual de
+  // imágenes huérfanas de Storage (solo en el teléfono del dueño).
+  useEffect(() => {
+    runDailyPurge().catch(() => {});
+    retryPendingImageUploads().catch(() => {});
+    try {
+      if (getDuenoSession()) purgeOrphanImages().catch(() => {});
+    } catch { /* sin sesión de dueño: se omite la purga de Storage */ }
+    const onOnline = () => retryPendingImageUploads().catch(() => {});
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, []);
   // El monitor no debe montar listeners de la caja. Las mutaciones remotas
   // permanecen deshabilitadas hasta completar el hardening server-side.
   useRemoteCommands(
