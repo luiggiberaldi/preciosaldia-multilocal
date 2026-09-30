@@ -29,3 +29,13 @@ Aprendizajes reutilizables del proyecto. Lo operativo del día a día va en `bit
 `ReceiptX` no existe en la versión de lucide-react del repo y rompió el build
 (vite-plugin-pwa/rollup falla con "not exported"). Antes de usar un icono
 nuevo, verificar con `node -e "import('lucide-react').then(l => console.log(typeof l.Icono))"`.
+
+## 2026-09-29 — Los 404 de la consola no se silencian, se evitan
+Chrome pinta `GET url 404 (Not Found)` por cada fetch fallido y desde JS no
+hay forma de suprimirlo (no es un `console.error` del código). Cuando un
+backend opcional no existe (tablas/RPCs sin crear), la solución no es bajar el
+volumen del log sino dejar de hacer las peticiones: detectar el primer 404
+(códigos PGRST2xx = objeto no existe en el schema cache), cachear el estado
+"no implementado" con TTL (localStorage) y saltear las llamadas. Distinguir
+de errores de red/401/500, que NO deben marcar como caído. Al crear el
+backend después, el TTL expira y todo se reactiva solo, sin deploy.

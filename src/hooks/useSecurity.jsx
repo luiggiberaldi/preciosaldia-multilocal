@@ -6,31 +6,52 @@ import { generateFingerprint, verifyStoredFingerprint, seedFingerprintAnchor } f
 import { useLicenseMonitoring } from './useLicenseMonitoring';
 import { useDemoCountdown } from './useDemoCountdown';
 import { LICENSE_POLICY } from '../utils/securityConstants';
+import {
+    isDeviceBackendDown,
+    markDeviceBackendDown,
+    markDeviceBackendUp,
+    isBackendMissingError,
+    noteDeviceBackendSkipped,
+} from '../utils/deviceBackend';
 
 const APP_VERSION = '1.0.0';
 const PRODUCT_ID = 'bodega';
 
 const DEMO_DURATION_MS = 72 * 60 * 60 * 1000; // 72 horas (3 dias)
 
-// Helper seguro para obtener el estado de la licencia respetando RLS o haciendo fallback
+// Helper seguro para obtener el estado de la licencia respetando RLS o haciendo fallback.
+// Guard deviceBackend: si el backend no está implementado, no se llama (evita 404).
 async function _fetchRemoteLicense(currentDeviceId) {
+    if (isDeviceBackendDown()) { noteDeviceBackendSkipped('useSecurity'); return { data: null, error: null }; }
     try {
         const { data, error } = await supabase.rpc('get_license_status', { p_device_id: currentDeviceId });
-        if (!error && data) {
+        if (error) {
+            // Función inexistente → la tabla tampoco existe: no intentar el fallback.
+            if (isBackendMissingError(error)) { markDeviceBackendDown(); noteDeviceBackendSkipped('useSecurity'); return { data: null, error: null }; }
+        } else if (data) {
             const record = Array.isArray(data) ? data[0] : data;
             if (record) {
+                markDeviceBackendUp();
                 return { data: record, error: null };
             }
         }
     } catch (e) {
+        if (isBackendMissingError(e)) { markDeviceBackendDown(); noteDeviceBackendSkipped('useSecurity'); return { data: null, error: null }; }
         // Silencioso
     }
-    return supabase
+    const res = await supabase
         .from('licenses')
         .select('type, is_active, expires_at, created_at')
         .eq('device_id', currentDeviceId)
         .eq('product_id', PRODUCT_ID)
         .maybeSingle();
+    if (res.error && isBackendMissingError(res.error)) {
+        markDeviceBackendDown();
+        noteDeviceBackendSkipped('useSecurity');
+        return { data: null, error: null };
+    }
+    markDeviceBackendUp();
+    return res;
 }
 
 // SEC-022 / INFRA-011: Security headers (CSP, X-Frame-Options, X-Content-Type-Options,
@@ -316,24 +337,35 @@ function useSecurityState() {
             } catch { }
         }
 
-        // Registro y heartbeat garantizado en Supabase para el 100% de los dispositivos
+        // Registro y heartbeat garantizado en Supabase para el 100% de los dispositivos.
+        // Guard deviceBackend: si el backend no existe, se omite (evita 404).
         const registerAndHeartbeat = async () => {
+            if (isDeviceBackendDown()) return;
             try {
                 const bName = localStorage.getItem('business_name') || localStorage.getItem('restaurant_name') || '';
                 const mEmail = localStorage.getItem('marketing_email') || '';
                 const clientName = mEmail ? `${bName} | ${mEmail}` : bName;
-                await supabase.rpc('auto_register_device', {
+                const { error: regErr } = await supabase.rpc('auto_register_device', {
                     p_device_id: currentDeviceId,
                     p_product_id: PRODUCT_ID,
                     p_client_name: clientName
                 });
-                await supabase.rpc('heartbeat_device', {
+                const { error: hbErr } = await supabase.rpc('heartbeat_device', {
                     p_device_id: currentDeviceId,
                     p_product_id: PRODUCT_ID,
                     p_client_name: clientName
                 });
+                if (isBackendMissingError(regErr) || isBackendMissingError(hbErr)) {
+                    markDeviceBackendDown();
+                    noteDeviceBackendSkipped('useSecurity');
+                } else {
+                    markDeviceBackendUp();
+                }
             } catch (e) {
-                if (import.meta.env?.DEV) {
+                if (isBackendMissingError(e)) {
+                    markDeviceBackendDown();
+                    noteDeviceBackendSkipped('useSecurity');
+                } else if (import.meta.env?.DEV) {
                     console.warn('[Security] Registro / heartbeat falló:', e?.message ?? e);
                 }
             }
@@ -373,16 +405,26 @@ function useSecurityState() {
             seedFingerprintAnchor(storedId, currentFp);
             setDeviceId(storedId);
 
-            // Auto-registro: registrar dispositivo si no existe (sin importar licencia)
+            // Auto-registro: registrar dispositivo si no existe (sin importar licencia).
+            // Guard deviceBackend: si el backend no existe, se omite (evita 404).
             try {
-                if (import.meta.env.VITE_SUPABASE_URL) {
+                if (import.meta.env.VITE_SUPABASE_URL && !isDeviceBackendDown()) {
                     const bName = localStorage.getItem('business_name') || localStorage.getItem('restaurant_name') || '';
                     const mEmail = localStorage.getItem('marketing_email') || '';
                     const clientName = mEmail ? `${bName} | ${mEmail}` : bName;
-                    await supabase.rpc('auto_register_device', { p_device_id: storedId, p_product_id: PRODUCT_ID, p_client_name: clientName });
+                    const { error: regErr } = await supabase.rpc('auto_register_device', { p_device_id: storedId, p_product_id: PRODUCT_ID, p_client_name: clientName });
+                    if (isBackendMissingError(regErr)) {
+                        markDeviceBackendDown();
+                        noteDeviceBackendSkipped('useSecurity');
+                    } else {
+                        markDeviceBackendUp();
+                    }
                 }
             } catch (e) {
-                if (import.meta.env?.DEV) console.warn('[Security] auto_register_device falló:', e?.message ?? e);
+                if (isBackendMissingError(e)) {
+                    markDeviceBackendDown();
+                    noteDeviceBackendSkipped('useSecurity');
+                } else if (import.meta.env?.DEV) console.warn('[Security] auto_register_device falló:', e?.message ?? e);
             }
 
             checkLicense(storedId);
@@ -758,17 +800,25 @@ function useSecurityState() {
      * Fuerza un heartbeat manual para sincronizar cambios como el nombre del negocio de inmediato.
      */
     const forceHeartbeat = async () => {
+        // Guard deviceBackend: si el backend no existe, se omite (evita 404).
+        if (isDeviceBackendDown()) return;
         const bName = localStorage.getItem('business_name') || localStorage.getItem('restaurant_name') || '';
         const mEmail = localStorage.getItem('marketing_email') || '';
         const clientName = mEmail ? `${bName} | ${mEmail}` : bName;
         try {
-            await supabase.rpc('heartbeat_device', {
+            const { error: hbErr } = await supabase.rpc('heartbeat_device', {
                 p_device_id: deviceId || localStorage.getItem('pda_device_id'),
                 p_product_id: PRODUCT_ID,
                 p_client_name: clientName
             });
+            if (isBackendMissingError(hbErr)) {
+                markDeviceBackendDown();
+            } else {
+                markDeviceBackendUp();
+            }
         } catch(e) {
-            console.error('Error forcing heartbeat:', e);
+            if (isBackendMissingError(e)) markDeviceBackendDown();
+            else console.error('Error forcing heartbeat:', e);
         }
     };
 

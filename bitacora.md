@@ -4,6 +4,42 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-09-29 — Limpieza de consola: guard del backend de dispositivos (404s)
+
+**Qué:** La consola del navegador se llenaba de 404s contra Supabase
+(`backup_requests`, `licenses`, RPCs `get_license_status`,
+`auto_register_device`, `heartbeat_device`), varios en `setInterval`
+(cada 60 s y cada 3 min). Esos endpoints no existen: el backend de
+licencias/dispositivos nunca se creó porque el modelo comercial no está
+decidido. Chrome pinta un 404 por cada fetch fallido y desde JS no se puede
+silenciar — la única forma de limpiar el log es dejar de hacer las peticiones.
+
+**Cómo:**
+- Nuevo `src/utils/deviceBackend.js`: guard puro que detecta el
+  "no implementado" (`isBackendMissingError`: códigos PGRST2xx, status 404,
+  mensajes "not found"/"does not exist"). Errores de red, 401/403 o 500 NO
+  marcan como caído (el backend existe pero no responde → se sigue intentando).
+- Al primer 404 se marca caído (`markDeviceBackendDown`) y se persiste en
+  localStorage con TTL de 24 h: en siguientes sesiones ni se intenta.
+  Vencido el TTL se reintenta solo, así cuando luigi cree las tablas/RPCs
+  la app lo detecta y reactiva todo sin deploy.
+- Aplicado en `useLicenseMonitoring` (verifyStatus, sendHeartbeat cada 3 min,
+  suscripción Realtime `licenses_sync_`), `useSecurity` (`_fetchRemoteLicense`,
+  registro + heartbeat al arrancar, `forceHeartbeat`) y `useAutoBackup`
+  (poll de `backup_requests` cada 60 s + canal Realtime).
+- Un solo `console.info` por sesión explica el estado (no es error).
+- 11 tests nuevos en `tests/deviceBackend.test.js`.
+
+**Verificación:** 717 tests pasan (1 fallo preexistente sensible a fecha en
+`receivablesDeterministic`, no relacionado), build verde.
+
+**Nota para luigi:** la app sigue 100% funcional en local; esto solo quita
+ruido de la consola y ahorra datos/batería en el teléfono. Cuando decidas el
+modelo comercial y creemos `licenses` + `backup_requests` en Supabase, todo
+se reactiva solo.
+
+---
+
 ## 2026-09-29 — Nace el proyecto
 - Se usa el repo `luiggiberaldi/preciosaldia-multilocal` (creado por luigi) como clon de
   `luiggiberaldi/preciosaldia2026` (commit base `09b5b6e`).

@@ -6,6 +6,13 @@ import { compressString, isCompressionSupported } from '../utils/compression';
 import { uploadToGoogleDrive } from '../utils/driveBackupUploader';
 import { validateBackupJson, applyBackupToStorage } from '../utils/backupRestoreService';
 import { buildCloudBackupsRow } from '../config/cloudSchema';
+import {
+    isDeviceBackendDown,
+    markDeviceBackendDown,
+    markDeviceBackendUp,
+    isBackendMissingError,
+    noteDeviceBackendSkipped,
+} from '../utils/deviceBackend';
 
 
 // ─── Configuración optimizada ───────────────────────────────────────────────
@@ -231,12 +238,16 @@ export function useAutoBackup(isPremium, isDemo, deviceId) {
     useEffect(() => {
         // Solo dispositivos con licencia activa (no demo) escuchan solicitudes remotas de la Estación Maestra.
         // Los demos no tienen acceso a backup remoto en Drive.
+        // Guard deviceBackend: sin la tabla backup_requests no hay nada que escuchar.
         const { isDemo: demoActive } = configRef.current;
-        if (!deviceId || !supabaseCloud || demoActive) return;
+        if (!deviceId || !supabaseCloud || demoActive || isDeviceBackendDown()) return;
 
         let channel = null;
 
         const checkPendingRequests = async () => {
+            // Guard deviceBackend: la tabla backup_requests no existe aún (modelo
+            // comercial sin decidir). Sin esto, el poll cada 60s genera 404 eternos.
+            if (isDeviceBackendDown()) { noteDeviceBackendSkipped('useAutoBackup'); return; }
             // GUARDA-RAIL: semáforo anti-doble-ejecución (poll + realtime)
             if (isRunningRef.current) return;
             isRunningRef.current = true;
@@ -248,13 +259,21 @@ export function useAutoBackup(isPremium, isDemo, deviceId) {
             }, 2 * 60 * 1000);
 
             try {
-                const { data } = await supabaseCloud
+                const { data, error: reqErr } = await supabaseCloud
                     .from('backup_requests')
                     .select('id, status, created_at')
                     .eq('device_id', deviceId)
                     .eq('status', 'pending')
                     .order('created_at', { ascending: false })
                     .maybeSingle();
+
+                // Tabla inexistente → marcar backend caído y no reintentar en 24 h.
+                if (reqErr && isBackendMissingError(reqErr)) {
+                    markDeviceBackendDown();
+                    noteDeviceBackendSkipped('useAutoBackup');
+                    return;
+                }
+                if (!reqErr) markDeviceBackendUp();
 
                 if (data?.id) {
                     // GUARDA-RAIL V4: usar sessionStorage para persistir IDs entre reloads en la misma pestaña
@@ -285,7 +304,12 @@ export function useAutoBackup(isPremium, isDemo, deviceId) {
                     }
                 }
             } catch (err) {
-                console.error('[AutoBackup] Error al procesar solicitud pendiente:', err);
+                if (isBackendMissingError(err)) {
+                    markDeviceBackendDown();
+                    noteDeviceBackendSkipped('useAutoBackup');
+                } else {
+                    console.error('[AutoBackup] Error al procesar solicitud pendiente:', err);
+                }
             } finally {
                 if (runningTimeoutRef.current) clearTimeout(runningTimeoutRef.current);
                 isRunningRef.current = false;

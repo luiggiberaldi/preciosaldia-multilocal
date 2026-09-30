@@ -1,5 +1,12 @@
 import { useEffect } from 'react';
 import { supabase } from '../core/supabaseClient';
+import {
+    isDeviceBackendDown,
+    markDeviceBackendDown,
+    markDeviceBackendUp,
+    isBackendMissingError,
+    noteDeviceBackendSkipped,
+} from '../utils/deviceBackend';
 
 const PRODUCT_ID = 'bodega';
 
@@ -27,17 +34,22 @@ export function useLicenseMonitoring({
         if (!deviceId || !import.meta.env.VITE_SUPABASE_URL) return;
 
         const verifyStatus = async () => {
+            // Guard: backend de dispositivos no implementado → no martillar con 404.
+            if (isDeviceBackendDown()) { noteDeviceBackendSkipped('useLicenseMonitoring'); return; }
             try {
                 let license = null;
                 try {
                     const { data, error: rpcErr } = await supabase.rpc('get_license_status', { p_device_id: deviceId });
-                    if (!rpcErr && data) {
+                    if (rpcErr) {
+                        if (isBackendMissingError(rpcErr)) { markDeviceBackendDown(); noteDeviceBackendSkipped('useLicenseMonitoring'); return; }
+                    } else if (data) {
                         const record = Array.isArray(data) ? data[0] : data;
                         if (record) {
                             license = record;
                         }
                     }
                 } catch (rpcEx) {
+                    if (isBackendMissingError(rpcEx)) { markDeviceBackendDown(); noteDeviceBackendSkipped('useLicenseMonitoring'); return; }
                     // Silencioso
                 }
 
@@ -48,8 +60,12 @@ export function useLicenseMonitoring({
                         .eq('device_id', deviceId)
                         .eq('product_id', PRODUCT_ID)
                         .maybeSingle();
+                    if (error && isBackendMissingError(error)) { markDeviceBackendDown(); noteDeviceBackendSkipped('useLicenseMonitoring'); return; }
                     license = data;
                 }
+
+                // Llegamos aquí sin "no implementado": el backend existe.
+                markDeviceBackendUp();
 
                 if (license && (license.is_active === false || license.type === 'revoked') && isPremium) {
                     localStorage.removeItem('pda_premium_token');
@@ -121,13 +137,23 @@ export function useLicenseMonitoring({
         };
 
         const sendHeartbeat = async () => {
+            if (isDeviceBackendDown()) return;
             verifyStatus();
             try {
                 const clientName = localStorage.getItem('business_name') || localStorage.getItem('restaurant_name') || '';
-                await supabase.rpc('auto_register_device', { p_device_id: deviceId, p_product_id: PRODUCT_ID, p_client_name: clientName });
-                await supabase.rpc('heartbeat_device', { p_device_id: deviceId, p_product_id: PRODUCT_ID, p_client_name: clientName });
+                const { error: regErr } = await supabase.rpc('auto_register_device', { p_device_id: deviceId, p_product_id: PRODUCT_ID, p_client_name: clientName });
+                const { error: hbErr } = await supabase.rpc('heartbeat_device', { p_device_id: deviceId, p_product_id: PRODUCT_ID, p_client_name: clientName });
+                if (isBackendMissingError(regErr) || isBackendMissingError(hbErr)) {
+                    markDeviceBackendDown();
+                    noteDeviceBackendSkipped('useLicenseMonitoring');
+                } else {
+                    markDeviceBackendUp();
+                }
             } catch (e) {
-                if (import.meta.env?.DEV) {
+                if (isBackendMissingError(e)) {
+                    markDeviceBackendDown();
+                    noteDeviceBackendSkipped('useLicenseMonitoring');
+                } else if (import.meta.env?.DEV) {
                     console.warn('[LicenseMonitoring] heartbeat falló:', e?.message ?? e);
                 }
             }
@@ -146,9 +172,9 @@ export function useLicenseMonitoring({
         // Solo dispositivos con cuenta activa (permanent/monthly/demo) mantienen el
         // socket `licenses_sync_` abierto — evita gastar cupo de conexiones Realtime
         // en instalaciones sin licencia. Esas detectan una activación vía el heartbeat
-        // de arriba en vez de Realtime.
+        // de arriba en vez de Realtime. Si el backend no existe, ni se suscribe.
         let subscribedToChannel = false;
-        if (isPremium) {
+        if (isPremium && !isDeviceBackendDown()) {
             let subObj = activeSubscriptions.get(deviceId);
             if (subObj) {
                 subObj.count++;
