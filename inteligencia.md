@@ -51,3 +51,20 @@ local), nunca reemplazar: así se puede podar la ventana enviada sin perder
 historial. Regla de oro: el receptor nunca debe poder borrar datos con un
 snapshot parcial. (Caso: `bodega_stock_v1` ~40KB vs catálogo ~3MB por venta;
 ventas podadas a 90 días con `mergeSales`.)
+
+## 2026-09-30 — Multi-dispositivo con Supabase Auth + RLS (patrón anti-egress)
+
+Patrón para sincronizar N dispositivos de un mismo dueño sin polling y sin quemar la cuota gratis:
+1. **Raíz de confianza = cuenta Auth del dueño**, no el device_id. Tabla `account_devices(user_id, device_id, revoked)`; el dispositivo se auto-registra al entrar o al canjear código.
+2. **Vinculación de caja sin escribir la contraseña:** tabla `pairing_codes(code 6 dígitos, user_id, expires_at, used)` + RPC `redeem_pairing_code` que valida expiración/uso único y registra el dispositivo en una sola llamada. La caja opera con sesión anónima (`is_anonymous`) y descubre a sus hermanos con un RPC `SECURITY DEFINER` (`my_account_device_ids()`) que solo devuelve device_ids — nunca datos de otros usuarios.
+3. **RLS:** políticas "owner gestiona sus device_ids" + "dispositivo lee `sync_documents` donde `device_id` ∈ sus device_ids". Sin service_role en el cliente.
+4. **Pull con watermark por cuenta** (`gt('updated_at', watermark)` en localStorage, orden ascendente, límite) en vez de traer todo en cada arranque. La corrección NO depende del watermark: el applier ignora lo que no sea más nuevo que la metadata local por documento (idempotente).
+5. **Lección de edición:** al insertar una rama nueva en un hook largo, verificar con `node --check`/esbuild + correr la suite ANTES de seguir: un bloque pegado en la rama equivocada deja un `else` inalcanzable que solo se ve revisando el flujo. Hacer backup del archivo antes de ediciones quirúrgicas con python (`cp` a /tmp).
+
+## 2026-09-30 — Tope de equipos por cuenta aplicado en el servidor
+
+Lección reutilizable del límite de 6 equipos:
+1. **El tope vive en un RPC `SECURITY DEFINER`, nunca en el cliente.** `register_account_device` cuenta los equipos activos del dueño (`auth.uid()`) sin contar el que se registra y falla con `LIMIT_REACHED` si ya hay 6. El cliente solo mapea ese token a UI (banner de límite). Así ningún cliente viejo o modificado puede saltarse el cupo.
+2. **Re-vincular no consume cupo** (upsert idempotente); un equipo revocado que vuelve a entrar con la contraseña sí pasa por el conteo — si la cuenta está llena, se rechaza igual que uno nuevo.
+3. **Ante el límite, no dejar sesiones a medias:** si el login es válido pero el equipo no se pudo vincular, se cierra la sesión de inmediato. Una sesión "conectada" que no sincroniza es peor que un error claro.
+4. **En modo cuenta, el pull multi-dispositivo mezcla `doc_id` de hermanos:** cualquier lógica de "¿ya existe en la nube?" debe filtrar por `device_id` propio (traerlo en el `select`), o un hermano suprime el push propio.

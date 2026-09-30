@@ -7,6 +7,7 @@ import { SectionCard } from '../../SettingsShared';
 import { showToast } from '../../Toast';
 import AuditLogViewer from '../AuditLogViewer';
 import QRCode from 'qrcode';
+import CloudAccountSection from '../../CloudAccountSection';
 
 export default function SettingsTabSistema({
     theme, toggleTheme,
@@ -179,6 +180,10 @@ export default function SettingsTabSistema({
                         {statusMessage}
                     </div>
                 )}
+
+                {/* Cuenta en la nube: vincula este dispositivo a la cuenta del dueño
+                    para sincronizar todas las sedes entre dispositivos. */}
+                <CloudAccountSection />
             </SectionCard>
 
             {/* Apariencia */}

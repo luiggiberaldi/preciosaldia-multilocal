@@ -534,3 +534,41 @@ por encima de la cuota gratis). Ahora una venta típica mueve ~40KB.
 
 **Verificación:** build de producción verde. Prueba real desde los teléfonos
 de las sedes pendiente.
+
+---
+
+## 2026-09-30 — Pro: Fase 1 sync multi-dispositivo (cuenta del dueño + códigos de 6 dígitos)
+
+**Qué:** los dispositivos del mismo dueño ahora sincronizan entre sí sin depender del pairing monitor/caja. La cuenta Supabase del dueño es la raíz de confianza: cada dispositivo se registra en `account_devices` y lee los documentos de sus hermanos.
+
+- **DB (Supabase `oshexsmweswzbwaksvra`, aplicadas):**
+  - Migración `002_account_devices.sql`: tabla `account_devices` (user_id, device_id, alias, revoked, last_seen) y `pairing_codes` (código 6 dígitos, expira 10 min, un solo uso); RPC `redeem_pairing_code(p_code, p_device_id)`; RLS: dueño gestiona sus dispositivos; dispositivo ve documentos de sus hermanos (`sync_documents_account_read`).
+  - Migración `003_my_account_device_ids.sql`: RPC `my_account_device_ids()` para que un dispositivo vinculado por código (sesión anónima) descubra solo los device_id de su cuenta.
+- **Cliente:** `src/services/cloudAccount.js` (nuevo): signUp/signIn/signOut del dueño, registro del dispositivo, generación y canje de códigos, lista y revocación de dispositivos, `getAccountSyncContext()` (modo owner / modo linked por código).
+- **`useCloudSync`:** si hay contexto de cuenta, el gate de pairing no bloquea; el pull inicial trae documentos de **todos** los dispositivos de la cuenta con watermark por cuenta (`gt('updated_at', watermark)`, límite 2000, orden ascendente) para cuidar egress; el push sigue por dispositivo propio. `forceSyncAllPOSData(deviceId, !accountCtx)`.
+- **UI:** `src/components/CloudAccountSection.jsx` (nuevo) integrado en Ajustes → Sistema → Datos y Respaldo: entrar/crear cuenta, vincular con código, generar código para otro dispositivo (con expiración visible), lista de dispositivos vinculados con revocar, estado de conexión.
+- **Tests:** `tests/cloudAccount.test.js` (21 tests: auth, códigos, RPC, contextos, revocación).
+
+**Por qué:** el dueño necesita abrir su cuenta desde cualquier dispositivo/país y ver los mismos datos; el monitor del jefe en tiempo real viene en la Fase 2 sobre esta base. Se mantiene offline-first (IndexedDB operativo, la nube como espejo) y sin polling: pull condicionado por `updated_at`, realtime solo para eventos mínimos (Fase 2), restore completo solo al vincular.
+
+**Archivos:** `src/services/cloudAccount.js`, `src/components/CloudAccountSection.jsx`, `tests/cloudAccount.test.js` (nuevos); `src/hooks/useCloudSync.js`, `src/components/Settings/tabs/SettingsTabSistema.jsx`; `supabase/migrations/002_account_devices.sql`, `003_my_account_device_ids.sql`; `docs/PLAN-SYNC-MULTIDISPOSITIVO.md`.
+
+**Verificación:** 21/21 tests nuevos verdes; suite completa 767/779 (2 ficheros con fallos preexistentes verificados sin estos cambios: `supervisorLifecycle`, `receivablesDeterministic`). Sintaxis de los 4 archivos tocados validada. E2E real con 2 teléfonos pendiente. Realtime del Modo Jefe = Fase 2.
+
+## 2026-09-30 — Pro: Cuenta en la nube simplificada (solo Entrar + tope de 6 equipos)
+
+**Qué:** luigi aprobó el mockup simplificado ("Me gusta"): se eliminó crear-cuenta y códigos de la UI; solo queda Entrar con email + contraseña, y el equipo se vincula solo al entrar. Tope de 6 equipos por cuenta, aplicado en el servidor. La cuenta de prueba del cliente (`medina180276@gmail.com`, email pre-confirmado) se creó directo en `auth.users` + `auth.identities` vía SQL (Management API) con bcrypt de pgcrypto; contraseña verificada contra el hash.
+
+- **DB (Supabase `oshexsmweswzbwaksvra`, aplicada y verificada):** migración `004_device_limit.sql`:
+  - RPC `register_account_device(p_device_id, p_alias)` (SECURITY DEFINER, solo `authenticated`): registra el equipo del dueño (`auth.uid()`). Re-vincular un equipo conocido no consume cupo; un equipo nuevo con 6 activos falla con `LIMIT_REACHED`.
+  - `redeem_pairing_code` parcheado con la misma regla (el flujo de códigos está oculto de la UI por ahora, pero la DB no queda sin tope).
+- **Cliente:** `src/services/cloudAccount.js`: `registerCurrentDevice` ahora llama al RPC en vez del upsert directo (el tope no depende del cliente); `MAX_DEVICES_PER_ACCOUNT = 6`; `signInOwner`/`signUpOwner` ante `LIMIT_REACHED` cierran la sesión a medias y devuelven `limitReached: true` (una sesión sin equipo vinculado no sincroniza nada: mejor no dejarla).
+- **UI:** `src/components/CloudAccountSection.jsx` reescrito según el mockup aprobado: sin pestañas, formulario directo de Entrar, banner rojo "Límite de 6 equipos alcanzado. Revoca uno para liberar un cupo." cuando el login choca con el tope, lista con contador "(N de 6)", y diálogo propio (bottom sheet) para revocar — se eliminó el `window.confirm()`.
+- **Fix de sync:** en `src/hooks/useCloudSync.js` el `existingCloudKeys` del auto-recovery mezclaba documentos de dispositivos hermanos en modo cuenta (el pull ya no traía `device_id`): un hermano con el mismo `doc_id` podía suprimir el push del equipo propio. Ahora el pull trae `device_id` y el set solo cuenta documentos propios (con fallback para el modo anterior).
+- **Tests:** `tests/cloudAccount.test.js` 28/28 (7 nuevos: tope = 6, RPC con alias, mapeo de `LIMIT_REACHED`, signIn/signUp cierran sesión ante el límite, sin sesión no hay RPC).
+
+**Por qué:** la prueba será con un solo cliente y una sola cuenta; simple gana: sin códigos, sin crear-cuenta en la app (la cuenta se crea en el dashboard de Supabase). El tope en el servidor evita que un cliente llene la cuenta sin control, y cerrar la sesión ante el límite evita equipos "conectados" que no sincronizan.
+
+**Archivos:** `src/services/cloudAccount.js`, `src/components/CloudAccountSection.jsx`, `tests/cloudAccount.test.js`, `src/hooks/useCloudSync.js`, `supabase/migrations/004_device_limit.sql` (nueva).
+
+**Verificación:** 28/28 tests del módulo verdes; suite completa 774/786 (los 2 ficheros con fallos son los preexistentes ya verificados: `supervisorLifecycle`, `receivablesDeterministic`). Sintaxis validada. Migración 004 aplicada al proyecto real y verificada (función existe, contiene `LIMIT_REACHED`, grant a `authenticated`). Sin commit/push/deploy (pendiente de autorización). E2E real con teléfonos y realtime del Modo Jefe siguen pendientes.

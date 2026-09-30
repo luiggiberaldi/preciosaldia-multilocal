@@ -5,6 +5,10 @@ import { useAuthStore } from './store/useAuthStore';
 import { toCloudDocId, parseCloudDocId, isDocForActiveBusiness } from '../utils/negocioContext';
 import { SUPERVISOR_SYNC_KEYS, validateSupervisorSyncDocument } from '../services/supervisorContracts';
 import { ensureSupervisorSession } from '../services/supervisorAuth';
+import { ensureDeviceSessionRegistered } from '../utils/deviceIdentity';
+// FASE 1 cuenta multi-dispositivo (migraciones 002/003): modo cuenta como
+// alternativa al pairing primario->monitor.
+import { getAccountSyncContext } from '../services/cloudAccount';
 import { mergeLedgerEntries, rebuildCustomersFromLedger } from '../utils/customerLedger';
 // QUOTA-001: sincronización delta (stock liviano vs catálogo) + poda de ventas.
 import {
@@ -434,6 +438,21 @@ export function useCloudSync(deviceId) {
                     authUserId: shortCloudSyncId(session.user?.id),
                 });
 
+                // ── MODO CUENTA (migraciones 002/003) ─────────────────────
+                // Si el dueño vinculó este dispositivo a su cuenta (login o
+                // código de 6 dígitos), el sync NO requiere device_pairings:
+                // el pull abarca todos los dispositivos vinculados (propio +
+                // hermanos) y el push sigue siendo por device_id propio.
+                // Reclamar la identidad primero: el RLS de 002 resuelve la
+                // cuenta vía device_sessions (auth.uid() -> device_id).
+                let accountCtx = null;
+                try {
+                    await ensureDeviceSessionRegistered(deviceId).catch(() => {});
+                    accountCtx = await getAccountSyncContext();
+                } catch { accountCtx = null; }
+
+                let pairedMonitorId = null;
+                if (!accountCtx) {
                 const { data: pairing, error: pairingError } = await supabaseCloud
                     .from('device_pairings')
                     .select('monitor_device_id')
@@ -469,16 +488,27 @@ export function useCloudSync(deviceId) {
                     }
                     return;
                 }
+                pairedMonitorId = pairing.monitor_device_id;
+                } else {
+                    console.info('[CloudSync] Modo cuenta activo', {
+                        deviceId: shortCloudSyncId(deviceId),
+                        mode: accountCtx.mode,
+                        devices: accountCtx.deviceIds.length,
+                    });
+                }
 
                 isCloudSyncActive = true;
                 isInitialized.current = true;
                 console.info('[CloudSync] Receptor activo', {
                     deviceId: shortCloudSyncId(deviceId),
-                    monitorDeviceId: shortCloudSyncId(pairing.monitor_device_id),
+                    monitorDeviceId: shortCloudSyncId(pairedMonitorId),
+                    accountMode: Boolean(accountCtx),
                 });
 
                 // Sincronizar automáticamente todos los datos del POS a la nube en segundo plano (Patrón Donde Juancho)
-                forceSyncAllPOSData(deviceId, true).catch(() => {});
+                // En modo cuenta el push va con hash-gating (sin forzar): siembra la
+                // cuenta la primera vez y evita re-subir el catálogo en cada arranque.
+                forceSyncAllPOSData(deviceId, !accountCtx).catch(() => {});
 
                 // ── Pull Inicial / Sincronización de Importación ──
                 // Declarar el snapshot fuera de la rama condicional: el bloque de
@@ -503,6 +533,50 @@ export function useCloudSync(deviceId) {
                     localStorage.setItem('cloud_sync_ts', new Date().toISOString());
                     localStorage.removeItem('pda_backup_imported_flag');
                     console.log('[CloudSync] Sincronización incondicional de importación completada.');
+                } else if (accountCtx) {
+                    // ── PULL MULTI-DISPOSITIVO (modo cuenta) ─────────────
+                    // Trae los documentos de todos los dispositivos vinculados
+                    // (propio + hermanos). Watermark por cuenta: solo lo nuevo
+                    // desde el último pull (egress). La corrección no depende
+                    // del watermark: _applyFromCloud ignora lo que no sea más
+                    // nuevo que la metadata local por documento.
+                    const wmKey = `cloud_pull_watermark_${accountCtx.userId}`;
+                    const watermark = localStorage.getItem(wmKey);
+                    let pullQuery = supabaseCloud
+                        .from('sync_documents')
+                        .select('collection, doc_id, data, updated_at, device_id')
+                        .in('device_id', accountCtx.deviceIds)
+                        .in('collection', ['store', 'local'])
+                        .order('updated_at', { ascending: true })
+                        .limit(2000);
+                    if (watermark) pullQuery = pullQuery.gt('updated_at', watermark);
+
+                    const { data: initialDocs, error: docsError } = await pullQuery;
+
+                    if (docsError) throw docsError;
+                    docs = initialDocs || [];
+
+                    if (docs.length > 0) {
+                        for (const doc of docs) {
+                            // FASE 1 + SEC-002: solo documentos del negocio activo
+                            // (o globales); los legacy sin prefijo se ignoran.
+                            if (!isDocForActiveBusiness(doc.doc_id)) continue;
+                            try {
+                                await _applyFromCloud(doc.doc_id, doc.collection, doc.data);
+                            } catch (e) {
+                                // HOOK-023: try/catch por documento para no abortar el pull completo.
+                                console.warn(`[CloudSync] Error aplicando doc ${doc.doc_id}:`, e);
+                            }
+                        }
+                        console.log(`[CloudSync] Pull cuenta: ${docs.length} documentos de ${accountCtx.deviceIds.length} dispositivos.`);
+                    }
+                    const maxTs = docs.reduce(
+                        (m, d) => (d.updated_at && d.updated_at > m ? d.updated_at : m),
+                        watermark || ''
+                    );
+                    if (maxTs) {
+                        try { localStorage.setItem(wmKey, maxTs); } catch { /* noop */ }
+                    }
                 } else {
                     const { data: initialDocs, error: docsError } = await supabaseCloud
                         .from('sync_documents')
@@ -533,7 +607,14 @@ export function useCloudSync(deviceId) {
                 try {
                     const criticalKeys = ['bodega_sales_v1', 'bodega_products_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1', 'bodega_accounts_v2'];
                     // FASE 1: los doc_id en la nube van namespaced; comparar contra eso.
-                    const existingCloudKeys = new Set((docs || []).map(d => d.doc_id));
+                    // MODO CUENTA: `docs` trae documentos de TODOS los dispositivos
+                    // vinculados; solo cuentan los del dispositivo PROPIO: un doc
+                    // hermano con el mismo doc_id no debe suprimir el push propio.
+                    const existingCloudKeys = new Set(
+                        (docs || [])
+                            .filter(d => !d.device_id || d.device_id === deviceId)
+                            .map(d => d.doc_id)
+                    );
 
                     for (const key of criticalKeys) {
                         const localValue = await appForage.getItem(key);
