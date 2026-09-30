@@ -368,3 +368,64 @@ sincronizar `VITE_ESTACION_BACKUP_SECRET` (POS) con `BACKUP_SHARED_SECRET`
 
 **Verificación:** 31 tests de backup pasan (backupRelay + backupRestore).
 `node --check` limpio.
+## 2026-09-30 — Distintivo PRO dorado en la pantalla de acceso
+
+**Qué:** badge "PRO" en dorado pegado debajo del logo en `LockScreen.jsx`
+(pantalla "Quien esta operando?"). Píldora redondeada con degradado dorado
+(`#E7C65A → #C9962E`), texto oscuro, sombra suave — sin tocar `logo.png`.
+
+**Por qué:** luigi pidió el distintivo PRO en la pantalla de acceso. Primera
+propuesta (esquina superior derecha, verde petróleo) rechazada; segunda
+(debajo del logo, dorado) aprobada con el badge más pegado al logo, como
+parte del lockup. Mockups en `~/workspace/mockup-pro/` (v3 aprobada).
+
+**Verificación:** build de producción verde. Revisión visual final en el
+teléfono de luigi.
+
+---
+
+## 2026-09-30 — Versión 1.7.2 (distintivo PRO visible)
+
+**Qué:** bump de versión 1.7.1 → 1.7.2 (`LockScreen.jsx`, `SettingsView.jsx`,
+`package.json`). El badge PRO dorado ya estaba en producción desde el deploy
+anterior, pero el caché del navegador mostraba la versión vieja; la versión
+visible en la píldora sirve para confirmar que cargó lo nuevo.
+
+---
+
+## 2026-09-30 — Fix responsividad: modales cortados y solapamiento del bottom nav
+
+**Qué:** 
+- Modales del flujo de negocios (`NegocioSelector`, `NegocioModal`,
+  `ConfirmModal`) y el `Modal` genérico: el overlay usaba `fixed inset-0`
+  (viewport con la barra de URL de Chrome Android), lo que cortaba la parte
+  superior de la tarjeta. Cambiado a `h-dvh` + `max-h-[85/90dvh]`.
+- `App.jsx`: el contenido (`pb-16`) quedaba parcialmente tapado por el bottom
+  nav fijo → `pb-28` en móvil.
+- Tab "Supervisión" se truncaba ("Supervisi…"): se eliminó el `px-0.5` del
+  botón y las variantes muertas `xs:` (no existe ese breakpoint), dándole más
+  ancho al label.
+
+**Por qué:** captura de luigi mostrando el modal "Mis negocios" cortado arriba,
+la tarjeta "Registrar Gasto" tapada por el nav inferior y el tab truncado.
+
+**Verificación:** build de producción verde. Revisión visual final en el
+teléfono de luigi.
+
+---
+
+## 2026-09-30 — Pro: se elimina "Celular del Supervisor" de Ajustes > Sistema
+
+**Qué:** se quitó la tarjeta "Celular del Supervisor" (vinculación QR del modo
+supervisor) de `SettingsTabSistema.jsx`, junto con su import y el componente
+`PairingManager.jsx` (quedó huérfano). También se actualizó la línea que
+documentaba ese flujo en el prompt del asistente interno
+(`chatSystemPrompt.js`).
+
+**Por qué:** era el mecanismo de supervisión remota del Lite y seguía
+apareciendo en Pro. En Pro la supervisión vive en la pestaña Supervisión
+(Modo Jefe, multi-negocio). El monitor en vivo (`MonitorView`) no se tocó:
+sigue usándose en Supervisión.
+
+**Verificación:** build de producción verde. Revisión visual final en el
+teléfono de luigi.

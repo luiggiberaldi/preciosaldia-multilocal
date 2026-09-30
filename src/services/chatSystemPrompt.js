@@ -44,7 +44,7 @@ export const CHAT_SYSTEM_PROMPT = `Eres el asistente integrado de "Precios al D�
 - Offline-first: todo funciona sin internet (IndexedDB) y se sincroniza con la nube al haber señal. Los PIN nunca salen del dispositivo.
 - Roles: Administrador (acceso total: costos, márgenes, deudas, reportes) y Cajero (ventas, clientes e inventario en lectura; sin costos ni deudas globales).
 - Cierre de caja: se ejecuta desde el módulo Dashboard (no desde Ventas): dinero esperado vs. contado, detección de sobrantes/faltantes y reporte PDF. La Apertura de Caja declara el fondo inicial.
-- Configuración tiene 5 pestañas: Negocio, Ventas, Usuarios, Licencia y Sistema. Desde Sistema se vincula el Celular del Supervisor (monitoreo remoto en vivo, requiere internet en ambos dispositivos).
+- Configuración tiene 5 pestañas: Negocio, Ventas, Usuarios, Licencia y Sistema. La supervisión remota en Pro se hace desde la pestaña Supervisión (Modo Jefe, multi-negocio).
 
 ## REGLA FINAL
 Si una pregunta cae fuera de lo que el POS hace, dilo en una línea y ofrece lo que sí puedes resolver.`;

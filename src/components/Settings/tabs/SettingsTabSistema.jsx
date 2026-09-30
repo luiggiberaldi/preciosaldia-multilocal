@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Database, Palette, Fingerprint, Upload, Download, Share2, Cloud,
-    Check, ChevronRight, Trash2, AlertTriangle, FileText, ZoomIn, ZoomOut, RotateCcw, QrCode
+    Check, ChevronRight, Trash2, AlertTriangle, FileText, ZoomIn, ZoomOut, RotateCcw
 } from 'lucide-react';
 import { SectionCard } from '../../SettingsShared';
 import { showToast } from '../../Toast';
 import AuditLogViewer from '../AuditLogViewer';
-import PairingManager from '../PairingManager';
 import QRCode from 'qrcode';
 
 export default function SettingsTabSistema({
@@ -264,14 +263,8 @@ export default function SettingsTabSistema({
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Comparte este ID o escanea su código QR si necesitas soporte técnico o activación de licencia.</p>
             </SectionCard>
 
-            {/* Celular del Supervisor (QR Monitoreo) */}
-            {isAdmin && (
-                <div className="md:col-span-2 xl:col-span-3">
-                    <SectionCard icon={QrCode} title="Celular del Supervisor" subtitle="Monitoreo remoto en tiempo real" iconColor="text-emerald-500">
-                        <PairingManager deviceId={deviceId} triggerHaptic={triggerHaptic} />
-                    </SectionCard>
-                </div>
-            )}
+            {/* Celular del Supervisor (QR Monitoreo) — removido en Pro: era el flujo
+                del Lite; la supervisión en Pro vive en la pestaña Supervisión */}
 
             {/* Zona de Peligro — Habilitado para Administradores */}
             {isAdmin && (
