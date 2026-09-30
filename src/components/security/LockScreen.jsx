@@ -125,14 +125,22 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
       <div className="relative z-10 flex flex-col items-center justify-center flex-1 p-6">
         {/* Header */}
         <div className="text-center mb-14">
-          <div className="flex justify-center mb-6">
-            <img
-              src="./logo.png"
-              alt="Logo"
-              onClick={handleLogoClick}
-              className="h-24 sm:h-32 w-auto object-contain drop-shadow-md cursor-pointer select-none active:scale-95 transition-transform"
-              title="Precios Al Día"
-            />
+          <div className="flex justify-center mb-5">
+            <div className="flex flex-col items-center">
+              <img
+                src="./logo.png"
+                alt="Logo"
+                onClick={handleLogoClick}
+                className="h-24 sm:h-32 w-auto object-contain drop-shadow-md cursor-pointer select-none active:scale-95 transition-transform"
+                title="Precios Al Día"
+              />
+              <span
+                className="mt-1.5 inline-block rounded-full py-[7px] pr-[18px] text-[13px] font-extrabold uppercase tracking-[0.22em] text-[#2b2113] shadow-[0_4px_14px_rgba(201,150,46,0.45),inset_0_1px_0_rgba(255,255,255,0.5)]"
+                style={{ background: 'linear-gradient(135deg, #E7C65A 0%, #C9962E 100%)', paddingLeft: '22px' }}
+              >
+                Pro
+              </span>
+            </div>
           </div>
           <h1 className="text-2xl sm:text-3xl font-light tracking-[0.15em] text-slate-600">
             Quien esta{' '}
