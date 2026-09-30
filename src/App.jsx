@@ -22,6 +22,7 @@ import { ProductProvider } from './context/ProductContext';
 import { CartProvider, useCart } from './context/CartContext';
 import PremiumGuard from './components/security/PremiumGuard';
 import TermsOverlay from './components/TermsOverlay';
+import BusinessSetupOverlay from './components/BusinessSetupOverlay';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useOfflineQueue } from './hooks/useOfflineQueue';
 import { useAutoBackup } from './hooks/useAutoBackup';
@@ -80,6 +81,22 @@ export default function App() {
   const [showMasterSetup, setShowMasterSetup] = useState(
     () => requireLogin && !isMasterPinSetup()
   );
+
+  // Flujo de primer arranque (multi-local): Términos → PIN maestro →
+  // configuración del primer negocio. Los términos se aceptan una vez por
+  // instalación; el negocio se configura una vez tras el PIN maestro.
+  const [termsAccepted, setTermsAccepted] = useState(
+    () => localStorage.getItem('pda_terms_accepted') === 'true'
+  );
+  const [showBusinessSetup, setShowBusinessSetup] = useState(() => {
+    if (localStorage.getItem('pda_business_config_done') === 'true') return false;
+    if (localStorage.getItem('pda_terms_accepted') === 'true') {
+      // Instalaciones que ya pasaron el flujo anterior: no pedir de nuevo.
+      localStorage.setItem('pda_business_config_done', 'true');
+      return false;
+    }
+    return true;
+  });
 
   // Al recargar la página, cerrar sesión si el login está activado
   useEffect(() => {
@@ -337,7 +354,7 @@ export default function App() {
       <UpdateBanner />
 
       {/* Terms and Conditions Overlay (First Use) */}
-      <TermsOverlay onAccept={forceHeartbeat} />
+      <TermsOverlay onAccept={() => { setTermsAccepted(true); forceHeartbeat(); }} />
 
 
       {/* Fase 1.5: creación única del PIN maestro del dueño (antes del lock) */}
@@ -345,6 +362,16 @@ export default function App() {
         <MasterPinSetupModal
           isOpen={showMasterSetup}
           onDone={() => setShowMasterSetup(false)}
+        />
+      )}
+
+      {/* Configuración del primer negocio: tras aceptar términos y crear el PIN maestro */}
+      {termsAccepted && !showMasterSetup && showBusinessSetup && (
+        <BusinessSetupOverlay
+          onDone={() => {
+            localStorage.setItem('pda_business_config_done', 'true');
+            setShowBusinessSetup(false);
+          }}
         />
       )}
 

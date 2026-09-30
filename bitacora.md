@@ -244,3 +244,18 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
   ventas" incluye la lista operativa de clientes para el fiado; la parte
   administrativa (proveedores, ajustes de cartera, tasas, usuarios) ya está
   vetada para el cajero por `isCajero`/`hasAdminAccess`.
+
+## 2026-09-29 — Fix SEC-021 en producción (sin commit de código)
+
+**Qué cambió:** Se agregaron `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` al `.env` local y a Vercel (production + preview), apuntando al mismo proyecto nuevo `oshexsmweswzbwaksvra`. Luego redeploy `--prod`.
+
+**Por qué:** `src/core/supabaseClient.js` (cliente "licencias", usado por useSecurity/useLicenseMonitoring/DevicesManager) lee esas dos variables y, en build de producción, LANZA el error SEC-021 al importarse si faltan. Solo habíamos configurado las `VITE_SUPABASE_CLOUD_*` (cliente de sync), así que producción cargaba pero tiraba `Uncaught Error ... Configuración incompleta (SEC-021)` en consola. Ambas parejas apuntan al mismo proyecto nuevo: el modelo comercial/licencias no está decidido y el cliente de licencias cae a flujo local en try/catch silencioso.
+
+## 2026-09-29 — Fix onboarding + T&C para lógica multi-local (auditoría de luigi)
+
+**Qué cambió:**
+1. `src/components/TermsOverlay.jsx`: se redujo al paso 1 (términos). El paso 2 (configuración del negocio) se extrajo a `BusinessSetupOverlay.jsx`. T&C actualizados: sección 2 suma bullet de gestión multi-negocio con datos separados; sección 4 reescrita por completo (el modelo viejo de licenciamiento por hardware/Estación Maestra/QR ya no existe → ahora describe el modelo de acceso por roles: PIN maestro del dueño, supervisor/cajero por negocio, responsabilidad sobre los PIN); sección 5 suma aislamiento de datos por negocio y límite por rol; fecha a Septiembre 2026; "sus negocios" en plural; pie "Tus Negocios Inteligentes".
+2. `src/components/BusinessSetupOverlay.jsx` (nuevo): paso de configuración del primer negocio con el `import` de `useNegociosStore` correcto (el viejo TermsOverlay lo usaba sin importar y el try/catch ocultaba el ReferenceError: el nombre nunca llegaba al registro). Copy nuevo: "Tu primer negocio", aclara que podrá agregar más desde el selector y que los datos van separados; el correo se etiqueta como "Correo del Dueño" (global, las novedades son de la app).
+3. `src/App.jsx`: nuevo orden de primer arranque — Términos → PIN maestro → configuración del primer negocio → app. Flag `pda_business_config_done`; instalaciones que ya aceptaron términos con el flujo anterior no ven el paso de nuevo (migración silenciosa).
+
+**Por qué:** la auditoría del flujo de bienvenida mostró que el onboarding seguía pensado para un solo negocio (copy en singular, T&C con licenciamiento obsoleto de la app original) y tenía un bug real que impedía guardar el nombre en el registro de negocios.
