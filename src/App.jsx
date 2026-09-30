@@ -469,7 +469,7 @@ export default function App() {
       <ProductProvider>
         {/* OFFLINE-IMG: precalienta el cache del SW con TODAS las imágenes del inventario */}
         <ImagePrecacheRunner />
-        <main className={`flex-1 min-h-0 w-full max-w-full px-0 lg:px-6 xl:px-8 mx-auto relative ${isKeyboardOpen ? 'pb-2' : 'pb-16 lg:pb-1'} flex flex-col overflow-y-auto`}>
+        <main className={`flex-1 min-h-0 w-full max-w-full px-0 lg:px-6 xl:px-8 mx-auto relative ${isKeyboardOpen ? 'pb-2' : 'pb-28 lg:pb-1'} flex flex-col overflow-y-auto`}>
 
           {/* Hidden Admin Trigger Area */}
         <div
@@ -764,7 +764,7 @@ function TabButton({ id, icon, label, isActive, badgeCount, onClick, 'data-tour'
     <button
       data-tour={dataTour}
       onClick={onClick}
-      className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 min-h-[44px] group relative transition-all duration-200 active:scale-95 px-0.5 overflow-visible"
+      className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 min-h-[44px] group relative transition-all duration-200 active:scale-95 overflow-visible"
     >
       <div className={`relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full transition-all duration-300 shrink-0 ${
         isActive 
@@ -778,7 +778,7 @@ function TabButton({ id, icon, label, isActive, badgeCount, onClick, 'data-tour'
           </span>
         )}
       </div>
-      <span className={`w-full max-w-full truncate text-center text-[9px] xs:text-[10px] sm:text-xs tracking-tight xs:tracking-normal leading-tight transition-colors duration-200 ${
+      <span className={`w-full max-w-full truncate text-center text-[9px] sm:text-xs tracking-tight leading-tight transition-colors duration-200 ${
         isActive ? 'text-white font-bold' : 'text-slate-400 group-hover:text-slate-200 font-medium'
       }`}>
         {label}

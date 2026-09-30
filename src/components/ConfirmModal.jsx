@@ -38,7 +38,7 @@ export default function ConfirmModal({
     const icon = ICONS[variant] || ICONS.danger;
 
     return (
-        <div className="fixed inset-0 z-[200] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+        <div className="fixed inset-x-0 top-0 h-dvh z-[200] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
             <div className="bg-white dark:bg-slate-900 rounded-[1.5rem] p-6 max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200"
                 onClick={e => e.stopPropagation()}>
 
