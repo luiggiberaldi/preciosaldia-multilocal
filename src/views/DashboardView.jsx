@@ -17,6 +17,7 @@ import { shareSaleWhatsApp } from '../utils/dashboardActions';
 import { generateDailyClosePDF } from '../utils/dailyCloseGenerator';
 import { useNotifications } from '../hooks/useNotifications';
 import SyncStatus from '../components/SyncStatus';
+import { pushSalesWindow } from '../hooks/useCloudSync';
 import { useProductContext } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import { useAudit } from '../hooks/useAudit';
@@ -373,6 +374,11 @@ export default function DashboardView({ rates, triggerHaptic, onNavigate, theme,
         await storageService.setItem(SALES_KEY, updatedSales);
         setSales(updatedSales);
         setIsCashReconOpen(false);
+
+        // CRÍTICO-2(b) (2026-10-01): al cierre de caja se sube la ventana de
+        // 90 días para que el supervisor tenga el historial completo.
+        // Fire-and-forget: el cierre no depende del resultado del sync.
+        try { pushSalesWindow().catch(() => {}); } catch { }
 
         if (summaryObj) {
             setShowCierreSummary(true);

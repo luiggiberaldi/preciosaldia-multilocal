@@ -4,6 +4,7 @@ import localforage from 'localforage';
 import { showToast } from '../components/Toast';
 import { IDB_KEYS, LS_KEYS, PROTECTED_KEYS } from '../config/backupKeys';
 import { validateBackupJson, applyBackupToStorage, clearAppKeysForRestore } from '../utils/backupRestoreService';
+import { isCloudSyncActiveNow } from './useCloudSync';
 
 /**
  * Hook that encapsulates JSON import/export and delete-all-data logic.
@@ -117,6 +118,15 @@ export function useDataImportExport({
 
     const handleDeleteAllData = async () => {
         if (deleteInput !== 'ELIMINAR') return;
+        // M-22 (2026-10-01): con sync activo el borrado local no es durable —
+        // las ventas "resucitan" en el próximo pull (mergeSales es aditivo).
+        // Se bloquea con mensaje claro en vez de prometer un borrado falso.
+        try {
+            if (isCloudSyncActiveNow()) {
+                showToast('No se puede borrar el historial con la sincronización activa: las ventas volverían desde la nube. Desactívala primero si de verdad quieres borrar.', 'error');
+                return;
+            }
+        } catch { /* si no se puede verificar, se permite (modo local) */ }
         try {
             triggerHaptic && triggerHaptic();
             await storageService.setItem('bodega_sales_v1', []);

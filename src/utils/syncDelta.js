@@ -88,6 +88,44 @@ export function isValidStockMap(value) {
     return Object.values(value).every((v) => Number.isFinite(Number(v)));
 }
 
+/**
+ * M-6 (2026-10-01): reconcilia un mapa de stock remoto SUMANDO DELTAS en vez
+ * de asignar el valor absoluto. El LWW del documento completo perdía los
+ * descuentos de ventas concurrentes entre equipos (caja A vendía 2 y caja B
+ * vendía 3 del mismo producto: al aplicar el mapa absoluto de B se perdía la
+ * venta de A).
+ *
+ * `lastRemoteMap`: último mapa visto de LA MISMA FUENTE (mismo device_id).
+ * El delta por producto (nuevo − anterior) refleja solo la actividad remota
+ * entre pushes y se suma al stock local, que ya incluye la actividad propia.
+ *
+ * Sin mapa previo (primera vez que se ve a esa fuente): se asigna el absoluto
+ * (comportamiento anterior, sin regresión) y se siembra el mapa.
+ *
+ * Retorna { products, nextRemoteMap } — nextRemoteMap se persiste como el
+ * "último visto" de esa fuente para el próximo ciclo.
+ */
+export function applyStockMapDelta(products, stockMap, lastRemoteMap) {
+    if (!Array.isArray(products) || !stockMap || typeof stockMap !== 'object') {
+        return { products, nextRemoteMap: lastRemoteMap || null };
+    }
+    if (!lastRemoteMap || typeof lastRemoteMap !== 'object') {
+        return { products: applyStockMap(products, stockMap), nextRemoteMap: { ...stockMap } };
+    }
+    let changed = false;
+    const out = products.map((p) => {
+        if (!p || p.id == null) return p;
+        const key = String(p.id);
+        if (!Object.prototype.hasOwnProperty.call(stockMap, key)) return p;
+        if (!Object.prototype.hasOwnProperty.call(lastRemoteMap, key)) return p;
+        const delta = Number(stockMap[key]) - Number(lastRemoteMap[key]);
+        if (!Number.isFinite(delta) || delta === 0) return p;
+        changed = true;
+        return { ...p, stock: (Number(p.stock) || 0) + delta };
+    });
+    return { products: changed ? out : products, nextRemoteMap: { ...stockMap } };
+}
+
 function saleTime(sale) {
     const raw = sale?.timestamp || sale?.fecha;
     const t = raw ? new Date(raw).getTime() : NaN;
@@ -109,7 +147,14 @@ export function pruneSalesForSync(sales, days = RETENTION.SALES_SYNC_DAYS) {
  * Fusiona ventas remotas con las locales por id (union aditiva).
  * Por id duplicado gana la más nueva por timestamp. Nunca elimina ventas
  * locales: una ventana podada (90 días) no puede borrar historial.
+ *
+ * M-3 (2026-10-01): la anulación es un estado terminal. Si una de las dos
+ * versiones está ANULADA (status o voidedAt), gana la anulada aunque su
+ * timestamp sea menor: una venta anulada jamás "resucita" por sync.
  */
+function isVoidedSale(sale) {
+    return sale?.status === 'ANULADA' || sale?.voidedAt != null;
+}
 export function mergeSales(localSales, remoteSales) {
     const local = Array.isArray(localSales) ? localSales : [];
     const remote = Array.isArray(remoteSales) ? remoteSales : [];
@@ -125,7 +170,20 @@ export function mergeSales(localSales, remoteSales) {
         if (!s || s.id == null) continue;
         const key = String(s.id);
         const prev = byId.get(key);
-        if (!prev || saleTime(s) >= saleTime(prev)) byId.set(key, s);
+        if (!prev) {
+            byId.set(key, s);
+            continue;
+        }
+        const prevVoid = isVoidedSale(prev);
+        const curVoid = isVoidedSale(s);
+        if (curVoid && !prevVoid) {
+            byId.set(key, s);
+            continue;
+        }
+        if (prevVoid && !curVoid) {
+            continue; // la anulación local gana: no resucitar
+        }
+        if (saleTime(s) >= saleTime(prev)) byId.set(key, s);
     }
     return [...orphans, ...byId.values()];
 }

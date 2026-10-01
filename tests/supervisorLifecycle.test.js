@@ -17,7 +17,9 @@ describe('Supervisor lifecycle guardrails', () => {
     });
 
     it('limpia y reintenta Realtime sin duplicar el canal', () => {
-        expect(monitorSync).toContain('subscriptionRef.current = null');
+        // ALTO-1 (2026-10-01): multi-canal por equipo; el guardrail ahora
+        // verifica la limpieza del arreglo de suscripciones.
+        expect(monitorSync).toContain('subscriptionsRef.current = subscriptionsRef.current.filter');
         expect(monitorSync).toContain('scheduleReconnect');
         expect(monitorSync).toContain('supabaseCloud.removeChannel(channel)');
         expect(monitorSync).toContain('initInFlightRef');

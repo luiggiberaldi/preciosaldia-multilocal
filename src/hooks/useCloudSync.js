@@ -12,7 +12,7 @@ import { getAccountSyncContext } from '../services/cloudAccount';
 import { mergeLedgerEntries, rebuildCustomersFromLedger } from '../utils/customerLedger';
 // QUOTA-001: sincronización delta (stock liviano vs catálogo) + poda de ventas.
 import {
-    applyStockMap,
+    applyStockMapDelta,
     buildSalesDeltaPayload,
     buildStockMap,
     catalogHash,
@@ -33,6 +33,13 @@ import {
     readSyncEnvelope,
     withSyncRetry,
 } from '../services/supervisorSyncService';
+import { recordSyncConflict, friendlyConflictName } from '../utils/syncConflicts';
+
+// Claves con semántica append-only o de fusión: su descarte/merge no es un
+// conflicto a reportar (M-17 solo vigila documentos NO append-only).
+const MERGED_SYNC_KEYS = new Set(['bodega_sales_v1', 'bodega_customer_ledger_v1', 'bodega_stock_v1']);
+const isMergeSemanticsKey = (key) =>
+    MERGED_SYNC_KEYS.has(key) || isSalesDeltaKey(key);
 
 // Una única allowlist compartida por primary y monitor.
 const SYNC_KEYS = SUPERVISOR_SYNC_KEYS;
@@ -67,6 +74,23 @@ function quickHash(value) {
 
 const LAST_PUSH_HASH_PREFIX = 'bodega_last_periodic_push_hash_';
 
+/* ─── M-6: último mapa de stock visto por fuente (para reconciliar por delta) */
+const lastRemoteStockKey = (docId, sourceDeviceId) =>
+    `pda_stock_lastremote_${docId}__${sourceDeviceId || 'unknown'}`;
+function readLastRemoteStockMap(docId, sourceDeviceId) {
+    try {
+        const raw = localStorage.getItem(lastRemoteStockKey(docId, sourceDeviceId));
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch { return null; }
+}
+function writeLastRemoteStockMap(docId, sourceDeviceId, map) {
+    try {
+        if (map) localStorage.setItem(lastRemoteStockKey(docId, sourceDeviceId), JSON.stringify(map));
+    } catch { /* cuota llena: se re-siembra en el próximo ciclo */ }
+}
+
 // ─── FASE 1 MULTI-NEGOCIO ──────────────────────────────────────────────────
 // `doc_id = nb_<negocioId>:<clave>` (la columna `collection` ya separa
 // 'store'/'local', así que no se duplica en el doc_id). Las claves globales
@@ -82,6 +106,11 @@ let isSyncingFromCloud = false; // true mientras aplicamos cambios de la nube �
 let pendingPush = {};           // Debounce: { [key]: timeoutId }
 let _currentDeviceId = '';      // Device ID activo para pushCloudSync
 let isCloudSyncActive = false;   // Evita empujar a la nube si el dispositivo no está autenticado/emparejado
+
+/** M-22 (2026-10-01): expone si el sync está activo para bloquear operaciones destructivas. */
+export function isCloudSyncActiveNow() {
+    return isCloudSyncActive;
+}
 
 // SEC-009 / HOOK-011: ELIMINADO el monkeypatch global de `localStorage.setItem`.
 // Antes se reemplazaba `localStorage.setItem` a nivel módulo, interceptando TODAS
@@ -196,19 +225,19 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
 };
 
 /**
- * QUOTA-003: sube el DELTA diario de ventas (solo los tickets de hoy).
+ * QUOTA-003: sube el DELTA diario de ventas (solo los tickets del día).
  * El doc_id es `bodega_sales_delta_YYYY-MM-DD` (por negocio vía toCloudDocId).
  * Pesa ~KB en vez de ~MB. El receptor fusiona por id (mergeSales).
  *
  * @param {Array} salesArray - array local completo de ventas
+ * @param {string} day - día YYYY-MM-DD local (defecto: hoy)
  */
-const pushSalesDelta = async (salesArray, forceUnconditional = false) => {
-    const day = salesDayString();
+const pushSingleSalesDelta = async (salesArray, day, forceUnconditional = false) => {
     const deltaKey = salesDeltaKeyForDate(day);
     const docId = toCloudDocId(deltaKey);
     const payload = buildSalesDeltaPayload(salesArray, day);
 
-    // Hash-gating propio del delta: si los tickets de hoy no cambiaron, no subir.
+    // Hash-gating propio del delta: si los tickets del día no cambiaron, no subir.
     const hashKey = LAST_PUSH_HASH_PREFIX + docId;
     const currentHash = quickHash(payload);
     if (!forceUnconditional && localStorage.getItem(hashKey) === currentHash) {
@@ -240,6 +269,67 @@ const pushSalesDelta = async (salesArray, forceUnconditional = false) => {
     }
 };
 
+const pushSalesDelta = async (salesArray, forceUnconditional = false) => {
+    const result = await pushSingleSalesDelta(salesArray, salesDayString(), forceUnconditional);
+    // CRÍTICO-2(a) (2026-10-01): si el equipo estuvo offline días previos, sus
+    // deltas nunca se empujaron. Re-empujar los pendientes (fire-and-forget).
+    if (result?.ok) {
+        pushPendingSalesDeltas(salesArray).catch(() => {});
+    }
+    return result;
+};
+
+/**
+ * CRÍTICO-2(a): re-empuja los deltas de días previos (dentro de la ventana de
+ * retención) cuyo hash no coincide con el último confirmado. Cada día tiene
+ * hash-gating propio, así que los ya subidos se saltan sin tráfico.
+ * Tope de 7 días por ciclo para no hacer ráfagas contra la cuota.
+ */
+const MAX_PENDING_DELTA_DAYS_PER_CYCLE = 7;
+const SALES_WINDOW_DAILY_KEY = 'pda_sales_window_last_push';
+const SALES_WINDOW_DAILY_MS = 24 * 60 * 60 * 1000;
+const pushPendingSalesDeltas = async (salesArray) => {
+    if (!supabaseCloud || !isCloudSyncActive || !_currentDeviceId) return { ok: false, skipped: true };
+    const today = salesDayString();
+    const cutoff = Date.now() - RETENTION.SALES_SYNC_DAYS * 24 * 60 * 60 * 1000;
+    const days = new Set();
+    for (const t of (Array.isArray(salesArray) ? salesArray : [])) {
+        const raw = t?.timestamp || t?.fecha;
+        const ts = raw ? new Date(raw).getTime() : NaN;
+        if (!Number.isFinite(ts) || ts < cutoff) continue;
+        const day = salesDayString(new Date(ts));
+        if (day !== today) days.add(day);
+    }
+    let pushed = 0;
+    let checked = 0;
+    for (const day of days) {
+        if (checked >= MAX_PENDING_DELTA_DAYS_PER_CYCLE) break;
+        checked++;
+        const r = await pushSingleSalesDelta(salesArray, day, false);
+        if (r?.ok && !r?.skipped) pushed++;
+    }
+    if (pushed > 0) console.info(`[CloudSync] Deltas de días previos re-empujados: ${pushed}`);
+    // CRÍTICO-2(b) (2026-10-01): la ventana de 90 días se sube como respaldo
+    // al menos 1 vez al día (además del cierre de caja explícito). Así un
+    // supervisor que pida historial siempre tiene de dónde reconstruir.
+    maybePushDailySalesWindow();
+    return { ok: true, pushed, checked };
+};
+
+/** Sube la ventana de 90 días si hace más de 24h que no se sube. */
+const maybePushDailySalesWindow = () => {
+    try {
+        const last = Number(localStorage.getItem(SALES_WINDOW_DAILY_KEY) || 0);
+        if (Date.now() - last < SALES_WINDOW_DAILY_MS) return;
+    } catch { return; }
+    pushSalesWindow().then((r) => {
+        if (r?.ok) {
+            try { localStorage.setItem(SALES_WINDOW_DAILY_KEY, String(Date.now())); } catch { }
+            console.info('[CloudSync] Ventana de ventas diaria subida');
+        }
+    }).catch(() => {});
+};
+
 /**
  * QUOTA-003: sube la ventana completa de 90 días de ventas (podada).
  * Uso: 1 vez al día al cierre del negocio, o bajo demanda cuando un
@@ -269,6 +359,7 @@ export const pushSalesWindow = async () => {
             if (res.error) throw res.error;
             return res;
         });
+        try { localStorage.setItem(SALES_WINDOW_DAILY_KEY, String(Date.now())); } catch { }
         return { ok: true, updatedAt, windowTickets: payloadValue.length };
     } catch (error) {
         console.warn('[CloudSync] No se pudo subir la ventana de ventas:', error?.message ?? error);
@@ -364,7 +455,7 @@ const STORE_SCHEMAS = {
  * documentos del negocio activo (o globales). Los documentos legacy sin
  * prefijo (pre-Fase 1) se ignoran: el push local los re-publica namespaced.
  */
-async function _applyFromCloud(docId, collection, data) {
+async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
     isSyncingFromCloud = true;
     try {
         if (!['store', 'local'].includes(collection)) return false;
@@ -385,6 +476,21 @@ async function _applyFromCloud(docId, collection, data) {
         const metadataKey = getSyncMetadataKey(docId);
         const previousUpdatedAt = localStorage.getItem(metadataKey);
         if (!isNewerSyncDocument(envelope.updatedAt, previousUpdatedAt)) {
+            // M-17 (2026-10-01): el LWW descartaba en silencio. Si el contenido
+            // remoto difiere del confirmado y la clave no es append-only, se
+            // registra el conflicto para avisar en UI.
+            if (!isMergeSemanticsKey(key)) {
+                const hashKey = LAST_PUSH_HASH_PREFIX + docId;
+                const confirmedHash = (() => { try { return localStorage.getItem(hashKey); } catch { return null; } })();
+                if (confirmedHash && confirmedHash !== quickHash(payload)) {
+                    recordSyncConflict({
+                        key,
+                        docId,
+                        direction: 'remote-discarded',
+                        detail: `Otro equipo también modificó ${friendlyConflictName(key)}; se conservó tu versión (más reciente).`,
+                    });
+                }
+            }
             return false;
         }
 
@@ -447,14 +553,25 @@ async function _applyFromCloud(docId, collection, data) {
             }
             // QUOTA-001: el mapa de stock se fusiona sobre el catálogo local.
             // Nunca reemplaza productos: solo actualiza existencias.
+            // M-6 (2026-10-01): reconciliación por DELTAS por fuente en vez de
+            // asignación absoluta (LWW perdía descuentos concurrentes). Los
+            // docs del propio equipo se ignoran: lo local ya es autoritativo.
             if (key === 'bodega_stock_v1' && payload && typeof payload === 'object') {
+                const ownId = _currentDeviceId || (() => { try { return localStorage.getItem('pda_device_id'); } catch { return null; } })();
+                const isOwnDoc = Boolean(sourceDeviceId && ownId && sourceDeviceId === ownId);
                 const localProducts = await appForage.getItem('bodega_products_v1');
-                if (Array.isArray(localProducts)) {
-                    const mergedProducts = applyStockMap(localProducts, payload);
+                if (Array.isArray(localProducts) && !isOwnDoc) {
+                    const lastRemote = readLastRemoteStockMap(docId, sourceDeviceId);
+                    const { products: mergedProducts, nextRemoteMap } =
+                        applyStockMapDelta(localProducts, payload, lastRemote);
+                    writeLastRemoteStockMap(docId, sourceDeviceId, nextRemoteMap);
                     if (mergedProducts !== localProducts) {
                         await appForage.setItem('bodega_products_v1', mergedProducts);
                         window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_products_v1', source: 'remote' } }));
                     }
+                } else if (isOwnDoc) {
+                    // Sembrar el "último visto" propio por coherencia, sin tocar stock.
+                    writeLastRemoteStockMap(docId, sourceDeviceId, { ...payload });
                 }
                 const hashKey = LAST_PUSH_HASH_PREFIX + docId;
                 localStorage.setItem(hashKey, quickHash(payload));
@@ -480,6 +597,26 @@ async function _applyFromCloud(docId, collection, data) {
                 localStorage.setItem(hashKey, quickHash(payloadToStore));
                 if (envelope.updatedAt) localStorage.setItem(metadataKey, envelope.updatedAt);
                 return true;
+            }
+            // M-17 (2026-10-01): si el documento local tiene cambios sin confirmar
+            // y el remoto (más nuevo) los va a reemplazar, registrar el
+            // conflicto antes de perderlos.
+            if (!isMergeSemanticsKey(key)) {
+                try {
+                    const hashKeyB = LAST_PUSH_HASH_PREFIX + docId;
+                    const confirmedHashB = localStorage.getItem(hashKeyB);
+                    const localValue = await appForage.getItem(key);
+                    if (localValue != null && confirmedHashB
+                        && quickHash(localValue) !== confirmedHashB
+                        && quickHash(payloadToStore) !== quickHash(localValue)) {
+                        recordSyncConflict({
+                            key,
+                            docId,
+                            direction: 'local-overwritten',
+                            detail: `Tus cambios sin sincronizar en ${friendlyConflictName(key)} fueron reemplazados por la versión más reciente de otro equipo.`,
+                        });
+                    }
+                } catch { /* la detección nunca debe romper el sync */ }
             }
             await appForage.setItem(key, payloadToStore);
             if (key === 'bodega_customer_ledger_v1') {
@@ -678,7 +815,7 @@ export function useCloudSync(deviceId) {
                             // (o globales); los legacy sin prefijo se ignoran.
                             if (!isDocForActiveBusiness(doc.doc_id)) continue;
                             try {
-                                await _applyFromCloud(doc.doc_id, doc.collection, doc.data);
+                                await _applyFromCloud(doc.doc_id, doc.collection, doc.data, doc.device_id);
                             } catch (e) {
                                 // HOOK-023: try/catch por documento para no abortar el pull completo.
                                 console.warn(`[CloudSync] Error aplicando doc ${doc.doc_id}:`, e);
@@ -709,7 +846,7 @@ export function useCloudSync(deviceId) {
                             // (o globales); los legacy sin prefijo se ignoran.
                             if (!isDocForActiveBusiness(doc.doc_id)) continue;
                             try {
-                                await _applyFromCloud(doc.doc_id, doc.collection, doc.data);
+                                await _applyFromCloud(doc.doc_id, doc.collection, doc.data, doc.device_id);
                             } catch (e) {
                                 // HOOK-023: try/catch por documento para no abortar el pull completo.
                                 console.warn(`[CloudSync] Error aplicando doc ${doc.doc_id}:`, e);

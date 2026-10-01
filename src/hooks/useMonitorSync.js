@@ -5,8 +5,9 @@ import localforage from 'localforage';
 import { parseCloudDocId, isGlobalKey } from '../utils/negocioContext';
 import { validateSupervisorSyncDocument } from '../services/supervisorContracts';
 import { ensureSupervisorSession } from '../services/supervisorAuth';
+import { getAccountSyncContext } from '../services/cloudAccount';
 // QUOTA-001/002: fusión delta al recibir (stock liviano, ventas podadas).
-import { applyStockMap, isSalesDeltaKey, mergeSales, physicalDocId, salesDeltaTickets } from '../utils/syncDelta';
+import { applyStockMapDelta, isSalesDeltaKey, mergeSales, physicalDocId, salesDeltaTickets } from '../utils/syncDelta';
 import {
     getSyncMetadataKey,
     isNewerSyncDocument,
@@ -20,7 +21,12 @@ localforage.config({ name: 'BodegaApp', storeName: 'bodega_app_data' });
 const SUBSCRIBE_TIMEOUT_MS = 8000;
 const RECONNECT_DELAYS_MS = [1000, 3000, 10000, 30000];
 
-export function useMonitorSync(pairedDeviceId) {
+/**
+ * ALTO-1 (2026-10-01): el monitor ya no es ciego a vendedores no pareados.
+ * Acepta un deviceId o un array; en modo cuenta usa TODOS los deviceIds de
+ * la cuenta (getAccountSyncContext) para el pull inicial y el Realtime.
+ */
+export function useMonitorSync(deviceIdsInput) {
     const [isConnected, setIsConnected] = useState(false);
     const [lastSync, setLastSync] = useState(() => {
         const stored = localStorage.getItem('monitor_last_sync');
@@ -31,7 +37,7 @@ export function useMonitorSync(pairedDeviceId) {
     const [loading, setLoading] = useState(true);
     const [syncState, setSyncState] = useState(SUPERVISOR_SYNC_STATES.IDLE);
     const [syncError, setSyncError] = useState(null);
-    const subscriptionRef = useRef(null);
+    const subscriptionsRef = useRef([]);
     const disposedRef = useRef(false);
     const initInFlightRef = useRef(null);
     const reconnectTimerRef = useRef(null);
@@ -40,6 +46,20 @@ export function useMonitorSync(pairedDeviceId) {
     const lifecycleRef = useRef(0);
     const subscribeInFlightRef = useRef(null);
     const removeInFlightRef = useRef(Promise.resolve());
+    // Lista efectiva de devices a monitorear (modo cuenta o fallback 1:1).
+    const deviceIdsRef = useRef([]);
+
+    const resolveDeviceIds = async () => {
+        // Modo cuenta: todos los equipos vinculados (propio + hermanos).
+        try {
+            const ctx = await getAccountSyncContext().catch(() => null);
+            if (ctx && Array.isArray(ctx.deviceIds) && ctx.deviceIds.length > 0) {
+                return [...new Set(ctx.deviceIds)];
+            }
+        } catch { /* fallback abajo */ }
+        const input = Array.isArray(deviceIdsInput) ? deviceIdsInput : [deviceIdsInput];
+        return [...new Set(input.filter(Boolean))];
+    };
 
     const updateLastSync = (value) => {
         lastSyncRef.current = value;
@@ -53,7 +73,7 @@ export function useMonitorSync(pairedDeviceId) {
 
     const removeChannel = async (channel) => {
         if (!channel) return;
-        if (subscriptionRef.current === channel) subscriptionRef.current = null;
+        subscriptionsRef.current = subscriptionsRef.current.filter((c) => c !== channel);
 
         const removal = supabaseCloud.removeChannel(channel).catch(() => {});
         removeInFlightRef.current = removal;
@@ -61,10 +81,14 @@ export function useMonitorSync(pairedDeviceId) {
         if (removeInFlightRef.current === removal) removeInFlightRef.current = Promise.resolve();
     };
 
-    const clearSubscription = async () => removeChannel(subscriptionRef.current);
+    const clearSubscription = async () => {
+        const channels = [...subscriptionsRef.current];
+        subscriptionsRef.current = [];
+        await Promise.all(channels.map((c) => removeChannel(c)));
+    };
 
     const scheduleReconnect = (lifecycleId = lifecycleRef.current) => {
-        if (!isActiveLifecycle(lifecycleId) || !pairedDeviceId || reconnectTimerRef.current) return;
+        if (!isActiveLifecycle(lifecycleId) || deviceIdsRef.current.length === 0 || reconnectTimerRef.current) return;
         const attempt = Math.min(reconnectAttemptRef.current, RECONNECT_DELAYS_MS.length - 1);
         const delay = RECONNECT_DELAYS_MS[attempt];
         reconnectAttemptRef.current += 1;
@@ -118,11 +142,23 @@ export function useMonitorSync(pairedDeviceId) {
         await runWithoutEco(async () => {
             // QUOTA-001: el mapa de stock se fusiona sobre el catálogo del
             // negocio pareado; nunca reemplaza productos.
+            // M-6 (2026-10-01): reconciliación por deltas por fuente (mismo
+            // helper que el primario) para no perder descuentos concurrentes.
             if (key === 'bodega_stock_v1' && envelope.payload && typeof envelope.payload === 'object') {
                 const productsDocId = physicalDocId(negocioId, 'bodega_products_v1');
                 const current = await localforage.getItem(productsDocId);
                 if (Array.isArray(current)) {
-                    const merged = applyStockMap(current, envelope.payload);
+                    const lrKey = `pda_stock_lastremote_${docId}__${doc?.device_id || 'unknown'}`;
+                    let lastRemote = null;
+                    try {
+                        const raw = localStorage.getItem(lrKey);
+                        lastRemote = raw ? JSON.parse(raw) : null;
+                    } catch { lastRemote = null; }
+                    const { products: merged, nextRemoteMap } =
+                        applyStockMapDelta(current, envelope.payload, lastRemote);
+                    try {
+                        if (nextRemoteMap) localStorage.setItem(lrKey, JSON.stringify(nextRemoteMap));
+                    } catch { /* cuota llena: se re-siembra en el próximo ciclo */ }
                     if (merged !== current) {
                         await localforage.setItem(productsDocId, merged);
                         window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_products_v1', source: 'remote' } }));
@@ -182,14 +218,18 @@ export function useMonitorSync(pairedDeviceId) {
 
     const subscribeToRealtime = (lifecycleId = lifecycleRef.current) => {
         if (!isActiveLifecycle(lifecycleId)) return Promise.resolve({ ok: false, error: 'Ciclo de sincronización obsoleto' });
-        if (subscriptionRef.current) return Promise.resolve({ ok: true, error: null });
+        if (subscriptionsRef.current.length > 0) return Promise.resolve({ ok: true, error: null });
         if (subscribeInFlightRef.current) return subscribeInFlightRef.current;
 
         const subscriptionPromise = (async () => {
             await removeInFlightRef.current;
             if (!isActiveLifecycle(lifecycleId)) return { ok: false, error: 'Ciclo de sincronización obsoleto' };
+            const deviceIds = deviceIdsRef.current;
+            if (deviceIds.length === 0) return { ok: false, error: 'Sin dispositivos a monitorear' };
 
-            return new Promise((resolve) => {
+            // ALTO-1: un canal Realtime por equipo (los filtros de Supabase no
+            // soportan `in`). Se considera éxito si al menos uno suscribe.
+            const results = await Promise.all(deviceIds.map((deviceId) => new Promise((resolve) => {
                 let settled = false;
                 let timeout;
                 const finish = (result) => {
@@ -201,19 +241,16 @@ export function useMonitorSync(pairedDeviceId) {
 
                 timeout = setTimeout(() => {
                     void removeChannel(channel);
-                    setIsConnected(false);
-                    setSyncState(SUPERVISOR_SYNC_STATES.DEGRADED);
                     finish({ ok: false, error: 'Tiempo agotado al conectar Realtime' });
-                    scheduleReconnect(lifecycleId);
                 }, SUBSCRIBE_TIMEOUT_MS);
 
                 const channel = supabaseCloud
-                    .channel(buildSupervisorRealtimeChannelName(pairedDeviceId, lifecycleId))
+                    .channel(buildSupervisorRealtimeChannelName(deviceId, lifecycleId))
                     .on('postgres_changes', {
                         event: '*',
                         schema: 'public',
                         table: 'sync_documents',
-                        filter: `device_id=eq.${pairedDeviceId}`,
+                        filter: `device_id=eq.${deviceId}`,
                     }, async (realtimePayload) => {
                         if (!isActiveLifecycle(lifecycleId) || !realtimePayload.new) return;
                         try {
@@ -235,22 +272,35 @@ export function useMonitorSync(pairedDeviceId) {
                             return;
                         }
                         if (status === 'SUBSCRIBED') {
-                            reconnectAttemptRef.current = 0;
-                            setIsConnected(true);
-                            setSyncState(SUPERVISOR_SYNC_STATES.CONNECTED);
-                            setSyncError(null);
-                            finish({ ok: true, error: null });
+                            subscriptionsRef.current.push(channel);
+                            finish({ ok: true, error: null, deviceId });
                         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                             void removeChannel(channel);
-                            setIsConnected(false);
-                            setSyncState(lastSyncRef.current ? SUPERVISOR_SYNC_STATES.DEGRADED : SUPERVISOR_SYNC_STATES.ERROR);
-                            finish({ ok: false, error: `Canal Realtime: ${status}` });
-                            scheduleReconnect(lifecycleId);
+                            finish({ ok: false, error: `Canal Realtime: ${status}`, deviceId });
                         }
                     });
+            })));
 
-                subscriptionRef.current = channel;
-            });
+            if (!isActiveLifecycle(lifecycleId)) {
+                await clearSubscription();
+                return { ok: false, error: 'Ciclo de sincronización obsoleto' };
+            }
+            const okCount = results.filter((r) => r.ok).length;
+            if (okCount > 0) {
+                reconnectAttemptRef.current = 0;
+                setIsConnected(true);
+                setSyncState(SUPERVISOR_SYNC_STATES.CONNECTED);
+                setSyncError(null);
+                if (okCount < results.length) {
+                    console.warn(`[MonitorSync] ${results.length - okCount} canal(es) Realtime no suscribieron; reintentando`);
+                    scheduleReconnect(lifecycleId);
+                }
+                return { ok: true, error: null, channels: okCount };
+            }
+            setIsConnected(false);
+            setSyncState(lastSyncRef.current ? SUPERVISOR_SYNC_STATES.DEGRADED : SUPERVISOR_SYNC_STATES.ERROR);
+            scheduleReconnect(lifecycleId);
+            return { ok: false, error: 'Ningún canal Realtime suscribió' };
         })();
 
         subscribeInFlightRef.current = subscriptionPromise;
@@ -265,7 +315,12 @@ export function useMonitorSync(pairedDeviceId) {
 
         const run = (async () => {
             if (!isActiveLifecycle(lifecycleId)) return { ok: false, error: 'Ciclo de sincronización obsoleto' };
-            if (!pairedDeviceId) {
+            // ALTO-1: resolver la lista efectiva (modo cuenta → todos los
+            // equipos; si no, el/los deviceId que pasó la vista).
+            const deviceIds = await resolveDeviceIds();
+            if (!isActiveLifecycle(lifecycleId)) return { ok: false, error: 'Ciclo de sincronización obsoleto' };
+            deviceIdsRef.current = deviceIds;
+            if (deviceIds.length === 0) {
                 setLoading(false);
                 setIsConnected(false);
                 setSyncState(SUPERVISOR_SYNC_STATES.IDLE);
@@ -285,8 +340,8 @@ export function useMonitorSync(pairedDeviceId) {
                 setSyncState(SUPERVISOR_SYNC_STATES.PULLING);
                 const { data: docs, error } = await supabaseCloud
                     .from('sync_documents')
-                    .select('collection, doc_id, data, updated_at')
-                    .eq('device_id', pairedDeviceId)
+                    .select('collection, doc_id, data, updated_at, device_id')
+                    .in('device_id', deviceIds)
                     .in('collection', ['store', 'local']);
 
                 if (error) throw error;
@@ -326,12 +381,17 @@ export function useMonitorSync(pairedDeviceId) {
 
     const triggerRefresh = async () => initMonitor();
 
+    // Clave estable del input (string o array) para el efecto.
+    const inputKey = Array.isArray(deviceIdsInput)
+        ? deviceIdsInput.filter(Boolean).sort().join(',')
+        : (deviceIdsInput || '');
+
     useEffect(() => {
         disposedRef.current = false;
         const lifecycleId = lifecycleRef.current + 1;
         lifecycleRef.current = lifecycleId;
         reconnectAttemptRef.current = 0;
-        if (!supabaseCloud || !pairedDeviceId) {
+        if (!supabaseCloud || !inputKey) {
             setLoading(false);
             setIsConnected(false);
             setSyncState(SUPERVISOR_SYNC_STATES.IDLE);
@@ -366,7 +426,7 @@ export function useMonitorSync(pairedDeviceId) {
             subscribeInFlightRef.current = null;
             clearSubscription();
         };
-    }, [pairedDeviceId]);
+    }, [inputKey]);
 
     return {
         isConnected,

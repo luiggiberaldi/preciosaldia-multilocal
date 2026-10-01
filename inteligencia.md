@@ -120,3 +120,9 @@ resolver"). El unmock no es solo "para lo que sigue": el registro de mocks
 se evalúa elevado. Regla: si un archivo necesita el mock y otro caso necesita
 el módulo real, van en **archivos de test separados** (`cloudGateFlows`
 mockeado vs `cloudGateRealConfig` sin mock), no con unmock a mitad de archivo.
+
+## 2026-10-01 — Lecciones de Fase 3 (sync multi-equipo)
+- Las guardas de los tests que verifican texto fuente (`supervisorLifecycle.test.js`) se rompen en cada refactor del hook: al renombrar `subscriptionRef` → `subscriptionsRef` el test falló. Actualizar el guardrail junto con el refactor (la intención —"sin duplicar el canal"— sigue viva, solo cambió la forma).
+- En reconciliación LWW, el "updatedAt más nuevo gana" es insuficiente para estados terminales (anulaciones): agregar una regla de dominancia explícita (ANULADA gana siempre) antes de comparar timestamps.
+- Para mapas absolutos compartidos (stock), reconciliar por delta contra el último valor conocido de cada fuente es barato y evita el pisoteo de ventas concurrentes; la primera observación de cada fuente conserva asignación absoluta como semilla.
+- Conflictos LWW silenciosos: detectar es barato (comparar hash del descartado vs el confirmado, o hash local vs último confirmado antes de sobrescribir) y el aviso en UI (badge ámbar en el indicador de sync) convierte una pérdida silenciosa en algo revisable.
