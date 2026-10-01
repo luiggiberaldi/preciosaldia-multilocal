@@ -27,6 +27,15 @@ import { persist } from 'zustand/middleware';
 import { logEvent } from '../../services/auditService';
 import { hashPin, verifyPin } from '../../utils/crypto';
 import { routeAuthKey } from '../../utils/negocioContext';
+// Catálogo de usuarios sync (SEC-002): solo builders sanitizados, sin PINs.
+// El push a la nube va por import dinámico de useCloudSync (evita acoplarlo
+// al store y romper el tree-shaking).
+import {
+    USER_CATALOG_DOC_KEY,
+    buildUserCatalogDoc,
+    readUserTombstones,
+    addUserTombstone,
+} from '../../utils/userCatalog';
 import {
     verifyMasterPin,
     getDuenoSession,
@@ -79,8 +88,8 @@ async function _createDefaultUsersWithRandomPins() {
     const adminHash = await hashPin(adminPin);
     const cajeroHash = await hashPin(cajeroPin);
     const usuarios = [
-        { id: 1, nombre: 'Administrador', rol: 'ADMIN', pin: adminHash, requirePin: true },
-        { id: 2, nombre: 'Cajero', rol: 'CAJERO', pin: cajeroHash, requirePin: true },
+        { id: 1, uid: _newUserUid(), nombre: 'Administrador', rol: 'ADMIN', pin: adminHash, requirePin: true },
+        { id: 2, uid: _newUserUid(), nombre: 'Cajero', rol: 'CAJERO', pin: cajeroHash, requirePin: true },
     ];
     const initialPins = [
         { id: 1, nombre: 'Administrador', rol: 'ADMIN', pin: adminPin },
@@ -108,6 +117,8 @@ async function _ensureDefaultUsers(state, set) {
             window.dispatchEvent(new CustomEvent('initial-pins-ready', { detail: initialPins }));
         }
         logEvent('AUTH', 'USUARIOS_INICIALES', 'PINs de fabrica generados para primer arranque.', null, { count: initialPins.length });
+        // Catálogo sync (SEC-002): publica el roster inicial (sin PINs).
+        _pushUserCatalog();
     } catch (err) {
         console.error('[useAuthStore] No se pudieron crear usuarios por defecto:', err);
     }
@@ -219,6 +230,40 @@ function _defaultRequireLogin() {
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
+
+/**
+ * Genera un identificador estable por usuario para el merge multi-equipo.
+ * El `id` numérico es local (maxId+1) y puede colisionar entre equipos; el
+ * `uid` distingue "renombré al usuario" de "dos usuarios distintos".
+ */
+function _newUserUid() {
+    try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+            return crypto.randomUUID();
+        }
+    } catch { /* fallback abajo */ }
+    return 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+/**
+ * Publica el catálogo de usuarios sanitizado (SIN PINs, SEC-002) a la nube.
+ * Fire-and-forget: un fallo del push jamás debe romper la gestión de usuarios.
+ * Import dinámico de `useCloudSync` para no acoplar el store al hook.
+ */
+function _pushUserCatalog() {
+    try {
+        import('../useCloudSync.js')
+            .then((cs) => {
+                if (typeof cs?.queueCloudSync !== 'function') return;
+                const doc = buildUserCatalogDoc(
+                    useAuthStore.getState().usuarios,
+                    readUserTombstones()
+                );
+                cs.queueCloudSync(USER_CATALOG_DOC_KEY, doc);
+            })
+            .catch(() => {});
+    } catch { /* silenciar: el push nunca rompe el flujo */ }
+}
 
 export const useAuthStore = create(
     persist(
@@ -499,7 +544,7 @@ export const useAuthStore = create(
                     const hashedPin = await hashPin(String(nuevoPin));
                     set((state) => ({
                         usuarios: state.usuarios.map(u =>
-                            u.id === userId ? { ...u, pin: hashedPin } : u
+                            u.id === userId ? { ...u, pin: hashedPin, pinPendiente: false } : u
                         ),
                         failedAttempts: 0,
                         lockUntil: null,
@@ -531,7 +576,7 @@ export const useAuthStore = create(
                     const hashedPin = await hashPin(String(nuevoPin));
                     set((state) => ({
                         usuarios: state.usuarios.map(u =>
-                            u.id === userId ? { ...u, pin: hashedPin } : u
+                            u.id === userId ? { ...u, pin: hashedPin, pinPendiente: false } : u
                         )
                     }));
                     const target = get().usuarios.find(u => u.id === userId);
@@ -566,10 +611,12 @@ export const useAuthStore = create(
                         const maxId = state.usuarios.reduce((max, u) => Math.max(max, u.id), 0);
                         return {
                             // Fase 1 (ALTO-2): los usuarios nuevos exigen PIN (antes: acceso directo).
-                            usuarios: [...state.usuarios, { id: maxId + 1, nombre, rol, pin: hashedPin, requirePin: true }]
+                            usuarios: [...state.usuarios, { id: maxId + 1, uid: _newUserUid(), nombre, rol, pin: hashedPin, requirePin: true }]
                         };
                     });
                     logEvent('USUARIO', 'USUARIO_CREADO', `Usuario "${nombre}" (${rol}) creado`, get().usuarioActivo);
+                    // Catálogo sync (SEC-002): propaga el alta sin PINs a los demás equipos.
+                    _pushUserCatalog();
                     return { ok: true };
                 } catch (e) {
                     console.error('[useAuthStore] agregarUsuario falló:', e);
@@ -585,7 +632,11 @@ export const useAuthStore = create(
                 if (usuarioActivo?.id === userId) return false;
 
                 set({ usuarios: usuarios.filter(u => u.id !== userId) });
+                // Catálogo sync: tombstone para propagar el borrado a los demás
+                // equipos (SEC-002: el doc jamás incluye PINs).
+                addUserTombstone(userId);
                 logEvent('USUARIO', 'USUARIO_ELIMINADO', `Usuario "${target?.nombre}" (${target?.rol}) eliminado`, usuarioActivo);
+                _pushUserCatalog();
                 return true;
             },
 
@@ -610,9 +661,12 @@ export const useAuthStore = create(
                             delete sinPin.pin;
                             set((state) => ({
                                 usuarios: state.usuarios.map(u =>
-                                    u.id === userId ? { ...u, ...sinPin, pin: hashedPin } : u
+                                    u.id === userId ? { ...u, ...sinPin, pin: hashedPin, pinPendiente: false } : u
                                 )
                             }));
+                            // Catálogo sync (SEC-002): el PIN no viaja, pero el
+                            // resto de los datos editados sí se propagan.
+                            _pushUserCatalog();
                         } catch (e) {
                             console.error('[useAuthStore] editarUsuario hashPin falló:', e);
                         }
@@ -625,7 +679,20 @@ export const useAuthStore = create(
                         u.id === userId ? { ...u, ...nuevosDatos } : u
                     )
                 }));
+                // Catálogo sync (SEC-002): propaga nombre/rol sin PINs.
+                _pushUserCatalog();
                 return { ok: true };
+            },
+
+            /**
+             * Aplica el catálogo de usuarios recibido de otro equipo (pull).
+             * Solo lo invoca `useCloudSync`; no publica de vuelta (evita eco).
+             * @param {Array} usuarios - usuarios ya fusionados (PINs locales preservados)
+             */
+            aplicarCatalogoRemoto: (usuarios) => {
+                if (!Array.isArray(usuarios)) return;
+                set({ usuarios });
+                logEvent('USUARIO', 'CATALOGO_SINCRONIZADO', `Catálogo de usuarios sincronizado desde otro equipo (${usuarios.length} usuarios)`, get().usuarioActivo);
             },
 
             setRequireLogin: (val) => {

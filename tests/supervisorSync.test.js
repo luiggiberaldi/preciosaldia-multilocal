@@ -17,7 +17,19 @@ describe('Supervisor sync contract', () => {
         expect(SUPERVISOR_SYNC_KEYS).toContain('bodega_products_v1');
         expect(SUPERVISOR_SYNC_KEYS).toContain('bodega_sales_v1');
         expect(isSupervisorSyncKey('abasto-auth-storage')).toBe(false);
-        expect(isSupervisorSyncKey('bodega_users_catalog_v1')).toBe(false);
+        // El catálogo de usuarios SÍ está permitido, pero solo en forma
+        // sanitizada (sin PINs, SEC-002): el auth completo sigue bloqueado.
+        expect(isSupervisorSyncKey('bodega_users_catalog_v1')).toBe(true);
+        expect(validateSupervisorSyncDocument('bodega_users_catalog_v1', {
+            v: 1,
+            users: [{ id: 1, nombre: 'Ana', rol: 'ADMIN', requirePin: true }],
+            deleted: [],
+        }).valid).toBe(true);
+        expect(validateSupervisorSyncDocument('bodega_users_catalog_v1', {
+            v: 1,
+            users: [{ id: 1, nombre: 'Ana', rol: 'ADMIN', pin: 'hash' }],
+            deleted: [],
+        }).valid).toBe(false);
         expect(isSupervisorSyncKey('arbitrary-secret')).toBe(false);
     });
 

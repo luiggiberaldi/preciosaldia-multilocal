@@ -40,6 +40,22 @@ const SYNC_VALIDATORS = Object.freeze({
     bodega_sales_v1: Array.isArray,
     bodega_payment_methods_v1: Array.isArray,
     bodega_accounts_v2: Array.isArray,
+    // Catálogo de usuarios SIN PINs (SEC-002): `{ v: 1, users: [...], deleted: [...] }`.
+    // Los PINs jamás viajan; cada equipo conserva los suyos (ver utils/userCatalog).
+    // Defensa en profundidad: se RECHAZA cualquier doc que incluya `pin`/`plainPin`.
+    bodega_users_catalog_v1: (value) =>
+        value && typeof value === 'object' && !Array.isArray(value)
+        && value.v === 1
+        && Array.isArray(value.users)
+        && (value.deleted === undefined || Array.isArray(value.deleted))
+        && value.users.every(u =>
+            u && typeof u === 'object'
+            && u.id != null
+            && typeof u.nombre === 'string'
+            && typeof u.rol === 'string'
+            && !('pin' in u)
+            && !('plainPin' in u)
+        ),
     // QUOTA-002: la bitácora de auditoría es diagnóstico por dispositivo;
     // ya NO viaja a la nube (crecía sin cota y se re-subía entera).
     monitor_rates_v12: isPlainObject,

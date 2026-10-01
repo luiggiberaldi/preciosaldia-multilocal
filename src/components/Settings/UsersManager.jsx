@@ -102,6 +102,17 @@ function UserRow({ user, currentUserId, canManage, onChangePin, onDelete, onEdit
                     {isCurrentUser && (
                         <span className="text-[8px] font-black uppercase tracking-wider bg-brand-light dark:bg-surface-800/30 text-brand px-1.5 py-0.5 rounded-full">Tu</span>
                     )}
+                    {/* Catálogo sync: el usuario llegó de otro equipo y aún no
+                        tiene PIN en este equipo — no puede entrar hasta que un
+                        admin lo defina (botón de llave). */}
+                    {(user.pinPendiente || user.pin == null) && (
+                        <span
+                            className="text-[8px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full"
+                            title="Llegó de otro equipo: define su PIN en este equipo con el botón de llave"
+                        >
+                            PIN pendiente
+                        </span>
+                    )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                     <RoleIcon size={10} className={roleConf.text} />

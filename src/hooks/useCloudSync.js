@@ -10,6 +10,8 @@ import { ensureDeviceSessionRegistered } from '../utils/deviceIdentity';
 // alternativa al pairing primario->monitor.
 import { getAccountSyncContext } from '../services/cloudAccount';
 import { mergeLedgerEntries, rebuildCustomersFromLedger } from '../utils/customerLedger';
+// Catálogo de usuarios sin PINs (SEC-002): merge preservando PINs locales.
+import { mergeUserCatalog, isValidUserCatalogDoc, buildUserCatalogDoc, readUserTombstones } from '../utils/userCatalog';
 // QUOTA-001: sincronización delta (stock liviano vs catálogo) + poda de ventas.
 import {
     applyStockMapDelta,
@@ -445,6 +447,15 @@ export const forceSyncAllPOSData = async (overrideDeviceId, forceUnconditional =
                 await pushCloudSync(key, val, forceUnconditional);
             }
         }
+        // Catálogo de usuarios sin PINs (SEC-002): vive en el auth store, no en appForage.
+        try {
+            const { usuarios } = useAuthStore.getState();
+            if (Array.isArray(usuarios) && usuarios.length > 0) {
+                await pushCloudSync('bodega_users_catalog_v1', buildUserCatalogDoc(usuarios, readUserTombstones()), forceUnconditional);
+            }
+        } catch (e) {
+            console.warn('[CloudSync] Error en sincronización forzada del catálogo de usuarios:', e);
+        }
     } catch (e) {
         console.warn('[CloudSync] Error en sincronización forzada POS:', e);
     }
@@ -462,6 +473,8 @@ const STORE_SCHEMAS = {
         && ['CREDIT', 'DEBIT'].includes(movement?.direction)),
     'bodega_payment_methods_v1': (data) => Array.isArray(data),
     'bodega_accounts_v2': (data) => Array.isArray(data),
+    // Catálogo de usuarios sin PINs (SEC-002): `{ v: 1, users, deleted }`.
+    'bodega_users_catalog_v1': (data) => isValidUserCatalogDoc(data),
     'bodega_categories_v1': (data) => Array.isArray(data),
     'monitor_rates_v12': (data) => typeof data === 'object' && data !== null,
     'abasto_audit_log_v1': (data) => Array.isArray(data),
@@ -594,6 +607,26 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
                     // Sembrar el "último visto" propio por coherencia, sin tocar stock.
                     writeLastRemoteStockMap(docId, sourceDeviceId, { ...payload });
                 }
+                const hashKey = LAST_PUSH_HASH_PREFIX + docId;
+                localStorage.setItem(hashKey, quickHash(payload));
+                if (envelope.updatedAt) localStorage.setItem(metadataKey, envelope.updatedAt);
+                return true;
+            }
+            // ── Catálogo de usuarios sin PINs (SEC-002) ─────────────────────
+            // Se fusiona preservando los PINs locales (mergeUserCatalog): los
+            // usuarios nuevos quedan con `pinPendiente: true` y los borrados se
+            // aplican vía tombstones. El doc jamás trae PINs.
+            if (key === 'bodega_users_catalog_v1' && payload && typeof payload === 'object' && !Array.isArray(payload)) {
+                try {
+                    const authState = useAuthStore.getState();
+                    const merged = mergeUserCatalog(authState.usuarios, payload);
+                    if (typeof authState.aplicarCatalogoRemoto === 'function') {
+                        authState.aplicarCatalogoRemoto(merged);
+                    }
+                } catch (e) {
+                    console.warn('[CloudSync] No se pudo aplicar el catálogo de usuarios:', e?.message ?? e);
+                }
+                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_users_catalog_v1', source: 'remote' } }));
                 const hashKey = LAST_PUSH_HASH_PREFIX + docId;
                 localStorage.setItem(hashKey, quickHash(payload));
                 if (envelope.updatedAt) localStorage.setItem(metadataKey, envelope.updatedAt);

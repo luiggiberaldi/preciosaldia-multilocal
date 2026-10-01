@@ -4,6 +4,25 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-10-01 — Catálogo de usuarios sincronizado entre equipos (sin PINs)
+
+**Qué:** Luigi preguntó si al crear un usuario en un equipo se sincroniza con los demás. No se hacía: los usuarios/PINs eran 100% locales por equipo. Ahora el **catálogo de usuarios se sincroniza** (crear, renombrar, cambiar rol, eliminar) vía `sync_documents`, pero los **PINs jamás viajan** (SEC-002 intacto: ni hashes ni texto plano; el validador rechaza docs que los incluyan). Cada equipo conserva sus PINs; un usuario que llega de otro equipo aparece con badge "PIN pendiente" hasta que un admin defina su PIN ahí.
+
+**Cambios:**
+- `src/utils/userCatalog.js`: `buildUserCatalogDoc()` (doc `{v:1, users:[{id,uid,nombre,rol,requirePin}], deleted:[tombstones]}`), `mergeUserCatalog()` (match por `uid` estable — distingue renombrado de colisión de id; preserva PINs locales; tombstones de borrado podados a 30 días; ids numéricos nunca se reutilizan en el merge), `isValidUserCatalogDoc()`, helpers de tombstones en localStorage (por negocio).
+- `src/services/supervisorContracts.js`: `bodega_users_catalog_v1` entra a la allowlist con validador estricto (rechaza `pin`/`plainPin` en el doc — defensa en profundidad).
+- `src/hooks/useCloudSync.js`: `STORE_SCHEMAS` += validador del catálogo; `_applyFromCloud` fusiona el doc remoto con `mergeUserCatalog` y lo aplica al auth store (sin eco); `forceSyncAllPOSData` también empuja el catálogo.
+- `src/hooks/store/useAuthStore.js`: `_pushUserCatalog()` (fire-and-forget, import dinámico) tras `agregarUsuario`, `eliminarUsuario` (registra tombstone), `editarUsuario` y `_ensureDefaultUsers`; nueva acción `aplicarCatalogoRemoto()`; `uid` estable (`crypto.randomUUID`) en usuarios nuevos y por defecto; `cambiarPin`/`resetPinEmergency`/`editarUsuario` limpian `pinPendiente`.
+- `src/components/Settings/UsersManager.jsx`: badge "PIN pendiente" en la fila del usuario que llegó de otro equipo sin PIN local.
+- `tests/userCatalogSync.test.js`: 20 tests (sanitizado, doc sin PINs, merge por uid, tombstones, colisiones, allowlist).
+- `tests/supervisorSync.test.js`: actualizado — el catálogo ahora SÍ está allowlisted (sanitizado); `abasto-auth-storage` sigue bloqueado.
+
+**Verificación:** suite completa 923 passed / 11 skipped / 0 failed; `npm run build` exitoso. Dos bugs atrapados por los tests durante el desarrollo: (1) en colisión de id el usuario local se perdía del merge; (2) renombrado vs colisión eran indistinguibles sin `uid`.
+
+**Nota operativa:** el PIN sigue siendo por equipo a propósito. Si el dueño cambia su PIN o crea un cajero, el usuario aparece en todos los equipos pero el PIN debe definirse en cada uno.
+
+---
+
 ## 2026-10-01 — Fixeo Fase 4: barcode duplicado, restore con confirmación, backup completo
 
 **Qué:** se cierran los hallazgos ALTO restantes implementables. (1) Guardar un producto con un código de barras ya usado por otro producto ahora pide confirmación explícita: antes, el POS escaneaba y cobraba el producto equivocado en silencio (first-match). (2) Restaurar un backup ya no borra los datos a ciegas: valida, muestra fecha del backup vs última venta local, advierte si el backup es más antiguo y solo restaura tras confirmación. (3) El backup manual ahora incluye las claves que faltaban: ventas en espera (`bodega_pending_holds_v1`), modo de tasa, Cashea, modos de redondeo, modos de moneda de recibo/etiqueta, reportes, datos del negocio y preferencias de UI.
@@ -902,3 +921,5 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Verificación:** focales `auditoriaPostPlan` + `fase6` + `withLock` = 36 passed / 0 failed; suite completa con `TZ='America/Caracas'`: **903 passed / 11 skipped / 0 failed**; `npm run build` exitoso.
 
 **Pendientes que siguen en pie (no se fingieron resueltos):** ALTO-6, M-8 y B-10 (importador Excel del tercero, diffs exactos en `~/workspace/your_files/fase-4-diffs-coordinacion-tercero-2026-10-01.md`); B-2 (sesión local manipulable — decisión HMAC/PIN); B-3 (RPC público sin rate-limit, requiere server-side).
+
+**Deploy a producción (2026-10-01, ~14:20):** luigi autorizó ("despliega"). El push a `main` no disparó deploy automático en Vercel (Git no conectado: `vercel git connect` pendiente). Deploy manual con `vercel --prod`: `✓ Ready in 3m`, target production, commit `de88a68c` (tag `fix-auditoria-postplan`). `https://preciosaldia-multilocal.vercel.app` → 200 OK.
