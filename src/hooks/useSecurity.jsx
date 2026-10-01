@@ -4,6 +4,7 @@ import { verifyLicenseToken } from '../security/tokenCrypto';
 import { generateFingerprint, verifyStoredFingerprint, seedFingerprintAnchor } from '../security/deviceFingerprint';
 import { useLicenseMonitoring } from './useLicenseMonitoring';
 import { LICENSE_POLICY } from '../utils/securityConstants';
+import { isAccountLinkedLocally } from '../services/cloudAccount';
 import {
     isDeviceBackendDown,
     markDeviceBackendDown,
@@ -97,6 +98,20 @@ function useSecurityState() {
             }
         }
             if (!tokenObj) {
+            // GATE-CLOUD (2026-10-01): el gate real de Pro es CloudGate
+            // (código de licencia → login de dueño → registro del equipo con
+            // tope de 6 en el servidor). Si el equipo completó ese flujo,
+            // `pda_account_linked` está en 'true' y la licencia es válida:
+            // no exigir además el token RSA legacy ni el fetch remoto
+            // (actualmente stub). Sin esto, todo equipo activado por
+            // CloudGate caía en PremiumGuard ("Solicitar Licencia").
+            try {
+                if (isAccountLinkedLocally()) {
+                    setIsPremium(true);
+                    setLoading(false);
+                    return;
+                }
+            } catch { /* noop: si no se puede leer, seguir al fallback */ }
             // Fallback: verificar si existe licencia activa en Supabase (ej: reactivada remotamente).
             // Aquí confiamos en la fila del servidor, no en un token local minteado.
             let remoteLicense = null;
@@ -345,6 +360,13 @@ function useSecurityState() {
             // Si localStorage fue borrado o no hay token local (flujo sin token local en licencias DB),
             // intentar validar remotamente o contra cache offline.
             if (!raw) {
+                // GATE-CLOUD (2026-10-01): equipo activado por CloudGate
+                // (sin token RSA legacy). El integrity check no debe revocar
+                // su premium: el vínculo cuenta↔equipo ya fue validado en el
+                // servidor al registrarse (tope de 6).
+                try {
+                    if (isAccountLinkedLocally()) return;
+                } catch { /* noop */ }
                 let remoteLicense = null;
                 let netError = false;
                 try {

@@ -4,6 +4,19 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-10-01 — Fix: equipos activados por CloudGate caían en "Solicitar Licencia" (GATE-CLOUD)
+
+**Qué:** luigi reportó que la pantalla "Solicitar Licencia" (PremiumGuard) seguía saliendo en un equipo del cliente. Causa raíz: `useSecurity.checkLicense` nunca fue actualizado para reconocer el flujo CloudGate — solo aceptaba el token RSA legacy (`pda_premium_token`), el fetch remoto está stub (`_fetchRemoteLicense` siempre retorna null) y el monitoreo legacy es no-op. CloudGate sí completa bien (código válido → login → `register_account_device` en el servidor con tope de 6 → `pda_account_linked='true'`), pero nada de eso llegaba a `isPremium`. Peor: el integrity check periódico revocaba el premium a los ~30 min en equipos sin token RSA.
+
+**Cambios** (`src/hooks/useSecurity.jsx`):
+- Import de `isAccountLinkedLocally` desde `services/cloudAccount.js`.
+- En `checkLicense`: si no hay token RSA pero el equipo está vinculado vía CloudGate (`pda_account_linked='true'`), se otorga `isPremium` directamente — el vínculo solo existe tras validación en el servidor.
+- En el integrity check periódico: si el equipo está vinculado vía CloudGate, se retorna temprano sin revocar.
+
+**Verificación:** `tests/security.test.js` + `tests/securityFase1.test.js` (38 passed / 8 skipped); `vite build` exitoso.
+
+---
+
 ## 2026-10-01 — Deploy a producción: catálogo de usuarios (`bf7a514`)
 
 **Qué:** luigi autorizó ("Si"). Deploy manual con `vercel --prod` (Git↔Vercel sigue sin conectar en este proyecto): `✓ Ready in 1m`, target production, commit `bf7a514`. `https://preciosaldia-multilocal.vercel.app` → 200 OK; el bundle de producción contiene `bodega_users_catalog_v1` y la versión visible sigue `v2.0.0`. Producción ahora tiene: QUOTA-003 (ventas por delta), fixes Fases 0–6, fixes post-plan y el sync del catálogo de usuarios (PINs nunca viajan).
