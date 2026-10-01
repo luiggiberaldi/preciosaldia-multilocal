@@ -4,6 +4,12 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-10-01 — Deploy a producción: fix GATE-CLOUD (`5e9b492`)
+
+**Qué:** luigi autorizó ("deployalo"). Deploy manual con `vercel --prod` (Git↔Vercel sigue sin conectar): `✓ Ready in 2m`, target production, commit `5e9b492`. Los equipos activados vía CloudGate ya no caen en "Solicitar Licencia". Verificación HTTP 200 pendiente: la red del sandbox se cayó justo después del deploy (ni google.com respondía); el Ready lo confirmó el propio CLI de Vercel.
+
+---
+
 ## 2026-10-01 — Fix: equipos activados por CloudGate caían en "Solicitar Licencia" (GATE-CLOUD)
 
 **Qué:** luigi reportó que la pantalla "Solicitar Licencia" (PremiumGuard) seguía saliendo en un equipo del cliente. Causa raíz: `useSecurity.checkLicense` nunca fue actualizado para reconocer el flujo CloudGate — solo aceptaba el token RSA legacy (`pda_premium_token`), el fetch remoto está stub (`_fetchRemoteLicense` siempre retorna null) y el monitoreo legacy es no-op. CloudGate sí completa bien (código válido → login → `register_account_device` en el servidor con tope de 6 → `pda_account_linked='true'`), pero nada de eso llegaba a `isPremium`. Peor: el integrity check periódico revocaba el premium a los ~30 min en equipos sin token RSA.
