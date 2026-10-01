@@ -4,6 +4,12 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-10-01 — Deploy a producción: catálogo de usuarios (`bf7a514`)
+
+**Qué:** luigi autorizó ("Si"). Deploy manual con `vercel --prod` (Git↔Vercel sigue sin conectar en este proyecto): `✓ Ready in 1m`, target production, commit `bf7a514`. `https://preciosaldia-multilocal.vercel.app` → 200 OK; el bundle de producción contiene `bodega_users_catalog_v1` y la versión visible sigue `v2.0.0`. Producción ahora tiene: QUOTA-003 (ventas por delta), fixes Fases 0–6, fixes post-plan y el sync del catálogo de usuarios (PINs nunca viajan).
+
+---
+
 ## 2026-10-01 — Catálogo de usuarios sincronizado entre equipos (sin PINs)
 
 **Qué:** Luigi preguntó si al crear un usuario en un equipo se sincroniza con los demás. No se hacía: los usuarios/PINs eran 100% locales por equipo. Ahora el **catálogo de usuarios se sincroniza** (crear, renombrar, cambiar rol, eliminar) vía `sync_documents`, pero los **PINs jamás viajan** (SEC-002 intacto: ni hashes ni texto plano; el validador rechaza docs que los incluyan). Cada equipo conserva sus PINs; un usuario que llega de otro equipo aparece con badge "PIN pendiente" hasta que un admin defina su PIN ahí.
