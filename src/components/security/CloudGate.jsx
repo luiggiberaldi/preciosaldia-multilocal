@@ -10,8 +10,8 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Cloud, CloudOff, KeyRound, Mail, Lock, Loader2, AlertTriangle,
-    Smartphone, Trash2, ArrowLeft, CheckCircle2,
+    CloudOff, Mail, Lock, Loader2, AlertTriangle,
+    Trash2, ArrowLeft, Check,
 } from 'lucide-react';
 import {
     ensureCustomerClient,
@@ -31,40 +31,87 @@ import {
     MAX_DEVICES_PER_ACCOUNT,
 } from '../../services/cloudAccount.js';
 
-const inputCls =
-    'w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 ' +
-    'rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 ' +
-    'focus:border-sky-500 focus:outline-none';
+const inputBase =
+    'w-full px-3 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 ' +
+    'rounded-2xl text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 ' +
+    'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition';
+
+const inputCode =
+    'w-full px-3 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 ' +
+    'rounded-2xl text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 ' +
+    'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition ' +
+    'uppercase tracking-[0.2em] text-center font-mono';
+
+const inputIconCls = 'w-4 h-4 absolute left-3.5 top-3.5 text-slate-400 pointer-events-none';
 
 const btnPrimary =
-    'w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold ' +
-    'transition-colors active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ' +
-    'flex items-center justify-center gap-2';
+    'w-full py-3 rounded-2xl bg-brand hover:bg-brand-dark text-white text-sm font-extrabold ' +
+    'transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ' +
+    'flex items-center justify-center gap-2 shadow-lg shadow-brand/25';
 
 const btnGhost =
-    'w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 ' +
-    'text-sm font-bold transition-colors active:scale-[0.98] disabled:opacity-50 ' +
+    'w-full py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 ' +
+    'text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-50 ' +
     'flex items-center justify-center gap-2';
 
 function Shell({ children }) {
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950">
-            <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans relative overflow-hidden">
+            <div className="absolute -top-[30%] -left-[15%] w-[600px] h-[600px] bg-brand/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute -bottom-[30%] -right-[15%] w-[600px] h-[600px] bg-teal-400/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-7">
                 {children}
             </div>
         </div>
     );
 }
 
-function Header({ icon: Icon, title, subtitle }) {
+function BrandHeader() {
+    return (
+        <div className="flex flex-col items-center mb-5">
+            <img
+                src="./logo.png"
+                alt="PreciosAlDía"
+                className="h-11 w-auto object-contain mb-2"
+            />
+            <span
+                className="rounded-full px-4 py-1 text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#2b2113] shadow-[0_4px_14px_rgba(201,150,46,0.45)]"
+                style={{ background: 'linear-gradient(135deg, #E7C65A 0%, #C9962E 100%)' }}
+            >
+                Pro
+            </span>
+        </div>
+    );
+}
+
+function Steps({ step }) {
+    const pillOn = 'flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1.5 rounded-full bg-brand/10 text-brand border border-brand/30';
+    const pillOff = 'flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700';
+    const pillDone = 'flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30';
+    const nOn = 'w-4 h-4 rounded-full bg-brand text-white text-[10px] font-black flex items-center justify-center';
+    const nOff = 'w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-600 text-white text-[10px] font-black flex items-center justify-center';
+    const codeDone = step === 'login';
+    return (
+        <div className="flex items-center justify-center gap-2 mb-6">
+            <span className={codeDone ? pillDone : pillOn}>
+                {codeDone ? <Check className="w-3 h-3" /> : <span className={nOn}>1</span>}
+                Código
+            </span>
+            <span className="w-6 h-px bg-slate-200 dark:bg-slate-700" />
+            <span className={step === 'login' ? pillOn : pillOff}>
+                <span className={step === 'login' ? nOn : nOff}>2</span>
+                Cuenta
+            </span>
+        </div>
+    );
+}
+
+function Title({ title, subtitle }) {
     return (
         <div className="text-center mb-5">
-            <div className="mx-auto w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center mb-3">
-                <Icon className="w-6 h-6 text-sky-600 dark:text-sky-400" />
-            </div>
-            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h1>
+            <h1 className="text-xl font-black text-slate-800 dark:text-slate-100">{title}</h1>
             {subtitle && (
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>
+                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{subtitle}</p>
             )}
         </div>
     );
@@ -202,8 +249,8 @@ export default function CloudGate({ onReady }) {
     if (state === 'checking') {
         return (
             <Shell>
-                <div className="flex flex-col items-center py-8">
-                    <Loader2 className="w-8 h-8 text-sky-600 animate-spin mb-3" />
+                <div className="flex flex-col items-center py-10">
+                    <Loader2 className="w-8 h-8 text-brand animate-spin mb-3" />
                     <p className="text-sm text-slate-500 dark:text-slate-400">Verificando…</p>
                 </div>
             </Shell>
@@ -213,14 +260,15 @@ export default function CloudGate({ onReady }) {
     if (state === 'code') {
         return (
             <Shell>
-                <Header
-                    icon={KeyRound}
+                <BrandHeader />
+                <Steps step="code" />
+                <Title
                     title="Activa tu licencia"
-                    subtitle="Ingresa el código que recibiste al comprar PreciosAlDía Pro. Solo se pide una vez."
+                    subtitle={<>Ingresa el código que recibiste al comprar.<br />Solo se pide una vez.</>}
                 />
                 <ErrorMsg msg={error} />
                 <input
-                    className={`${inputCls} uppercase tracking-widest text-center font-mono mb-3`}
+                    className={`${inputCode} mb-4`}
                     placeholder="LIC-XXXXXX"
                     value={code}
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -229,9 +277,12 @@ export default function CloudGate({ onReady }) {
                     autoCorrect="off"
                 />
                 <button className={btnPrimary} onClick={handleCode} disabled={busy || !code.trim()}>
-                    {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     Verificar código
                 </button>
+                <p className="text-center text-[11px] text-slate-400 mt-4">
+                    ¿No tienes código? Escríbenos al <span className="text-brand font-bold">0412 405 1793</span>
+                </p>
                 {offline && (
                     <p className="flex items-center justify-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mt-3">
                         <CloudOff className="w-3.5 h-3.5" /> Sin conexión: conéctate una vez para activar.
@@ -245,17 +296,18 @@ export default function CloudGate({ onReady }) {
         const proj = getCustomerProject();
         return (
             <Shell>
-                <Header
-                    icon={Cloud}
+                <BrandHeader />
+                <Steps step="login" />
+                <Title
                     title="Cuenta en la nube"
-                    subtitle="Entra con el correo y la clave de tu negocio. Solo se pide una vez; después la app trabaja sin internet."
+                    subtitle={<>Entra con el correo y la clave de tu negocio.<br />Solo se pide una vez; después la app trabaja sin internet.</>}
                 />
                 <ErrorMsg msg={error} />
-                <div className="space-y-3 mb-3">
+                <div className="space-y-3 mb-4">
                     <div className="relative">
-                        <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                        <Mail className={inputIconCls} />
                         <input
-                            className={`${inputCls} pl-9`}
+                            className={`${inputBase} pl-10`}
                             type="email"
                             placeholder="correo@negocio.com"
                             value={email}
@@ -265,9 +317,9 @@ export default function CloudGate({ onReady }) {
                         />
                     </div>
                     <div className="relative">
-                        <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                        <Lock className={inputIconCls} />
                         <input
-                            className={`${inputCls} pl-9`}
+                            className={`${inputBase} pl-10`}
                             type="password"
                             placeholder="Contraseña"
                             value={password}
@@ -280,12 +332,17 @@ export default function CloudGate({ onReady }) {
                     {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     Entrar
                 </button>
+                {proj?.code && (
+                    <div className="flex items-center justify-center gap-2 mt-4 text-[11px] text-slate-400">
+                        <span>Licencia</span>
+                        <code className="font-mono font-bold text-brand bg-brand/10 border border-brand/20 rounded-full px-2.5 py-0.5">
+                            {proj.code}
+                        </code>
+                    </div>
+                )}
                 <button className="w-full text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mt-3 flex items-center justify-center gap-1" onClick={handleUseAnotherCode}>
                     <ArrowLeft className="w-3 h-3" /> Usar otro código de licencia
                 </button>
-                {proj?.code && (
-                    <p className="text-center text-[11px] text-slate-400 mt-2">Licencia {proj.code}</p>
-                )}
             </Shell>
         );
     }
@@ -294,8 +351,8 @@ export default function CloudGate({ onReady }) {
         const myId = getLocalDeviceId();
         return (
             <Shell>
-                <Header
-                    icon={Smartphone}
+                <BrandHeader />
+                <Title
                     title="Límite de equipos"
                     subtitle={`Tu licencia cubre ${MAX_DEVICES_PER_ACCOUNT} equipos y ya están todos en uso. Libera uno para entrar en este.`}
                 />
@@ -310,7 +367,7 @@ export default function CloudGate({ onReady }) {
                                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
                                     {d.alias || shortId(d.device_id)}
                                     {d.device_id === myId && (
-                                        <span className="ml-1 text-[10px] font-bold text-sky-600 dark:text-sky-400">ESTE EQUIPO</span>
+                                        <span className="ml-1 text-[10px] font-bold text-brand">ESTE EQUIPO</span>
                                     )}
                                 </p>
                                 <p className="text-[11px] text-slate-400 font-mono">{shortId(d.device_id)}</p>

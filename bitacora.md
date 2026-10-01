@@ -751,3 +751,10 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
   cajero sin deslogueo automático.
 - **Desplegado a producción 2026-10-01:** `preciosaldia-multilocal.vercel.app`
   (deploy `hqnanr503`, status Ready, 200 OK).
+
+## 2026-10-01 — Rediseño CloudGate (login correo/clave) con paleta del sistema
+- luigi pidió rediseño profesional del inicio de sesión con logo Pro + zona de código; aprobó mockup (`~/workspace/mockup-cloudgate-pro.html`) con la paleta del sistema (crema cálida `#fbfaf7` + teal `#01696f`, NO navy).
+- `src/components/security/CloudGate.jsx`: nuevo `Shell` (fondo crema + blobs teal, tarjeta blanca redondeada), `BrandHeader` (logo real + badge PRO dorado), `Steps` (1 Código → 2 Cuenta), `Title`; inputs blancos con iconos y foco teal, botón primario `bg-brand`, chip de licencia `LIC-XXXXXX`, contacto `0412 405 1793` en paso código.
+- Lógica intacta (checking/code/login/limit/ready, tope 6 equipos, offline resume). Solo presentación.
+- Verificado: `npm run build` OK, 14/14 tests CloudGate OK, captura con CSS real compilado (modo claro verificado visualmente).
+- Nota: `dark:` usa la escala surface invertida de tokens.css (intencional); modo oscuro conserva las clases del original sin regresión. App en modo claro por defecto.
