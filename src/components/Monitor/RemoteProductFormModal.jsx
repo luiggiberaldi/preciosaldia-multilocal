@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../Modal';
 import ProductFormQuick from '../Products/ProductFormQuick';
 import { useProductContext } from '../../context/ProductContext';
-import { buildProductPayload } from '../../utils/productProcessor';
+import { buildProductPayload, clampInitialStock } from '../../utils/productProcessor';
 import { showToast } from '../Toast';
 import { Save } from 'lucide-react';
 import { SUPERVISOR_REMOTE_MUTATIONS_ENABLED } from '../../config/supervisorPolicy';
@@ -252,6 +252,9 @@ export default function RemoteProductFormModal({ isOpen, onClose, targetDeviceId
             };
 
             const processed = buildProductPayload(formData, bcvRate);
+            // M-9 (2026-10-01): el formulario remoto tampoco crea stock negativo
+            // salvo permiso explícito (paridad con ProductsView.handleSave).
+            processed.stock = clampInitialStock(processed.stock);
             const isEdit = Boolean(productToEdit);
 
             const productPayload = {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Check } from 'lucide-react';
 import { formatBs } from '../../utils/calculatorUtils';
+import { useModalBehavior } from '../Modal'; // M-27/M-28/M-29/M-30: Escape, scroll-lock, foco, backdrop-click.
 
 export default function CustomAmountModal({
     onClose,
@@ -11,6 +12,7 @@ export default function CustomAmountModal({
     const [amount, setAmount] = useState('');
     const [currency, setCurrency] = useState('BS');
     const inputRef = useRef(null);
+    const panelRef = useModalBehavior(true, onClose);
 
     const copEnabled = localStorage.getItem('cop_enabled') === 'true';
     const tasaCop = parseFloat(localStorage.getItem('tasa_cop')) || 4150;
@@ -54,8 +56,8 @@ export default function CustomAmountModal({
     const isValid = parsedValue > 0;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[24px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
+            <div ref={panelRef} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[24px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800" onClick={e => e.stopPropagation()}>
                 
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">

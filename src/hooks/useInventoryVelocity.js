@@ -26,7 +26,10 @@ export function useInventoryVelocity(productsTrigger) {
 
                 const recentSales = allSales.filter(s =>
                     s.timestamp && new Date(s.timestamp) >= fourteenDaysAgo &&
-                    s.tipo !== 'COBRO_DEUDA' && s.tipo !== 'COBRO_CASHEA' && s.status !== 'ANULADA'
+                    s.tipo !== 'COBRO_DEUDA' && s.tipo !== 'COBRO_CASHEA' && s.status !== 'ANULADA' &&
+                    // M-7 (2026-10-01): los ajustes manuales de stock (AJUSTE_ENTRADA /
+                    // AJUSTE_SALIDA) no son ventas; incluirlos subestima "Días de inventario".
+                    s.tipo !== 'AJUSTE_ENTRADA' && s.tipo !== 'AJUSTE_SALIDA'
                 );
 
                 // Contar ventas por producto

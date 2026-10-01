@@ -828,3 +828,28 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 - M-17: detección de conflictos LWW en documentos no append-only (`src/utils/syncConflicts.js`): remoto-descartado-divergente y local-sobrescrito se registran (tope 20) y emiten `pda_sync_conflict`. `SyncStatus` muestra aviso ámbar con conteo; al tocarlo se marcan como revisados.
 - M-22: `handleDeleteAllData` se BLOQUEA con mensaje claro si el sync está activo (`isCloudSyncActiveNow()`), porque el borrado local no es durable (mergeSales aditivo → las ventas resucitan en el próximo pull). Nuevo getter exportado en `useCloudSync`.
 - Tests: nuevo `tests/syncFase3.test.js` (17: anulación terminal, deltas de stock concurrentes, flujo E2E simulado venta-offline-ayer→monitor-hoy, conflictos). Guardrail `supervisorLifecycle.test.js` actualizado al refactor multi-canal. Suite: 854 passed / 11 skipped / 0 failed. Build OK. Tag `fix-fase-3`.
+## 2026-10-01 — Plan de fixeo: Fase 5 (medios por área)
+
+**Qué:** se cierran los 16 hallazgos medios. (1) POS: la tolerancia del drift USD/Bs en el checkout ahora escala con nº de líneas (`max(5, 0.005×tasa×nLineas)`) — antes el fijo de 5 Bs rechazaba "Venta Libre en Bs" legítimas DESPUÉS de cobrar; y restaurar una venta en espera ya no pierde líneas ni falsifica precios (usa `resyncCartItems`: lookup por `_originalId`, precio vía `deriveCartFields`). (2) Productos: `useInventoryVelocity` excluye `AJUSTE_ENTRADA`/`AJUSTE_SALIDA`; el formulario limita el stock inicial negativo a 0 salvo `allow_negative_stock` (helper `clampInitialStock`); el modal de eliminar muestra stock + valor del inventario; el nombre se valida con trim; el filtrado/orden ya no crashea si un producto no tiene nombre. (3) Supervisión: el dueño retoma su última pestaña (lazy-init desde `pda_last_tab` — antes el efecto de guardado la destruía en el mount); "Recaudación total" → "Ventas totales" (incluye fiados otorgados, el rótulo era engañoso). (4) Ajustes: `applyBackupToStorage` filtra contra `IDB_KEYS`/`LS_KEYS` (un backup manipulado ya no envenena claves fuera del catálogo). (5) Modales: X con `relative` en `ConfirmModal`/`CashReconciliationModal`; nuevo hook `useModalBehavior` (Escape solo en el modal superior, scroll-lock del body, focus trap + foco inicial + retorno); backdrop-click en `CasheaRemittanceModal`, `SettingsModal`, `CustomAmountModal`, `TransactionModal`, `HoldsModal`.
+
+**Cambios:**
+- `src/utils/checkoutProcessor.js`: tolerancia FIN-022 escalada por líneas.
+- `src/views/SalesView.jsx`: `handleRestoreHold` reescrito sobre `resyncCartItems` (la línea de un producto eliminado sobrevive marcada `_productMissing`).
+- `src/hooks/useInventoryVelocity.js`: excluye ajustes de stock del cálculo de velocidad.
+- `src/utils/productProcessor.js`: nuevo `clampInitialStock(stock)` + trim del nombre en `buildProductPayload`.
+- `src/views/ProductsView.jsx`: `handleSave` valida `name?.trim()`, aplica `clampInitialStock` con toast; modal de eliminar con stock/valor.
+- `src/components/Monitor/RemoteProductFormModal.jsx`: aplica `clampInitialStock`.
+- `src/hooks/useProductFiltering.js`: guard `(p.name||'').toLowerCase()` en filtro y orden.
+- `src/App.jsx`: `activeTab` con lazy-init desde `pda_last_tab`.
+- `src/views/ModoJefePanel.jsx`: rótulo "Ventas totales".
+- `src/utils/backupRestoreService.js`: allowlist en `applyBackupToStorage`.
+- `src/components/Modal.jsx`: nuevo `useModalBehavior` exportado; el `Modal` base lo usa (Escape/scroll-lock/foco).
+- `src/components/ConfirmModal.jsx`, `src/components/Dashboard/CashReconciliationModal.jsx`: `relative` en el panel + `useModalBehavior`.
+- `src/components/Customers/CasheaRemittanceModal.jsx`, `src/components/SettingsModal.jsx`, `src/components/Sales/CustomAmountModal.jsx`, `src/components/Customers/TransactionModal.jsx`, `src/components/Sales/HoldsModal.jsx`: `useModalBehavior` + backdrop-click.
+- `tests/fase5.test.js`: 10 tests nuevos (clamp, trim, allowlist de restore, tolerancia escalada incl. 40 líneas/drift 7 Bs).
+
+**Corrección en curso:** el clamp M-9 se puso primero dentro de `buildProductPayload` y rompió el test del importador Excel del tercero ("conserva negativos y los cuenta"); se movió a los formularios vía `clampInitialStock`. También se detectó y eliminó un duplicado accidental `docs/bitacora.md`/`docs/inteligencia.md` (los canónicos viven en la raíz).
+
+**Verificación:** suite completa 875 passed / 11 skipped / 0 failed; `npm run build` exitoso.
+
+---

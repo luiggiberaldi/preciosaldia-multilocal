@@ -174,11 +174,15 @@ export async function applyBackupToStorage(backup, { writeMode = 'storageService
         const applied = { idbKeys: [], lsKeys: [] };
         if (isV2) {
             for (const [key, value] of Object.entries(backup.data.idb)) {
+                // M-21 (2026-10-01): allowlist — un backup manipulado no puede
+                // envenenar claves fuera del catálogo canónico (p. ej. sesión o PINs).
+                if (!IDB_KEYS.includes(key)) continue;
                 await writeIdb(key, value);
                 applied.idbKeys.push(key);
             }
             if (backup.data.ls) {
                 for (const [key, value] of Object.entries(backup.data.ls)) {
+                    if (!LS_KEYS.includes(key)) continue;
                     writeLs(key, value);
                     applied.lsKeys.push(key);
                 }

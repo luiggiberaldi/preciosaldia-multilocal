@@ -71,8 +71,15 @@ export async function processSaleTransaction({
     }
     const expectedBs = mulR(activeCartTotalUsd, effectiveRate);
     const bsDrift = Math.abs(subR(activeCartTotalBs, expectedBs));
-    if (bsDrift > FINANCIAL_EPSILON.CASH_RECONCILE_TOLERANCE_BS) {
-        return { success: false, error: `Inconsistencia USD/Bs: drift de ${round2(bsDrift)} Bs (tasa ${effectiveRate}).` };
+    // M-4 (2026-10-01): la tolerancia fija de 5 Bs bloqueaba "Venta Libre en Bs"
+    // legítimas: el error de redondeo por línea se acumula y la venta se
+    // rechazaba DESPUÉS de cobrar. Se escala con nº de líneas y tasa.
+    const toleranceBs = Math.max(
+        FINANCIAL_EPSILON.CASH_RECONCILE_TOLERANCE_BS,
+        0.005 * effectiveRate * (Array.isArray(cart) ? cart.length : 0)
+    );
+    if (bsDrift > toleranceBs) {
+        return { success: false, error: `Inconsistencia USD/Bs: drift de ${round2(bsDrift)} Bs (tasa ${effectiveRate}, tolerancia ${round2(toleranceBs)}).` };
     }
 
     // ── Aritmética precisa con dinero.js (elimina IEEE 754 drift) ──

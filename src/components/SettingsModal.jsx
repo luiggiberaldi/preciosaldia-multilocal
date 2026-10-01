@@ -4,6 +4,7 @@ import { storageService } from '../utils/storageService';
 import { appForage } from '../utils/appForage';
 import { showToast } from '../components/Toast';
 import PaymentMethodsManager from './Settings/PaymentMethodsManager';
+import { useModalBehavior } from './Modal'; // M-27/M-28/M-29/M-30: Escape, scroll-lock, foco, backdrop-click.
 
 import { useSecurity } from '../hooks/useSecurity';
 import { useProductContext } from '../context/ProductContext';
@@ -24,6 +25,7 @@ export default function SettingsModal({ isOpen, onClose, products, onImport, tri
     const { deviceId, forceHeartbeat } = useSecurity();
     const [idCopied, setIdCopied] = useState(false);
     const [allowNegativeStock, setAllowNegativeStock] = useState(() => localStorage.getItem('allow_negative_stock') === 'true');
+    const panelRef = useModalBehavior(isOpen, onClose);
     // Used from context instead.
 
     // Configuración del negocio (Ticket WhatsApp)
@@ -185,8 +187,8 @@ export default function SettingsModal({ isOpen, onClose, products, onImport, tri
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+            <div ref={panelRef} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
 
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">

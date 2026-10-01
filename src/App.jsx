@@ -56,9 +56,16 @@ import SplashScreenPlayer from './remotion/SplashScreenPlayer';
 import { getLocalISODate } from './utils/dateHelpers';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('inicio');
   // Última pestaña del dueño: al volver a entrar, retoma donde quedó.
   const LAST_TAB_KEY = 'pda_last_tab';
+  // M-18 (2026-10-01): lazy-init desde localStorage. Antes el estado nacía en
+  // 'inicio' y el efecto de guardado corría en el mount, DESTRUYENDO el valor
+  // guardado antes de que cualquier restauración lo leyera. El gate de roles
+  // (más abajo) redirige al landing del rol si la pestaña no le aplica.
+  const [activeTab, setActiveTab] = useState(() => {
+    try { return localStorage.getItem(LAST_TAB_KEY) || 'inicio'; }
+    catch { return 'inicio'; }
+  });
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showIOSInstall, setShowIOSInstall] = useState(false);
   const [mountedViews, setMountedViews] = useState({});

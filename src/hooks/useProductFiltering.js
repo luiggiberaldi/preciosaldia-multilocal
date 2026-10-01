@@ -6,7 +6,8 @@ export function useProductFiltering(products, searchTerm, activeCategory, sortFi
     const filteredProducts = useMemo(() => {
         let result = products.filter(p => {
             const term = deferredSearchTerm.toLowerCase();
-            const matchesSearch = p.name.toLowerCase().includes(term) || (p.barcode && p.barcode.toLowerCase().includes(term));
+            // M-12 (2026-10-01): un producto sin `name` crasheaba la vista (TypeError).
+            const matchesSearch = (p.name || '').toLowerCase().includes(term) || (p.barcode && p.barcode.toLowerCase().includes(term));
             if (activeCategory === 'bajo-stock') {
                 return matchesSearch && (p.stock ?? 0) <= (p.lowStockAlert ?? 5);
             }
@@ -19,7 +20,7 @@ export function useProductFiltering(products, searchTerm, activeCategory, sortFi
             result = [...result].sort((a, b) => {
                 let valA, valB;
                 switch (sortField) {
-                    case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
+                    case 'name': valA = (a.name || '').toLowerCase(); valB = (b.name || '').toLowerCase(); break;
                     case 'price': valA = a.priceUsdt || 0; valB = b.priceUsdt || 0; break;
                     case 'stock': valA = a.stock ?? 0; valB = b.stock ?? 0; break;
                     case 'margin': {

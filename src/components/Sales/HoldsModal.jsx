@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Clock, User, FileText, Trash2, ArrowRightCircle, Eye, EyeOff } from 'lucide-react';
+import { useModalBehavior } from '../Modal'; // M-27/M-28/M-29/M-30: Escape, scroll-lock, foco, backdrop-click.
 
 export default function HoldsModal({ tickets = [], onRecuperar, onEliminar, onClose, effectiveRate = 0 }) {
     const [expandedId, setExpandedId] = useState(null);
@@ -22,9 +23,11 @@ export default function HoldsModal({ tickets = [], onRecuperar, onEliminar, onCl
         setConfirmDeleteId(null);
     };
 
+    const panelRef = useModalBehavior(true, onClose);
+
     return (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+            <div ref={panelRef} className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-slate-100 dark:border-slate-800" onClick={e => e.stopPropagation()}>
                 
                 {/* Header */}
                 <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">

@@ -26,7 +26,7 @@ export function buildProductPayload(formData, effectiveRate) {
         lowStockAlert
     } = formData;
 
-    const formattedName = name.replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
+    const formattedName = String(name || '').trim().replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
     // FIN-022-pattern: validar tasa antes de usarla (sin fallback silencioso a 1).
     const safeRate = effectiveRate > 0 ? effectiveRate : 1;
 
@@ -72,7 +72,9 @@ export function buildProductPayload(formData, effectiveRate) {
     if (isLote && stockInLotes && parsedUnitsPerPkg > 0) {
         finalStock = Math.round(parseFloat(stockInLotes) * parsedUnitsPerPkg);
     }
-
+    // (M-9 movido a los formularios: el clamp vive en ProductsView.handleSave y
+    // RemoteProductFormModal; el importador Excel conserva negativos a propósito
+    // — ver tests/excelImport.test.js "conserva negativos y los cuenta".)
     // GRANEL-001: alerta de stock bajo con el mismo guardarraíl de tipado
     // (granel admite hasta 3 decimales; el resto cae a entero, con fallback a 5).
     const finalLowStockAlert = lowStockAlert
@@ -115,4 +117,21 @@ export function buildProductPayload(formData, effectiveRate) {
         category: category,
         lowStockAlert: finalLowStockAlert,
     };
+}
+
+/**
+ * M-9 (2026-10-01): el formulario de producto no crea stock inicial negativo
+ * salvo que el ajuste `allow_negative_stock` lo permita.
+ *
+ * Vive como helper aparte (NO dentro de buildProductPayload) porque el
+ * importador Excel conserva negativos a propósito:
+ * tests/excelImport.test.js > "conserva negativos y los cuenta".
+ */
+export function clampInitialStock(stock) {
+    const s = Number(stock) || 0;
+    if (s < 0 && typeof window !== 'undefined'
+        && window.localStorage?.getItem('allow_negative_stock') !== 'true') {
+        return 0;
+    }
+    return s;
 }

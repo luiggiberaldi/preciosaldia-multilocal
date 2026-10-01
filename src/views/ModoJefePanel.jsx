@@ -355,7 +355,9 @@ export function ConsolidadoJefe({ negocios, dataById, updatedAt }) {
                     <div className="flex items-end justify-between mb-3">
                         <div>
                             <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                                Recaudación total
+                                {/* M-20 (2026-10-01): antes "Recaudación total" — engañoso porque
+                                    incluye fiados OTORGADOS (no cobrados). Es el total vendido. */}
+                                Ventas totales
                             </div>
                             <div className="text-3xl font-black text-slate-800 dark:text-white">
                                 ${formatUsd(combinado.totalUsd)}

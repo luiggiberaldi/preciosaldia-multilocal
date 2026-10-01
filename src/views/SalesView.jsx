@@ -153,7 +153,13 @@ export default function SalesView({ triggerHaptic, isActive }) {
         showToast('Venta en espera eliminada', 'info');
     };
 
-    // Función para restaurar una venta en espera
+    // Función para restaurar una venta en espera.
+    // M-5 (2026-10-01): antes buscaba por `p.id` (las líneas unidad usan
+    // `"xxx_unit"` → la línea se perdía) y comparaba contra `priceUsd`
+    // (campo inexistente → siempre 0, falsificando precios). Ahora usa
+    // `resyncCartItems` (utils/cartSync.js): lookup por `_originalId || id`
+    // y precio vía `deriveCartFields`; la línea de un producto eliminado
+    // sobrevive marcada con `_productMissing` en vez de desaparecer.
     const handleRestoreHold = async (holdId) => {
         const hold = pendingCarts.find(h => h.id === holdId);
         if (!hold) return;
@@ -162,28 +168,16 @@ export default function SalesView({ triggerHaptic, isActive }) {
             return;
         }
 
-        const itemsActualizados = [];
+        const resynced = resyncCartItems(hold.items, products, { tasaCop, effectiveRate });
+        const itemsActualizados = resynced ? resynced.cart : (hold.items || []);
         const reportesCambio = [];
-
-        for (const item of hold.items) {
-            // Buscamos el producto en el catálogo cargado en memoria
-            const prodActual = products.find(p => p.id === item.id);
-            if (!prodActual) {
-                reportesCambio.push(`❌ ${item.name} ya no existe en el catálogo.`);
-                continue;
+        if (resynced) {
+            for (const pc of resynced.priceChanges) {
+                reportesCambio.push(`💰 ${pc.name}: $${Number(pc.from).toFixed(2)} -> $${Number(pc.to).toFixed(2)}`);
             }
-
-            // Validar cambio de precio
-            const precioSnapshot = item.priceUsd;
-            const precioActual = prodActual.priceUsd || prodActual.precio || 0;
-            if (Math.abs(precioSnapshot - precioActual) > 0.01) {
-                reportesCambio.push(`💰 ${item.name}: $${precioSnapshot.toFixed(2)} -> $${precioActual.toFixed(2)}`);
-            }
-
-            itemsActualizados.push({
-                ...item,
-                priceUsd: precioActual
-            });
+        }
+        for (const m of itemsActualizados.filter(i => i && i._productMissing)) {
+            reportesCambio.push(`❌ ${m.name} ya no existe en el catálogo (se conserva la línea con el precio original).`);
         }
 
         // Validar cambio de tasa

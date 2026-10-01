@@ -32,7 +32,7 @@ import { useInventoryVelocity } from '../hooks/useInventoryVelocity';
 import { useProductFiltering } from '../hooks/useProductFiltering';
 import { useProductForm } from '../hooks/useProductForm';
 import { useProductSorting } from '../hooks/useProductSorting';
-import { buildProductPayload } from '../utils/productProcessor';
+import { buildProductPayload, clampInitialStock } from '../utils/productProcessor';
 import { isGranelProduct, formatStockDisplay } from '../utils/granel'; // GRANEL-001
 import { uploadProductImage, migrateProductImagesToStorage } from '../utils/imageUpload';
 // useAuthStore removed - single-user app
@@ -385,7 +385,8 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
 
     const handleSave = () => {
         triggerHaptic && triggerHaptic();
-        if (!name || (!priceUsd && !priceBs)) {
+        // M-11 (2026-10-01): un nombre de solo espacios pasaba la validación.
+        if (!name?.trim() || (!priceUsd && !priceBs)) {
             setIsFormShaking(true);
             setTimeout(() => setIsFormShaking(false), 500);
             return showToast('Nombre y precio requeridos', 'warning');
@@ -396,6 +397,16 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
             packagingType, unitsPerPackage, granelUnit, sellByUnit, unitPriceUsd, unitPriceCop,
             category, lowStockAlert
         }, effectiveRate);
+
+        // M-9 (2026-10-01): el formulario no crea stock negativo salvo que el
+        // ajuste `allow_negative_stock` lo permita. (El importador Excel conserva
+        // negativos a propósito — ver tests/excelImport.test.js — por eso el
+        // clamp vive en el helper clampInitialStock y no en buildProductPayload.)
+        const clampedStock = clampInitialStock(productData.stock);
+        if (clampedStock !== productData.stock) {
+            productData.stock = clampedStock;
+            showToast('Stock negativo no permitido: se guardó en 0', 'warning');
+        }
 
         // ALTO-7 (2026-10-01): un código duplicado hace que el escáner cobre el
         // producto equivocado. Se detecta la colisión como lo haría un escaneo
@@ -1100,6 +1111,25 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                         {/* v1.2.0: text tokens surface-* en vez de slate-* */}
                         <h4 className="text-lg font-bold text-surface-700 dark:text-white">¿Estás seguro?</h4>
                         <p className="text-sm text-surface-500 dark:text-surface-400 mt-1 px-4">Esta acción eliminará el producto permanentemente.</p>
+                        {/* M-10 (2026-10-01): mostrar qué se borra — stock y valor del inventario. */}
+                        {(() => {
+                            const p = products.find(x => x.id === deleteId);
+                            if (!p) return null;
+                            const st = Number(p.stock) || 0;
+                            const val = st * (Number(p.costUsd) || 0);
+                            return (
+                                <div className="w-full bg-surface-100 dark:bg-surface-800 rounded-xl px-4 py-3 text-sm text-left">
+                                    <div className="font-bold text-surface-700 dark:text-white truncate">«{p.name}»</div>
+                                    <div className="flex justify-between mt-1 text-surface-500 dark:text-surface-400">
+                                        <span>Stock: <strong className={st !== 0 ? 'text-amber-600 dark:text-amber-400' : ''}>{st}</strong></span>
+                                        <span>Valor: <strong>${val.toFixed(2)}</strong></span>
+                                    </div>
+                                    {st !== 0 && (
+                                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Ese inventario dejará de existir en el sistema.</p>
+                                    )}
+                                </div>
+                            );
+                        })()}
                     </div>
                     <div className="flex gap-3 w-full pt-2">
                         {/* v1.2.0: touch targets ≥ 48px (a11y WCAG AA) */}

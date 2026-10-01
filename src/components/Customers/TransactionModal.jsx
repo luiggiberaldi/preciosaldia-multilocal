@@ -4,6 +4,7 @@ import { procesarImpactoCliente } from '../../utils/financialLogic';
 import { formatUsd, formatBs, formatCop } from '../../utils/calculatorUtils';
 import CustomSelect from '../CustomSelect';
 import { getPaymentIcon } from '../../config/paymentMethods';
+import { useModalBehavior } from '../Modal'; // M-27/M-28/M-29/M-30: Escape, scroll-lock, foco, backdrop-click.
 
 export default function TransactionModal({
     transactionModal,
@@ -22,6 +23,8 @@ export default function TransactionModal({
     handleTransaction,
     isSubmitting = false,
 }) {
+    const handleClose = () => setTransactionModal({ isOpen: false, type: null, customer: null });
+    const panelRef = useModalBehavior(transactionModal.isOpen, handleClose);
     if (!transactionModal.isOpen || !transactionModal.customer) return null;
 
     // Calcular preview del saldo resultante en tiempo real
@@ -57,8 +60,8 @@ export default function TransactionModal({
     const saldoPreview = formatSaldo(saldoPreviewUsd);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-t-3xl sm:rounded-3xl shadow-xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={handleClose}>
+            <div ref={panelRef} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-t-3xl sm:rounded-3xl shadow-xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
                 <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <h3 className="text-xl font-black text-slate-800 dark:text-white">Ajustar Cuenta</h3>
                     <button onClick={() => setTransactionModal({ isOpen: false, type: null, customer: null })} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">

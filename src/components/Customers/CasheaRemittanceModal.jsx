@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { useModalBehavior } from '../Modal'; // M-27/M-28/M-29/M-30: Escape, scroll-lock, foco, backdrop-click.
 
 /**
  * Registro de la REMESA que Cashea envía a la bodega.
@@ -13,6 +14,7 @@ export default function CasheaRemittanceModal({
     const [paymentMethod, setPaymentMethod] = useState('efectivo_usd');
     const [busy, setBusy] = useState(false);
 
+    const panelRef = useModalBehavior(isOpen, onClose);
     if (!isOpen || !customer) return null;
 
     const pendiente = customer.casheaDeuda || 0;
@@ -37,8 +39,8 @@ export default function CasheaRemittanceModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+            <div ref={panelRef} className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-black text-slate-800 dark:text-white">Registrar remesa de Cashea</h3>
                     <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
