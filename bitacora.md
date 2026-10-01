@@ -758,3 +758,4 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 - Lógica intacta (checking/code/login/limit/ready, tope 6 equipos, offline resume). Solo presentación.
 - Verificado: `npm run build` OK, 14/14 tests CloudGate OK, captura con CSS real compilado (modo claro verificado visualmente).
 - Nota: `dark:` usa la escala surface invertida de tokens.css (intencional); modo oscuro conserva las clases del original sin regresión. App en modo claro por defecto.
+- **Desplegado a producción 2026-10-01** (autorizado por luigi): `preciosaldia-multilocal.vercel.app` (deploy `preciosaldia-multilocal-13a9eigju-luiggi2`, status Ready, 200 OK).
