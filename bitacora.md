@@ -767,3 +767,9 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 - Críticos: (1) clave maestra de emergencia '24457713' hardcodeada en el bundle + admin puede escalar a dueño; (2) ventas offline fuera del día actual nunca se sincronizan (`pushSalesWindow` es código muerto); (3) VENTA_CASHEA nunca registra `casheaDeuda` → remesa incobrable; (4) chip COP de "Plata de hoy" siempre $0 (`amountCop` jamás se escribe); (5) admin configura la clave de emergencia sin re-autenticación.
 - Informe completo entregado: `~/workspace/your_files/auditoria-debugging-pro-2026-10-01.md`.
 - Sin cambios de código en esta pasada (pendiente autorización de luigi para corregir).
+
+## 2026-10-01 — Plan de fixeo: Fase 0 (baseline limpio)
+- Inicio de la implementación del plan de fixeo (`~/workspace/your_files/plan-fixeo-general-pro-2026-10-01.md`).
+- M-19: `tests/supervisorLifecycle.test.js` leía `PairingManager.jsx`, eliminado a propósito en `2987dd4` (era flujo del Lite). Se retiró el test del flujo eliminado; los otros 3 guardrails siguen verificando archivos existentes.
+- M-16: `injectDeterministicSales` no aceptaba `dateStr` → inyectaba con fecha de hoy pero el test filtraba `2026-09-18..2026-09-22` (0 ventas en rango, 43.59 vs 0). El injector ahora acepta `dateStr` opcional y el test pasa `DETERMINISTIC_DATE`. Era bug del harness, no del motor.
+- Baseline: suite completa 809 passed / 11 skipped / 0 failed; `npm run build` OK. Tag `pre-fixeo-2026-10-01` como punto de rollback.

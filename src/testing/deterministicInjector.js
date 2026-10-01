@@ -39,14 +39,16 @@ const CONFIRM_TEXT =
 /**
  * Genera e inyecta el dataset determinista.
  *
- * @param {{ interactive?: boolean }} [opts] - `false` salta confirm/alert/reload
- *        (lo usan los tests). Por defecto es interactivo.
+ * @param {{ interactive?: boolean, dateStr?: string }} [opts] - `false` salta confirm/alert/reload
+ *        (lo usan los tests). Por defecto es interactivo. `dateStr` fija la fecha
+ *        base del dataset (por defecto, hoy); los tests la pasan para que las
+ *        ventas caigan dentro del período evaluado.
  */
-export async function injectDeterministicSales({ interactive = true } = {}) {
+export async function injectDeterministicSales({ interactive = true, dateStr } = {}) {
     const hasWindow = typeof window !== 'undefined';
     if (interactive && hasWindow && !window.confirm(CONFIRM_TEXT)) return { cancelled: true };
 
-    const dataset = buildDeterministicDataset();
+    const dataset = buildDeterministicDataset(dateStr ? { dateStr } : {});
     const { sales: testSales, products, customers, ledger } = dataset;
 
     try {

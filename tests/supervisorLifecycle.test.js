@@ -2,9 +2,11 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const scanner = readFileSync('src/components/PairingScanScreen.jsx', 'utf8');
-const pairingManager = readFileSync('src/components/Settings/PairingManager.jsx', 'utf8');
 const monitorSync = readFileSync('src/hooks/useMonitorSync.js', 'utf8');
 const ownerMonitor = readFileSync('src/views/OwnerMonitorView.jsx', 'utf8');
+// NOTA 2026-10-01 (Fase 0): PairingManager.jsx fue eliminado a propósito en
+// 2987dd4 ("quitar 'Celular del Supervisor' de Ajustes; era flujo del Lite").
+// El test que cubría su polling se retiró con el flujo; no se revive.
 
 describe('Supervisor lifecycle guardrails', () => {
     it('evita doble lectura QR y timers de reinicio huérfanos', () => {
@@ -19,13 +21,6 @@ describe('Supervisor lifecycle guardrails', () => {
         expect(monitorSync).toContain('scheduleReconnect');
         expect(monitorSync).toContain('supabaseCloud.removeChannel(channel)');
         expect(monitorSync).toContain('initInFlightRef');
-    });
-
-    it('detiene polling cuando la consulta falla repetidamente y confirma el servidor', () => {
-        expect(pairingManager).not.toContain(".select('*')");
-        expect(pairingManager).toContain('pollingFailuresRef');
-        expect(pairingManager).toContain('Revisa la conexión');
-        expect(pairingManager).toContain('stillPaired');
     });
 
     it('bloquea acciones remotas cuando el monitor está desconectado', () => {

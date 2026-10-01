@@ -251,7 +251,7 @@ describe('persistencia determinista del inyector', () => {
     it('escribe ventas, productos, clientes y ledger sin tocar datos reales', async () => {
         await _memoryStore.set('bodega_sales_v1', [{ id: 'real-1', tipo: 'VENTA', totalUsd: 1, items: [] }]);
 
-        const result = await injectDeterministicSales({ interactive: false });
+        const result = await injectDeterministicSales({ interactive: false, dateStr: DETERMINISTIC_DATE });
 
         const sales = _memoryStore.get('bodega_sales_v1');
         const customers = _memoryStore.get('bodega_customers_v1');
@@ -273,9 +273,9 @@ describe('persistencia determinista del inyector', () => {
     });
 
     it('es idempotente: inyectar dos veces no duplica los registros det_', async () => {
-        await injectDeterministicSales({ interactive: false });
+        await injectDeterministicSales({ interactive: false, dateStr: DETERMINISTIC_DATE });
         const first = JSON.parse(JSON.stringify(_memoryStore.get('bodega_sales_v1')));
-        await injectDeterministicSales({ interactive: false });
+        await injectDeterministicSales({ interactive: false, dateStr: DETERMINISTIC_DATE });
         const second = _memoryStore.get('bodega_sales_v1');
 
         expect(second.length).toBe(first.length);
