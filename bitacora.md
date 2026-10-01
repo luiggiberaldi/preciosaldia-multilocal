@@ -749,3 +749,5 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 - Incluye todo lo de la sesión: QUOTA-003 (deltas de ventas), fix cápsulas
   Supervisión, COP solo si está activado, dueño retoma última pestaña,
   cajero sin deslogueo automático.
+- **Desplegado a producción 2026-10-01:** `preciosaldia-multilocal.vercel.app`
+  (deploy `hqnanr503`, status Ready, 200 OK).
