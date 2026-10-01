@@ -56,6 +56,8 @@ import { getLocalISODate } from './utils/dateHelpers';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
+  // Última pestaña del dueño: al volver a entrar, retoma donde quedó.
+  const LAST_TAB_KEY = 'pda_last_tab';
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showIOSInstall, setShowIOSInstall] = useState(false);
   const [mountedViews, setMountedViews] = useState({});
@@ -63,6 +65,7 @@ export default function App() {
 
   useEffect(() => {
     setMountedViews(prev => ({...prev, [activeTab]: true}));
+    try { localStorage.setItem(LAST_TAB_KEY, activeTab); } catch {}
   }, [activeTab]);
 
   const { isPremium, licenseExpiredMsg, dismissLicenseExpiredMsg, deviceId, forceHeartbeat } = useSecurity();
@@ -120,10 +123,20 @@ export default function App() {
   }, []);
 
   // Al iniciar sesión, redirigir según el rol (Fase 1.5: cajero→ventas,
-  // dueño→supervisión, supervisor→inicio).
+  // dueño→supervisión, supervisor→inicio). El dueño, además, recupera la
+  // última pestaña donde quedó (p. ej. supervisión) al volver a entrar.
   useEffect(() => {
     if (usuarioActivo) {
-      setActiveTab(landingTab({ requireLogin, usuarioActivo }));
+      let tab = landingTab({ requireLogin, usuarioActivo });
+      if (isOwner(usuarioActivo)) {
+        try {
+          const saved = localStorage.getItem(LAST_TAB_KEY);
+          if (saved && visibleTabIds({ requireLogin, usuarioActivo }).includes(saved)) {
+            tab = saved;
+          }
+        } catch {}
+      }
+      setActiveTab(tab);
     }
   }, [usuarioActivo]);
 

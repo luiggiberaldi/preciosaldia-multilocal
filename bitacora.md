@@ -713,3 +713,13 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
   localStorage (regla de luigi: sin COP activado, no aparece en el sistema).
   El grid pasa de 3 a 2 columnas cuando el COP está desactivado. Aplica a
   "Plata de hoy · detalle" y "Plata de hoy · consolidado".
+
+## 2026-10-01 — El dueño retoma su última pestaña al entrar
+- Pedido de luigi: si el dueño dejó abierto el modo supervisor, al volver a
+  entrar la app debe abrir en supervisión (solo el dueño).
+- `src/App.jsx`: la pestaña activa se guarda en `localStorage` (`pda_last_tab`)
+  en cada cambio; al establecerse la sesión, si el usuario es dueño y la
+  pestaña guardada sigue permitida para su rol, se restaura; si no,
+  `landingTab` como antes. Cajero y administrador sin cambios.
+- El gate existente (`allowedTabIds`) sigue protegiendo contra pestañas no
+  permitidas.
