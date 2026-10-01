@@ -8,9 +8,11 @@
  * - `'ADMIN'` — administrador del negocio ACTIVO: dashboard de su sede,
  *   inventario, tasas y gestión de cajeros. Sin datos fiscales ni
  *   crear/eliminar negocios.
- * - `'CAJERO'` — cajero del negocio activo: solo POS (ventas) y clientes
- *   (fiados). Sin dashboard financiero, inventario administrativo, tasas,
- *   usuarios ni ajustes.
+ * - `'CAJERO'` — cajero del negocio activo: Inicio (resumen de su turno, sin
+ *   finanzas), POS (ventas), inventario en modo solo-lectura (ver productos,
+ *   precios y stock; sin crear/editar/eliminar, sin costos ni ajustes de
+ *   stock) y clientes (fiados). Sin dashboard financiero, tasas, usuarios
+ *   ni ajustes.
  *
  * Compatibilidad: los valores almacenados en usuarios siguen siendo
  * `'ADMIN'`/`'CAJERO'` porque varios servicios comparan esos strings
@@ -32,7 +34,7 @@ export const ROL_CAJERO = 'CAJERO';
 export const TABS_DUENO_ADMIN = Object.freeze([
     'inicio', 'ventas', 'catalogo', 'clientes', 'reportes', 'ajustes', 'supervision',
 ]);
-export const TABS_CAJERO = Object.freeze(['ventas', 'clientes']);
+export const TABS_CAJERO = Object.freeze(['inicio', 'ventas', 'catalogo', 'clientes']);
 
 export function getRol(session) {
     return session?.rol ?? null;

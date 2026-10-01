@@ -4,6 +4,20 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-10-01 — Cajero ve Inventario en solo-lectura (ROL-CAJERO)
+
+**Qué:** luigi pidió que a los cajeros les salga el inventario (antes solo veían Vender y Clientes). `ProductsView` ya traía soporte de solo-lectura para cajero (`isCajero`: sin onEdit/onDelete, `readOnly`, sin columna de costo, sin botones ± de stock, toolbar con acciones ocultas) — solo faltaba el permiso del tab.
+
+**Cambios** (`src/utils/roles.js`, `tests/roles.test.js`):
+- `TABS_CAJERO`: `['ventas', 'clientes']` → `['inicio', 'ventas', 'catalogo', 'clientes']` (el orden visual lo da `ALL_TABS` en App.jsx: Inicio, Vender, Inventario, Clientes).
+- `DashboardView` ya traía render especial para cajero ("Caja Activa · {nombre}", sin finanzas) — solo faltaba el permiso del tab.
+- Docstring del rol CAJERO actualizado.
+- Test `visibleTabIds` del cajero actualizado.
+
+**Nota:** el estado vacío de ProductsView muestra "NUEVO PRODUCTO"/"IMPORTAR EXCEL" sin chequear `isCajero` (código del tercero, no tocado por regla). Con los inventarios sembrados no aparece; coordinar con el tercero si se quiere ocultar.
+
+---
+
 ## 2026-10-01 — Deploy a producción: fix GATE-CLOUD (`5e9b492`)
 
 **Qué:** luigi autorizó ("deployalo"). Deploy manual con `vercel --prod` (Git↔Vercel sigue sin conectar): `✓ Ready in 2m`, target production, commit `5e9b492`. Los equipos activados vía CloudGate ya no caen en "Solicitar Licencia". Verificación HTTP 200 pendiente: la red del sandbox se cayó justo después del deploy (ni google.com respondía); el Ready lo confirmó el propio CLI de Vercel.

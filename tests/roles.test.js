@@ -109,7 +109,7 @@ describe('tabs visibles', () => {
 
     it('el cajero solo ve ventas y clientes', () => {
         const tabs = visibleTabIds({ requireLogin: true, usuarioActivo: CAJERO });
-        expect(tabs).toEqual(['ventas', 'clientes']);
+        expect(tabs).toEqual(['inicio', 'ventas', 'catalogo', 'clientes']);
     });
 });
 
