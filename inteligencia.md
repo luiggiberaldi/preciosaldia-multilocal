@@ -140,3 +140,13 @@ mockeado vs `cloudGateRealConfig` sin mock), no con unmock a mitad de archivo.
 - Comportamiento transversal de modales (Escape/scroll-lock/foco) en un hook compartido `useModalBehavior` con pila a nivel módulo: solo el modal superior consume Escape. Aplicarlo son 3 líneas por modal custom (import + hook + ref en el panel + backdrop).
 - Tolerancias fijas en validaciones monetarias son bombas de tiempo con N líneas: escalar con `max(piso, k×tasa×n)` preserva la protección sin bloquear ventas legítimas.
 - Cuidado con `tail -30 docs/bitacora.md || tail -30 bitacora.md`: el `||` oculta que el primer archivo no existe y se termina creando un duplicado al hacer `>>`. Verificar existencia con `ls` antes de redactar.
+
+## 2026-10-01 — Lecciones de Fase 6 (bajos)
+- **Mutex cross-tab barato con localStorage:** en LAN por HTTP no hay `navigator.locks` (sin contexto seguro). Un lease con token + re-lectura de confirmación tras ~10ms elimina la mayoría de colisiones entre pestañas sin SharedWorker. Degradar por niveles: locks nativo → storage → memoria, y nunca bloquear la venta (timeout → degradar).
+- **Reintentos infinitos en silencio = deuda de UX:** todo retry loop necesita tope + superficie del error (`syncError` para reintento manual). Igual para `.catch(() => {})` en pushes: registrar (`recordSyncPushError` + evento) en vez de tragar.
+- **`\w` es ASCII:** cualquier capitalización/normalización de texto en español debe usar `\p{L}` con flag `u`. Extraer a helper puro (`titleCaseUnicode`) lo hace testeable.
+- **Los filtros de reportes no deben depender de que cada llamador filtre:** `calculateSupervisorPaymentBreakdown` ahora excluye ANULADA por sí solo (`isVoidedSale`). Patrón: el predicado puro + el filtro en el agregador, no en la UI.
+- **Settings que se leen con `useState(inicializador)` no reaccionan a cambios:** si otro componente escribe la clave, suscribirse a evento custom + `storage` (mismo tab + otros tabs). Emitir el evento en cada sitio de escritura.
+- **Ack remoto lento + cierre de modal = setState en desmontado:** `useMountedRef` en los 3 modales remotos; además bloquear el cierre durante el envío (`disableClose` en `Modal` base) porque cerrar a mitad del ack dejaba la orden en limbo visual.
+- **No se puede desactivar el último método de pago:** guard de negocio simple en el toggle (el checkout quedaría sin forma de cobrar). Y eliminar método = `ConfirmModal`, no acción directa.
+- **B-3 verificado, no resuelto:** `lookup_customer_project` es un RPC SQL público sin rate-limit; throttlearlo bien requiere Edge Function (la IP no llega confiable al SQL). Se documenta como pendiente server-side, no se finge un fix.

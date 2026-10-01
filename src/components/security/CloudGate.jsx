@@ -234,6 +234,10 @@ export default function CloudGate({ onReady }) {
         if (reg.ok) {
             setState('ready');
             onReady();
+        } else {
+            // B-1 (2026-10-01): antes el fallo quedaba en silencio (spinner
+            // apagado sin mensaje). Se muestra el error para reintentar.
+            setError(reg.error || 'No se pudo registrar este equipo. Inténtalo de nuevo.');
         }
     }, [onReady]);
 

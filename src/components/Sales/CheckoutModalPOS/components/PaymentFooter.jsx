@@ -30,7 +30,7 @@ export default function PaymentFooter({
             {/* Pagar / Fiar */}
             <button
                 type="button"
-                onClick={() => onProcesar(false)}
+                onClick={() => onProcesar()}
                 disabled={disabled}
                 aria-disabled={disabled}
                 className={`px-4 sm:px-10 py-3.5 min-h-[52px] rounded-xl font-black text-sm sm:text-base flex items-center gap-2 shadow-lg transition-all active:scale-[0.97] flex-1 max-w-none sm:max-w-xs justify-center

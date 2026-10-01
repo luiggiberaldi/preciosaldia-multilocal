@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { round2, divR, mulR, subR, sumR } from '../../../../utils/dinero';
+import { copToUsd } from '../../../../utils/fase6Money'; // B-7 (2026-10-01)
 import { FINANCIAL_EPSILON } from '../../../../utils/securityConstants';
 import { CurrencyService } from '../../../../services/CurrencyService';
 
@@ -32,11 +33,13 @@ export const usePaymentCalculations = ({
     }, [casheaActive, totalUSD, casheaPercent]);
 
     // Total pagado en USD (convirtiendo BS y COP)
+    // B-7 (2026-10-01): un pago COP sin tasaCop válida ya no cae al divisor de
+    // Bs (conversión errónea); se cuenta como 0 (inalcanzable por UI hoy).
     const totalPagadoUSD = useMemo(() => {
         return sumR(metodosActivos.map(m => {
             const v = val(m.id);
             if (m.tipo === 'DIVISA') return round2(v);
-            if (m.tipo === 'COP' && safeTasaCop > 0) return divR(v, safeTasaCop);
+            if (m.tipo === 'COP') return round2(copToUsd(v, safeTasaCop));
             return tasaSegura > 0 ? divR(v, tasaSegura) : 0;
         }));
     }, [pagos, metodosActivos, tasaSegura, safeTasaCop]);
@@ -46,8 +49,8 @@ export const usePaymentCalculations = ({
         return sumR(metodosActivos.map(m => {
             const v = val(m.id);
             if (m.tipo === 'BS') return round2(v);
-            if (m.tipo === 'COP' && safeTasaCop > 0 && tasaSegura > 0)
-                return mulR(divR(v, safeTasaCop), tasaSegura);
+            if (m.tipo === 'COP')
+                return (safeTasaCop > 0 && tasaSegura > 0) ? mulR(divR(v, safeTasaCop), tasaSegura) : 0;
             return tasaSegura > 0 ? mulR(v, tasaSegura) : 0;
         }));
     }, [pagos, metodosActivos, tasaSegura, safeTasaCop]);

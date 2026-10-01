@@ -42,6 +42,9 @@ export default function MobileChangeAllocation({
     canStepUp = false,
     // Acciones (definidas en CheckoutModal con la lógica existente)
     onDeliverAll,
+    // B-5 (2026-10-01): entrega TODO el vuelto en Bs (el botón "Entregar en Bs"
+    // antes aplicaba el split mixto). Opcional; fallback a onDeliverAll.
+    onDeliverAllBs,
     onOpenSheet,
     onToggleTip,
     // Parcial en caja (propina)
@@ -141,7 +144,7 @@ export default function MobileChangeAllocation({
                             </div>
                             <button
                                 type="button"
-                                onClick={onDeliverAll}
+                                onClick={onDeliverAllBs || onDeliverAll}
                                 className="mt-2 w-full min-h-11 px-3 rounded-xl font-black text-sm bg-emerald-700 text-white shadow-md shadow-emerald-700/25 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
                             >
                                 <HandCoins size={15} className="shrink-0" />

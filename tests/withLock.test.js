@@ -51,7 +51,7 @@ describe('withLock — fallback (sin navigator.locks)', () => {
     Object.defineProperty(navigator, 'locks', { value: originalLocks, configurable: true });
   });
 
-  it('cae al mutex en memoria y sigue garantizando exclusión', async () => {
+  it('cae al fallback y sigue garantizando exclusión', async () => {
     expect(isLocksSupported()).toBe(false);
     const order = [];
     const slow = async (id) => {
@@ -63,6 +63,24 @@ describe('withLock — fallback (sin navigator.locks)', () => {
     };
     await Promise.all([slow(1), slow(2)]);
     expect(order).toEqual(['start_1', 'end_1', 'start_2', 'end_2']);
+  });
+
+  it('B-8: el mutex cross-tab escribe y libera la llave en localStorage', async () => {
+    expect(isLocksSupported()).toBe(false);
+    let keyDuringRun = null;
+    await withLock('b8_lock_lifecycle', async () => {
+      keyDuringRun = localStorage.getItem('pda_lock_b8_lock_lifecycle');
+      expect(keyDuringRun).not.toBeNull();
+      expect(JSON.parse(keyDuringRun).token).toBeTruthy();
+    });
+    expect(localStorage.getItem('pda_lock_b8_lock_lifecycle')).toBeNull();
+  });
+
+  it('B-8: propaga errores del callback y aun así libera la llave', async () => {
+    await expect(
+      withLock('b8_lock_error', async () => { throw new Error('boom'); })
+    ).rejects.toThrow('boom');
+    expect(localStorage.getItem('pda_lock_b8_lock_error')).toBeNull();
   });
 });
 

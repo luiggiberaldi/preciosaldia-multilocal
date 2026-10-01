@@ -14,6 +14,7 @@ import { useCart } from '../context/CartContext';
 import { useProductContext } from '../context/ProductContext';
 import { isGranelProduct, parseCartQuantity, adjustStockValue } from '../utils/granel'; // GRANEL-001
 import { deriveCartFields, resyncCartItems } from '../utils/cartSync'; // SYNC-CESTA-001
+import { advancePriceUsdt } from '../utils/fase6Money'; // B-6 (2026-10-01)
 
 // Components
 import SalesHeader from '../components/Sales/SalesHeader';
@@ -695,7 +696,9 @@ export default function SalesView({ triggerHaptic, isActive }) {
             const advanceProduct = {
                 id: `advance_${Date.now()}`,
                 name: `Avance Efectivo (${advanceData.currency})`,
-                priceUsdt: advanceData.totalCobrado / effectiveRate,
+                // B-6 (2026-10-01): el monto ya viene en la moneda elegida; solo
+                // se convierte a USD cuando es Bs (antes dividía siempre).
+                priceUsdt: advancePriceUsdt(advanceData.totalCobrado, advanceData.currency, effectiveRate),
                 exactBs: advanceData.currency === 'BS' ? advanceData.totalCobrado : null,
                 costBs: 0,
                 costUsd: 0,

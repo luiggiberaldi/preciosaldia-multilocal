@@ -4,6 +4,7 @@ import CasheaIcon from '../CasheaIcon';
 import { formatBs, formatCop } from '../../utils/calculatorUtils';
 import { mulR, divR, subR, round2, calculateChangeRemainder } from '../../utils/dinero';
 import { computeRealisticSplit, stepSplitDown, stepSplitUp } from '../../utils/changeSplit';
+import { bsOnlyChange } from '../../utils/fase6Money'; // B-5 (2026-10-01)
 import { FINANCIAL_EPSILON } from '../../utils/securityConstants';
 import { useCheckoutCalculations } from '../../hooks/useCheckoutCalculations';
 import CheckoutPaymentBars from './CheckoutPaymentBars';
@@ -182,6 +183,16 @@ export default function CheckoutModal({
         const s = steppedSplit || realisticSplit;
         setChangeUsdGiven(s.usdPart > 0 ? s.usdPart.toFixed(2) : '');
         setChangeBsGiven(s.bsPart > 0 ? s.bsPart.toFixed(2) : '');
+        setSteppedSplit(null);
+    };
+
+    // B-5 (2026-10-01): "Entregar en Bs" ahora SÍ entrega todo en Bs. Antes
+    // aplicaba el split mixto aunque no hubiera propuesta factible (el rótulo
+    // era engañoso).
+    const deliverAllBsChange = () => {
+        triggerHaptic && triggerHaptic();
+        setChangeUsdGiven('');
+        setChangeBsGiven(bsOnlyChange(changeToDeliverUsd, safeRate).toFixed(2));
         setSteppedSplit(null);
     };
 
@@ -564,6 +575,7 @@ export default function CheckoutModal({
                         changeUsdGiven={changeUsdGiven}
                         changeBsGiven={changeBsGiven}
                         onDeliverAll={deliverRealisticChange}
+                        onDeliverAllBs={deliverAllBsChange}
                         onOpenSheet={() => setShowChangeSheet(true)}
                     />
                     )}

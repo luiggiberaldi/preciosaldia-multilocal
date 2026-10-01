@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, CreditCard, Banknote, Smartphone, DollarSign, Store, ShoppingCart, Package, Coins, Key, Fingerprint } from 'lucide-react';
 import { getAllPaymentMethods, savePaymentMethods, togglePaymentMethodEnabled, FACTORY_PAYMENT_METHODS, PAYMENT_ICONS, ICON_COMPONENTS, toTitleCase } from '../../config/paymentMethods';
 import { showToast } from '../Toast';
+import ConfirmModal from '../ConfirmModal';
 
 const ICON_OPTIONS = [
     { key: 'Banknote', Icon: Banknote },
@@ -22,6 +23,8 @@ export default function PaymentMethodsManager({ triggerHaptic }) {
     const [newLabel, setNewLabel] = useState('');
     const [newCurrency, setNewCurrency] = useState('BS');
     const [newIcon, setNewIcon] = useState('Banknote');
+    // B-17 (2026-10-01): eliminar un método pide confirmación.
+    const [removeTarget, setRemoveTarget] = useState(null);
 
     const copEnabled = localStorage.getItem('cop_enabled') === 'true';
 
@@ -59,8 +62,15 @@ export default function PaymentMethodsManager({ triggerHaptic }) {
         showToast('Método de pago agregado', 'success');
     };
 
-    const handleRemove = async (id) => {
+    const handleRemove = (id) => {
         triggerHaptic && triggerHaptic();
+        setRemoveTarget(methods.find(m => m.id === id) || { id });
+    };
+
+    const confirmRemove = async () => {
+        if (!removeTarget) return;
+        const id = removeTarget.id;
+        setRemoveTarget(null);
         const updated = methods.filter(m => m.id !== id);
         await savePaymentMethods(updated);
         const hydrated = await getAllPaymentMethods();
@@ -70,6 +80,17 @@ export default function PaymentMethodsManager({ triggerHaptic }) {
 
     const handleToggleState = async (id) => {
         triggerHaptic && triggerHaptic();
+        // B-17 (2026-10-01): no permitir desactivar el último método activo —
+        // sin métodos activos el checkout queda sin forma de cobrar.
+        const target = methods.find(m => m.id === id);
+        const isEnabled = target ? target.isEnabled !== false : true;
+        if (isEnabled) {
+            const othersEnabled = methods.some(m => m.id !== id && m.isEnabled !== false);
+            if (!othersEnabled) {
+                showToast('Debe quedar al menos un método de pago activo', 'warning');
+                return;
+            }
+        }
         const updated = await togglePaymentMethodEnabled(id);
         setMethods(updated);
     };
@@ -205,6 +226,17 @@ export default function PaymentMethodsManager({ triggerHaptic }) {
                     {methodsCop.map(renderMethod)}
                 </div>
             )}
+
+            {/* B-17 (2026-10-01): confirmación antes de eliminar un método */}
+            <ConfirmModal
+                isOpen={!!removeTarget}
+                onClose={() => setRemoveTarget(null)}
+                onConfirm={confirmRemove}
+                title="Eliminar método de pago"
+                message={removeTarget ? `¿Seguro que deseas eliminar "${removeTarget.label}"? Esta acción no se puede deshacer.` : ''}
+                confirmText="Sí, eliminar"
+                variant="danger"
+            />
         </div>
     );
 }

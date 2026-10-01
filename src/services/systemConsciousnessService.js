@@ -5,6 +5,10 @@ import { storageService } from '../utils/storageService';
 import { getActivePaymentMethods } from '../config/paymentMethods';
 
 export async function compileSystemConsciousnessContext({ effectiveRate, tasaCop, products, cart, usuarioActivo, isOnline }) {
+    // B-15 (2026-10-01): el prompt incluía "Tasa COP" aunque COP estuviera
+    // desactivado. Ahora la línea solo aparece si cop_enabled está activo.
+    const copEnabled = typeof localStorage !== 'undefined' && localStorage.getItem('cop_enabled') === 'true';
+    const copLine = copEnabled ? `- Tasa COP: ${tasaCop > 0 ? `${tasaCop.toFixed(2)} COP / USD` : 'No configurada'}\n` : '';
     const role = usuarioActivo?.rol || 'CAJERO';
     const isCajero = role === 'CAJERO';
     const timestampStr = new Date().toLocaleString('es-VE', { timeZone: 'America/Caracas' });
@@ -102,8 +106,7 @@ export async function compileSystemConsciousnessContext({ effectiveRate, tasaCop
 
 ## CONTEXTO OPERATIVO DE CAJERO
 - Tasa BCV Oficial: Bs. ${(effectiveRate || 0).toFixed(2)} / USD
-- Tasa COP: ${tasaCop > 0 ? `${tasaCop.toFixed(2)} COP / USD` : 'No configurada'}
-- Carrito de Venta Activo: ${cartCount} ítems (${cartSummary})
+${copLine}- Carrito de Venta Activo: ${cartCount} ítems (${cartSummary})
 - Inventario: ${totalProducts} registrados | ${lowStockItems.length} bajos de stock (${outOfStockItems.length} agotados)
 - Productos Críticos: ${criticalStockSummary}
 - Ventas de tu turno hoy: ${salesCount} ventas procesadas
@@ -125,8 +128,7 @@ No tienes permitido consultar ni revelar costos de compra, márgenes de ganancia
 
 ## SALUD DEL SISTEMA Y OPERACIONES
 - Tasa BCV Oficial: Bs. ${(effectiveRate || 0).toFixed(2)} / USD
-- Tasa COP: ${tasaCop > 0 ? `${tasaCop.toFixed(2)} COP / USD` : 'No configurada'}
-- Ventas del Día: ${salesCount} transacciones | Total USD: $${totalSalesUsd.toFixed(2)} / Total Bs: Bs.${totalSalesBs.toFixed(2)}
+${copLine}- Ventas del Día: ${salesCount} transacciones | Total USD: $${totalSalesUsd.toFixed(2)} / Total Bs: Bs.${totalSalesBs.toFixed(2)}
 - Desglose por Método de Pago: ${paymentSummary}
 - Carrito de Venta Activo: ${cartCount} ítems (${cartSummary})
 - Salud de Inventario: ${totalProducts} productos | ${lowStockItems.length} bajo stock crítico | ${outOfStockItems.length} agotados

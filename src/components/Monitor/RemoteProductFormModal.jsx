@@ -7,8 +7,11 @@ import { showToast } from '../Toast';
 import { Save } from 'lucide-react';
 import { SUPERVISOR_REMOTE_MUTATIONS_ENABLED } from '../../config/supervisorPolicy';
 import { sendSupervisorCommand } from '../../services/supervisorCommandService';
+import { useMountedRef } from '../../hooks/useMountedRef';
 
 export default function RemoteProductFormModal({ isOpen, onClose, targetDeviceId, productToEdit = null, remoteAvailable = true }) {
+    // B-19 (2026-10-01): el ack remoto puede tardar; no tocar estado si se cerró.
+    const mountedRef = useMountedRef();
     const { categories, effectiveRate: bcvRate, copEnabled, copPrimary, tasaCop } = useProductContext();
 
     // Form fields
@@ -287,9 +290,9 @@ export default function RemoteProductFormModal({ isOpen, onClose, targetDeviceId
             onClose();
         } catch (err) {
             console.error('[RemoteProductFormModal] Error enviando producto:', err);
-            showToast('Error al enviar la orden de producto', 'error');
+            if (mountedRef.current) showToast('Error al enviar la orden de producto', 'error');
         } finally {
-            setIsSubmitting(false);
+            if (mountedRef.current) setIsSubmitting(false);
         }
     };
 
@@ -299,6 +302,7 @@ export default function RemoteProductFormModal({ isOpen, onClose, targetDeviceId
             onClose={onClose}
             title={productToEdit ? "Editar Producto Remoto" : "Nuevo Producto Remoto"}
             size="max-w-2xl"
+            disableClose={isSubmitting}
         >
             <div className="space-y-6">
                 <ProductFormQuick
@@ -343,7 +347,8 @@ export default function RemoteProductFormModal({ isOpen, onClose, targetDeviceId
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-sm transition-colors"
+                        disabled={isSubmitting}
+                        className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-sm transition-colors disabled:opacity-50"
                     >
                         Cancelar
                     </button>

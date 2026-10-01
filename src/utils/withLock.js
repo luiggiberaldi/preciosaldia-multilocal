@@ -8,8 +8,9 @@
  *
  * Estrategia:
  *   1. Si `navigator.locks` está disponible y el contexto es seguro, lo usamos (atómico real).
- *   2. Si no, caemos a un mutex en memoria basado en promesas (mejor effort, no cross-tab).
- *   3. Siempre envolvemos en try/catch para que el callback nunca se pierda por un error
+ *   2. Si no, mutex entre pestañas vía localStorage (lease con token) — B-8.
+ *   3. Si localStorage tampoco sirve, mutex en memoria (mejor effort, no cross-tab).
+ *   4. Siempre envolvemos en try/catch para que el callback nunca se pierda por un error
  *      del mecanismo de lock (la integridad del dato prevalece sobre la atomicidad perfecta).
  *
  * Uso:
@@ -19,7 +20,7 @@
  * @module utils/withLock
  */
 
-// ── Mutex en memoria (fallback cuando navigator.locks no existe) ──────────────
+// ── Mutex en memoria (último recurso: solo excluye dentro del mismo tab) ────
 const _queues = new Map();
 
 /**
@@ -66,6 +67,84 @@ export function isLocksSupported() {
 }
 
 /**
+ * B-8 (2026-10-01): mutex entre pestañas vía localStorage (lease con token).
+ *
+ * El mutex en memoria no excluye entre tabs; en LAN por HTTP (sin contexto
+ * seguro) `navigator.locks` no existe y dos pestañas podían pisarse al
+ * escribir. Este nivel intermedio usa una llave con lease en localStorage
+ * (visible para todos los tabs del mismo origen):
+ *   - Adquisición: si la llave no existe o el lease expiró, escribimos nuestro
+ *     token y re-leemos tras ~10ms para confirmar que ganamos la carrera.
+ *   - Liberación: borramos solo si el token sigue siendo el nuestro.
+ *   - Si localStorage no está disponible → degrada al mutex en memoria.
+ *   - Si no logramos adquirir en TIMEOUT_MS → ejecutamos con el mutex en
+ *     memoria para no bloquear la venta indefinidamente (best effort).
+ *
+ * No es tan fuerte como navigator.locks (relojes y carreras de ~10ms), pero
+ * elimina la gran mayoría de las colisiones entre pestañas en la LAN.
+ */
+const _STORAGE_LEASE_MS = 8000;
+const _STORAGE_TIMEOUT_MS = 10000;
+
+function _storageAvailable() {
+  try {
+    return typeof localStorage !== 'undefined'
+      && typeof localStorage.getItem === 'function';
+  } catch {
+    return false;
+  }
+}
+
+async function _storageMutex(name, fn) {
+  const key = `pda_lock_${name}`;
+  const token = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const read = () => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return 'UNREADABLE';
+    }
+  };
+
+  const start = Date.now();
+  while (Date.now() - start < _STORAGE_TIMEOUT_MS) {
+    const held = read();
+    if (held === 'UNREADABLE') return _memoryMutex(name, fn);
+    const expired = !held || (Date.now() - (held.ts || 0) > _STORAGE_LEASE_MS);
+    if (expired) {
+      try {
+        localStorage.setItem(key, JSON.stringify({ token, ts: Date.now() }));
+      } catch {
+        return _memoryMutex(name, fn);
+      }
+      // Ventana de carrera: re-leer para confirmar que nuestro token ganó.
+      await sleep(10);
+      const cur = read();
+      if (cur && cur !== 'UNREADABLE' && cur.token === token) {
+        try {
+          return await fn();
+        } finally {
+          try {
+            const c2 = read();
+            if (c2 && c2 !== 'UNREADABLE' && c2.token === token) {
+              localStorage.removeItem(key);
+            }
+          } catch { /* limpieza best effort */ }
+        }
+      }
+    }
+    await sleep(25 + Math.random() * 25);
+  }
+  // Timeout: no bloquear la venta; degradar al mutex en memoria.
+  if (import.meta.env?.DEV) {
+    console.warn(`[withLock] timeout adquiriendo lock cross-tab "${name}", usando mutex en memoria.`);
+  }
+  return _memoryMutex(name, fn);
+}
+
+/**
  * Ejecuta `fn` bajo un lock nombrado. Si navigator.locks no está disponible,
  * cae a un mutex en memoria (con advertencia en consola en dev).
  *
@@ -109,10 +188,21 @@ export async function withLock(name, fn, opts = {}) {
     }
   }
 
-  // Fallback: mutex en memoria.
+  // Nivel 2: mutex cross-tab vía localStorage (B-8). Cubre HTTP en LAN donde
+  // navigator.locks no existe por falta de contexto seguro.
+  if (_storageAvailable()) {
+    if (opts.fallbackWarning !== false && import.meta.env?.DEV) {
+      console.warn(
+        `[withLock] navigator.locks NO soportado. Usando mutex cross-tab (localStorage) para "${name}".`
+      );
+    }
+    return _storageMutex(name, fn);
+  }
+
+  // Nivel 3: mutex en memoria (último recurso).
   if (opts.fallbackWarning !== false && import.meta.env?.DEV) {
     console.warn(
-      `[withLock] navigator.locks NO soportado. Usando mutex en memoria para "${name}". ` +
+      `[withLock] navigator.locks NO soportado y localStorage no disponible. Usando mutex en memoria para "${name}". ` +
       `La exclusión mutua NO aplica entre tabs/navegadores.`
     );
   }

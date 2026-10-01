@@ -853,3 +853,35 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 **Verificación:** suite completa 875 passed / 11 skipped / 0 failed; `npm run build` exitoso.
 
 ---
+## 2026-10-01 — Plan de fixeo: Fase 6 (bajos)
+
+**Qué:** se cierran 16 de los 19 hallazgos bajos (B-10 excluido por tocar el importador del tercero; B-2/B-3 son decisiones pendientes). (1) Seguridad: `CloudGate.handleRevoke` muestra error si el registro del equipo falla tras liberar el cupo (B-1). (2) POS: eliminado el parámetro muerto `imprimir` de `CheckoutModalPOS` (la impresión vive en `ReceiptModal`) (B-4); "Entregar en Bs" ahora entrega TODO el vuelto en Bs vía `bsOnlyChange` (antes aplicaba el split mixto con rótulo engañoso) (B-5); el avance de efectivo en USD ya no se divide entre el BCV (`advancePriceUsdt`) (B-6); un pago COP sin tasa válida aporta 0 en USD y en Bs (`copToUsd`/`paymentMethodToBs`, antes caía al divisor de Bs) (B-7). (3) Sync: `_debouncePush` ya no traga errores en silencio — `recordSyncPushError` + evento `pda_sync_push_error` (B-13a); la reconexión del monitor tiene tope de 12 intentos y luego expone `syncError` para reintento manual (B-13b); el fallback de `withLock` ahora es un mutex cross-tab vía localStorage con lease+token (B-8, antes solo en memoria). (4) Productos: advertencia (no bloqueo) al guardar precio $0 (B-9); capitalización Unicode (`titleCaseUnicode`, la ñ ya capitaliza) (B-11). (5) Supervisión: `calculateSupervisorPaymentBreakdown` filtra ANULADA por sí solo (`isVoidedSale`) (B-12); los chips de moneda reaccionan al toggle de COP vía evento `pda_cop_enabled_changed` + `storage` (B-14); el prompt de IA omite la línea de tasa COP si está desactivado (B-15); los 3 modales remotos usan `useMountedRef` para no hacer setState tras desmontaje durante el ack (B-19). (6) Ajustes: nombre/RIF con trim + límites (60/20, RIF en mayúsculas) vía `cleanBusinessData` (B-16); eliminar método de pago pide confirmación (`ConfirmModal`) y no se puede desactivar el último método activo (B-17). (7) Modales: `Modal` acepta `disableClose` (bloquea X/backdrop/Escape durante el envío); `RemoteProductFormModal` lo usa con `isSubmitting`; `SupervisorRateModal` ignora cierres durante el envío (`SupervisorInventoryBatchModal` ya lo hacía) (B-18).
+
+**No implementado (documentado):** B-10 (heurística de encabezado Excel — toca el importador del tercero, pendiente de coordinación junto con ALTO-6 y M-8). B-2: sesión local manipulable desde devtools — riesgo aceptado del auth 100% cliente, decisión pendiente con Luigi (HMAC atado al PIN vs documentar). B-3: verificado — `lookup_customer_project` (RPC público en el proyecto del cliente) no tiene rate-limit server-side; un throttle real requiere Edge Function/gateway (no se afirma como resuelto).
+
+**Cambios:**
+- `src/utils/fase6Money.js`: nuevo — `advancePriceUsdt`, `copToUsd`, `bsOnlyChange`, `paymentMethodToBs`, `isVoidedSale`, `cleanBusinessData`, `titleCaseUnicode` (+ re-export `divR`).
+- `src/components/security/CloudGate.jsx`: error visible en `handleRevoke`.
+- `src/components/Sales/CheckoutModalPOS/index.jsx`, `components/PaymentFooter.jsx`: fuera `imprimir`.
+- `src/components/Sales/CheckoutModal.jsx`: `deliverAllBsChange` sobre `bsOnlyChange`; `MobileChangeAllocation` recibe `onDeliverAllBs`.
+- `src/views/SalesView.jsx`: avance usa `advancePriceUsdt`.
+- `src/components/Sales/CheckoutModalPOS/hooks/usePaymentCalculations.js`: COP vía `copToUsd`.
+- `src/utils/withLock.js`: nivel intermedio `_storageMutex` (lease 8s, timeout 10s, verificación de token).
+- `src/hooks/useCloudSync.js`: `recordSyncPushError`/`getLastSyncPushError`/`SYNC_PUSH_ERROR_EVENT`.
+- `src/hooks/useMonitorSync.js`: `MAX_RECONNECT_ATTEMPTS = 12`; `triggerRefresh` resetea contador y limpia error.
+- `src/hooks/useMountedRef.js`: nuevo hook.
+- `src/components/Modal.jsx`: prop `disableClose`.
+- `src/components/Monitor/RemoteProductFormModal.jsx`, `SupervisorRateModal.jsx`, `SupervisorInventoryBatchModal.jsx`: `useMountedRef` + bloqueo de cierre durante envío.
+- `src/views/ProductsView.jsx`: advertencia de precio $0.
+- `src/utils/productProcessor.js`: `titleCaseUnicode` en `buildProductPayload`.
+- `src/services/supervisorFinancials.js`: `isVoidedSale` en el breakdown.
+- `src/views/ModoJefePanel.jsx`: `MonedaChips` suscribe `pda_cop_enabled_changed` + `storage`.
+- `src/components/Settings/tabs/SettingsTabNegocio.jsx`, `src/components/SettingsModal.jsx`: emiten `pda_cop_enabled_changed`.
+- `src/services/systemConsciousnessService.js`: línea de tasa COP condicional a `cop_enabled`.
+- `src/views/SettingsView.jsx`: `cleanBusinessData` al guardar.
+- `src/components/Settings/PaymentMethodsManager.jsx`: `ConfirmModal` para eliminar; bloqueo de desactivar el último activo.
+- `tests/fase6.test.js`: 19 tests nuevos; `tests/withLock.test.js`: +2 tests B-8.
+
+**Verificación:** suite completa 896 passed / 11 skipped / 0 failed; `npm run build` exitoso.
+
+---

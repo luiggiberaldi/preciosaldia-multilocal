@@ -4,6 +4,7 @@
 import { round2, divR, mulR } from './dinero.js';
 import { CurrencyService } from '../services/CurrencyService.js'; // FIN-017-pattern: safeParse en vez de parseFloat.
 import { isGranelProduct, parseStockInput } from './granel.js'; // GRANEL-001: decimales SOLO para productos a granel.
+import { titleCaseUnicode } from './fase6Money.js'; // B-11 (2026-10-01)
 
 export function buildProductPayload(formData, effectiveRate) {
     const {
@@ -26,7 +27,9 @@ export function buildProductPayload(formData, effectiveRate) {
         lowStockAlert
     } = formData;
 
-    const formattedName = String(name || '').trim().replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
+    // B-11 (2026-10-01): \w es ASCII y dejaba "ñandú" como "ñandú" (la ñ no
+    // capitalizaba). Helper Unicode en fase6Money.js.
+    const formattedName = titleCaseUnicode(name);
     // FIN-022-pattern: validar tasa antes de usarla (sin fallback silencioso a 1).
     const safeRate = effectiveRate > 0 ? effectiveRate : 1;
 

@@ -86,8 +86,11 @@ export function useModalBehavior(isOpen, onClose) {
   return panelRef;
 }
 
-export const Modal = ({ isOpen, onClose, title, children, className = '', size = 'max-w-sm' }) => {
-  const panelRef = useModalBehavior(isOpen, onClose);
+export const Modal = ({ isOpen, onClose, title, children, className = '', size = 'max-w-sm', disableClose = false }) => {
+  // B-18 (2026-10-01): disableClose bloquea X, backdrop-click y Escape mientras
+  // se envía una orden remota (evita cerrar a mitad del ack).
+  const guardedClose = disableClose ? undefined : onClose;
+  const panelRef = useModalBehavior(isOpen, guardedClose);
   if (!isOpen) return null;
 
   return (
@@ -97,7 +100,7 @@ export const Modal = ({ isOpen, onClose, title, children, className = '', size =
       {/* Backdrop con desenfoque */}
       <div
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        onClick={guardedClose}
       />
 
       {/* Contenido del Modal */}
@@ -113,7 +116,7 @@ export const Modal = ({ isOpen, onClose, title, children, className = '', size =
         {/* Cabecera */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
           <h3 className="font-black text-slate-800 dark:text-white text-lg tracking-tight">{title}</h3>
-          <CloseButton onClick={onClose} />
+          {!disableClose && <CloseButton onClick={onClose} />}
         </div>
 
         {/* Body con Scroll Mejorado */}

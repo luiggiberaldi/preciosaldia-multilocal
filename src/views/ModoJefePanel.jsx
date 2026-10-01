@@ -11,7 +11,7 @@
  * UI: todo redondeado, sin <select> nativo, una sola señal de foco,
  * iconos lucide, sin alert/confirm/prompt.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
     Banknote, Wallet, Coins, CreditCard, Zap, Eye, HandCoins, Scale,
     TrendingUp, TrendingDown, Minus, TriangleAlert, BadgePercent,
@@ -60,8 +60,23 @@ export function FrescuraBadge({ updatedAt }) {
 }
 
 function MonedaChips({ porMoneda }) {
-    // Si el COP no está activado, no aparece en el sistema.
-    const [copEnabled] = useState(() => localStorage.getItem('cop_enabled') === 'true');
+    // B-14 (2026-10-01): antes era `useState` con inicializador — cambiar COP
+    // en Ajustes no refrescaba los chips sin remontar. Ahora se suscribe al
+    // evento `pda_cop_enabled_changed` (misma pestaña) y a `storage` (otras).
+    const [copEnabled, setCopEnabled] = useState(() => localStorage.getItem('cop_enabled') === 'true');
+    useEffect(() => {
+        const sync = (e) => {
+            if (e?.detail && typeof e.detail.enabled === 'boolean') setCopEnabled(e.detail.enabled);
+            else setCopEnabled(localStorage.getItem('cop_enabled') === 'true');
+        };
+        const onStorage = (e) => { if (!e.key || e.key === 'cop_enabled') sync(); };
+        window.addEventListener('pda_cop_enabled_changed', sync);
+        window.addEventListener('storage', onStorage);
+        return () => {
+            window.removeEventListener('pda_cop_enabled_changed', sync);
+            window.removeEventListener('storage', onStorage);
+        };
+    }, []);
     const chips = [
         { icon: Banknote, label: 'USD', value: `$${formatUsd(porMoneda.USD)}`, tone: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
         { icon: Wallet, label: 'Bs', value: `Bs ${formatBs(porMoneda.BS)}`, tone: 'bg-sky-500/10 text-sky-600 dark:text-sky-400' },

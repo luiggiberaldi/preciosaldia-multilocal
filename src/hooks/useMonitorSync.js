@@ -20,6 +20,10 @@ localforage.config({ name: 'BodegaApp', storeName: 'bodega_app_data' });
 
 const SUBSCRIBE_TIMEOUT_MS = 8000;
 const RECONNECT_DELAYS_MS = [1000, 3000, 10000, 30000];
+// B-13 (2026-10-01): tope de reintentos de reconexión. Sin tope, el monitor
+// reintentaba para siempre en silencio si la red caía de forma permanente.
+// Al agotarse, se expone syncError para que la UI ofrezca reintento manual.
+const MAX_RECONNECT_ATTEMPTS = 12;
 
 /**
  * ALTO-1 (2026-10-01): el monitor ya no es ciego a vendedores no pareados.
@@ -89,6 +93,12 @@ export function useMonitorSync(deviceIdsInput) {
 
     const scheduleReconnect = (lifecycleId = lifecycleRef.current) => {
         if (!isActiveLifecycle(lifecycleId) || deviceIdsRef.current.length === 0 || reconnectTimerRef.current) return;
+        // B-13 (2026-10-01): tope de intentos; al agotarse se avisa en vez de
+        // reintentar eternamente en silencio.
+        if (reconnectAttemptRef.current >= MAX_RECONNECT_ATTEMPTS) {
+            setSyncError('Se perdió la conexión con el monitor tras varios intentos. Revisa tu internet y usa Actualizar para reintentar.');
+            return;
+        }
         const attempt = Math.min(reconnectAttemptRef.current, RECONNECT_DELAYS_MS.length - 1);
         const delay = RECONNECT_DELAYS_MS[attempt];
         reconnectAttemptRef.current += 1;
@@ -379,7 +389,13 @@ export function useMonitorSync(deviceIdsInput) {
         }
     };
 
-    const triggerRefresh = async () => initMonitor();
+    // B-13 (2026-10-01): el reintento manual resetea el contador de intentos y
+    // limpia el error de "reconexión agotada".
+    const triggerRefresh = async () => {
+        reconnectAttemptRef.current = 0;
+        setSyncError(null);
+        return initMonitor();
+    };
 
     // Clave estable del input (string o array) para el efecto.
     const inputKey = Array.isArray(deviceIdsInput)

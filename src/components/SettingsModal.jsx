@@ -390,6 +390,8 @@ export default function SettingsModal({ isOpen, onClose, products, onImport, tri
                                     const newVal = !copEnabled;
                                     setCopEnabled(newVal);
                                     localStorage.setItem('cop_enabled', newVal.toString());
+                                    // B-14 (2026-10-01): avisar a los chips del Modo Jefe.
+                                    window.dispatchEvent(new CustomEvent('pda_cop_enabled_changed', { detail: { enabled: newVal } }));
                                     forceHeartbeat();
                                     showToast(newVal ? 'COP Habilitado' : 'COP Deshabilitado', 'success');
                                     if (triggerHaptic) triggerHaptic();

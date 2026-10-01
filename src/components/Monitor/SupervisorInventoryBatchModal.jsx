@@ -13,6 +13,7 @@ import SupervisorSelect from './SupervisorSelect';
 import { sendSupervisorCommand } from '../../services/supervisorCommandService';
 import { SUPERVISOR_REMOTE_EGRESS_ENABLED } from '../../config/supervisorPolicy';
 import { showToast } from '../Toast';
+import { useMountedRef } from '../../hooks/useMountedRef';
 
 const EGRESS_REASONS = [
     { value: 'merma', label: 'Merma' },
@@ -43,6 +44,8 @@ export default function SupervisorInventoryBatchModal({
     remoteAvailable = false,
     allowEgress = SUPERVISOR_REMOTE_EGRESS_ENABLED,
 }) {
+    // B-19 (2026-10-01): el ack remoto puede tardar; no tocar estado si se cerró.
+    const mountedRef = useMountedRef();
     const [direction, setDirection] = useState('ingreso');
     const [quantityInput, setQuantityInput] = useState('1');
     const [inputUnit, setInputUnit] = useState('unidades');
@@ -163,22 +166,22 @@ export default function SupervisorInventoryBatchModal({
                 },
             });
             if (!result.ok) {
-                setFormError(result.error || 'No se pudo enviar el movimiento.');
+                if (mountedRef.current) setFormError(result.error || 'No se pudo enviar el movimiento.');
                 return;
             }
 
             const ack = await result.ackPromise;
             if (!ack?.ok) {
-                setFormError(ack?.error || 'La caja no confirmó el movimiento.');
+                if (mountedRef.current) setFormError(ack?.error || 'La caja no confirmó el movimiento.');
                 return;
             }
 
             showToast(isEgress ? 'Egreso confirmado en la caja' : 'Ingreso confirmado en la caja', 'success');
             onClose?.();
         } catch (error) {
-            setFormError(error?.message || 'No se pudo enviar el movimiento.');
+            if (mountedRef.current) setFormError(error?.message || 'No se pudo enviar el movimiento.');
         } finally {
-            setIsSubmitting(false);
+            if (mountedRef.current) setIsSubmitting(false);
         }
     };
 

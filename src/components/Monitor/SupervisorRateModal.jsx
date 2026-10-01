@@ -3,8 +3,11 @@ import { X, Check, DollarSign, Euro, TrendingUp, Edit3 } from 'lucide-react';
 import { showToast } from '../Toast';
 import { SUPERVISOR_REMOTE_MUTATIONS_ENABLED, SUPERVISOR_REMOTE_RATE_ENABLED } from '../../config/supervisorPolicy';
 import { sendSupervisorCommand } from '../../services/supervisorCommandService';
+import { useMountedRef } from '../../hooks/useMountedRef';
 
 export default function SupervisorRateModal({ isOpen, onClose, targetDeviceId, currentRateMode, currentCustomRate, rates = {}, remoteAvailable = true }) {
+    // B-19 (2026-10-01): el ack remoto puede tardar; no tocar estado si se cerró.
+    const mountedRef = useMountedRef();
     const [rateMode, setRateMode] = useState(currentRateMode || 'bcv');
     const [customRate, setCustomRate] = useState(currentCustomRate || '');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,9 +79,9 @@ export default function SupervisorRateModal({ isOpen, onClose, targetDeviceId, c
             onClose();
         } catch (e) {
             console.error('[SupervisorRateModal] Error enviando orden de tasa:', e);
-            showToast('Error al enviar la orden de cambio de tasa', 'error');
+            if (mountedRef.current) showToast('Error al enviar la orden de cambio de tasa', 'error');
         } finally {
-            setIsSubmitting(false);
+            if (mountedRef.current) setIsSubmitting(false);
         }
     };
 
@@ -98,7 +101,7 @@ export default function SupervisorRateModal({ isOpen, onClose, targetDeviceId, c
                         </div>
                     </div>
                     <button 
-                        onClick={onClose}
+                        onClick={() => { if (!isSubmitting) onClose(); }}
                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
                     >
                         <X className="w-5 h-5" />
@@ -162,7 +165,7 @@ export default function SupervisorRateModal({ isOpen, onClose, targetDeviceId, c
                 <div className="flex gap-3 pt-2">
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={() => { if (!isSubmitting) onClose(); }}
                         className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-sm transition-colors"
                     >
                         Cancelar

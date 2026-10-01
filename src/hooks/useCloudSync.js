@@ -139,8 +139,29 @@ function _debouncePush(key, value) {
     const delay = HEAVY_KEYS.includes(key) ? DEBOUNCE_HEAVY_MS : DEBOUNCE_LIGHT_MS;
     pendingPush[key] = setTimeout(() => {
         delete pendingPush[key];
-        pushCloudSync(key, value).catch(() => {});
+        // B-13 (2026-10-01): antes los errores se tragaban con `.catch(() => {})`
+        // y el push fallaba en silencio. Ahora se registran (evento + último
+        // error consultable) para que la UI pueda avisar.
+        pushCloudSync(key, value).then((res) => {
+            if (res && res.ok === false && !res.skipped) recordSyncPushError(key, res.error);
+        }).catch((err) => {
+            recordSyncPushError(key, err?.message || String(err));
+        });
     }, delay);
+}
+
+/** B-13 (2026-10-01): último error de push (no silencioso). */
+export const SYNC_PUSH_ERROR_EVENT = 'pda_sync_push_error';
+let _lastSyncPushError = null;
+export function recordSyncPushError(key, error) {
+    _lastSyncPushError = { key, error: String(error || 'Error desconocido'), at: new Date().toISOString() };
+    try {
+        window.dispatchEvent(new CustomEvent(SYNC_PUSH_ERROR_EVENT, { detail: _lastSyncPushError }));
+    } catch { /* sin window (tests): silenciar */ }
+    return _lastSyncPushError;
+}
+export function getLastSyncPushError() {
+    return _lastSyncPushError;
 }
 
 export const pushCloudSync = async (key, value, forceUnconditional = false) => {

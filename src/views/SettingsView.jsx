@@ -14,6 +14,7 @@ import { useProductContext } from '../context/ProductContext';
 import ShareInventoryModal from '../components/ShareInventoryModal';
 import { useAudit } from '../hooks/useAudit';
 import SettingsTabNegocio from '../components/Settings/tabs/SettingsTabNegocio';
+import { cleanBusinessData } from '../utils/fase6Money'; // B-16 (2026-10-01)
 import SettingsTabVentas from '../components/Settings/tabs/SettingsTabVentas';
 import SettingsTabUsuarios from '../components/Settings/tabs/SettingsTabUsuarios';
 import SettingsTabSistema from '../components/Settings/tabs/SettingsTabSistema';
@@ -208,8 +209,13 @@ export default function SettingsView({ onClose, theme, toggleTheme, triggerHapti
 
     // ─── HANDLERS ─────────────────────────────────────────
     const handleSaveBusinessData = () => {
-        localStorage.setItem('business_name', businessName);
-        localStorage.setItem('business_rif', businessRif);
+        // B-16 (2026-10-01): trim + límite (el ticket lo escapa, pero un nombre
+        // de 500 caracteres con espacios igual ensucia recibos y reportes).
+        const { name: cleanName, rif: cleanRif } = cleanBusinessData(businessName, businessRif);
+        setBusinessName(cleanName);
+        setBusinessRif(cleanRif);
+        localStorage.setItem('business_name', cleanName);
+        localStorage.setItem('business_rif', cleanRif);
         localStorage.setItem('printer_paper_width', paperWidth);
         forceHeartbeat();
         showToast('Datos del negocio guardados', 'success');

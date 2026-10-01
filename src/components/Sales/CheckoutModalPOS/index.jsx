@@ -470,7 +470,9 @@ export default function CheckoutModalPOS({
     };
 
     // ─── PROCESAR PAGO ──────────────────────────────────────
-    const procesarPago = (imprimir = false) => {
+    // B-4 (2026-10-01): eliminado el parámetro `imprimir` (muerto: siempre era
+    // false). El recibo se imprime desde ReceiptModal tras la venta.
+    const procesarPago = () => {
         try {
             // Validaciones
             // M-2: la tasa se valida PRIMERO — sin tasa válida nada de lo demás tiene sentido.
@@ -600,11 +602,11 @@ export default function CheckoutModalPOS({
             // Si hay vuelto, se revisa la distribución en un modal final. No se
             // registra nada hasta que el cajero confirme explícitamente.
             if (cambioUSD > FINANCIAL_EPSILON.PAYMENT_ZERO) {
-                setChangeConfirmation({ payments, saleOptions, imprimir });
+                setChangeConfirmation({ payments, saleOptions });
                 return;
             }
 
-            onConfirmSale(payments, saleOptions, imprimir);
+            onConfirmSale(payments, saleOptions, false);
             triggerHaptic && triggerHaptic();
         } catch (err) {
             console.error('Error al procesar pago POS:', err);
@@ -776,7 +778,7 @@ export default function CheckoutModalPOS({
                     onConfirm={() => {
                         const pending = changeConfirmation;
                         setChangeConfirmation(null);
-                        onConfirmSale(pending.payments, pending.saleOptions, pending.imprimir);
+                        onConfirmSale(pending.payments, pending.saleOptions, false);
                         triggerHaptic && triggerHaptic();
                     }}
                     isProcessing={isProcessing}

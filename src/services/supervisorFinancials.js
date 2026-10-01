@@ -1,5 +1,6 @@
 import { FinancialEngine } from '../core/FinancialEngine.js';
 import { divR, round2, sumR } from '../utils/dinero.js';
+import { isVoidedSale } from '../utils/fase6Money.js'; // B-12 (2026-10-01)
 import { getGeneratedWalletCredit } from '../utils/customerLedger.js';
 
 const SALE_TYPES = Object.freeze(['VENTA', 'VENTA_FIADA', 'VENTA_CASHEA']);
@@ -121,6 +122,9 @@ export function calculateSupervisorPaymentBreakdown(sales = [], bcvRate = 1) {
     };
 
     for (const sale of sales) {
+        // B-12 (2026-10-01): filtrar ANULADA aquí también (antes dependía de
+        // que cada llamador lo hiciera; fragilidad latente).
+        if (isVoidedSale(sale)) continue;
         if (sale.tipo === 'APERTURA_CAJA') {
             if (finite(sale.openingUsd) > 0) add('efectivo_usd', sale.openingUsd, 0, 'Efectivo $', 'USD');
             if (finite(sale.openingBs) > 0) add('efectivo_bs', 0, sale.openingBs, 'Efectivo Bs', 'BS');

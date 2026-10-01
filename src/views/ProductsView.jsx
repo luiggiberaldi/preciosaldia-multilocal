@@ -392,6 +392,12 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
             return showToast('Nombre y precio requeridos', 'warning');
         }
 
+        // B-9 (2026-10-01): el Excel avisa cuando el precio es $0; el formulario
+        // manual lo permitía en silencio. Advertencia sin bloquear.
+        if (parseFloat(priceUsd) === 0 && parseFloat(priceBs) === 0) {
+            showToast('Precio en $0: se guardará sin precio de venta', 'warning');
+        }
+
         const productData = buildProductPayload({
             name, barcode, priceUsd, priceBs, pricingMode, priceBsUsdRef, priceCop, costUsd, costBs, stock, stockInLotes,
             packagingType, unitsPerPackage, granelUnit, sellByUnit, unitPriceUsd, unitPriceCop,
