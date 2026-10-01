@@ -4,6 +4,25 @@ Aprendizajes reutilizables del proyecto. Lo operativo del día a día va en `bit
 
 ---
 
+## 2026-10-01 — QUOTA-003: deltas diarios en vez de snapshots para egress
+- Patrón: cuando un documento sincronizado crece con el tiempo (ventas,
+  ledger), el push no debe re-subir el snapshot completo. Un doc diario
+  (`prefijo_YYYY-MM-DD`) con solo lo nuevo + fusión idempotente por id en el
+  receptor (`mergeSales`) convierte O(ventana) en O(delta). El snapshot
+  completo pasa a ser nocturno/bajo demanda.
+- La key dinámica no cabe en una allowlist exacta: validar por
+  prefijo+formato (`isSalesDeltaKey`) tanto en el contrato como en el
+  receptor. El validador del payload va por su propio contrato
+  (`isValidSalesDelta`), no por la tabla de validadores estáticos.
+- E2E contra Supabase real: el RLS de `sync_documents` exige (1) JWT del
+  usuario Auth (no basta la anon key) y (2) dispositivo registrado en
+  `device_sessions` ANTES de cualquier DELETE (el DELETE con RLS que filtra
+  devuelve 200 con 0 filas, no error — silencioso). Para aislamiento entre
+  corridas, device IDs únicos por run (`E2E-...-${Date.now().toString(36)}`)
+  en vez de confiar en la limpieza.
+- PostgREST upsert por REST necesita `Prefer: resolution=merge-duplicates`
+  además de `on_conflict`; sin eso el segundo POST da 409.
+
 ## 2026-09-30 — CloudGate: un solo build, N proyectos Supabase por cliente
 - Patrón que funcionó: cliente Supabase perezoso vía `Proxy` — todo el código
   existente sigue usando `supabaseCloud.from(...)` / `.auth...` sin cambios;

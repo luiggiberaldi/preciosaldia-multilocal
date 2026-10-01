@@ -4,6 +4,46 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-10-01 — QUOTA-003: ventas como delta diario (fix de egress)
+
+**Qué:** Cada venta subía la ventana completa de 90 días (~16MB por push con
+100 ventas/día por vendedor → 46.6GB/mes realista, revienta los 5GB del tier
+gratis). Ahora cada venta solo sube el delta del día
+(`bodega_sales_delta_YYYY-MM-DD`, ~KB). La ventana de 90 días se sube solo al
+cierre (`pushSalesWindow`) o bajo demanda. Tráfico modelado: 339MB/mes (138x menos).
+
+**Cambios:**
+- `src/utils/syncDelta.js`: `SALES_DELTA_KEY_PREFIX`, `salesDeltaKeyForDate()`,
+  `isSalesDeltaKey()`, `filterTicketsForDay()`, `buildSalesDeltaPayload()`,
+  `isValidSalesDelta()`, `salesDeltaTickets()`.
+- `src/hooks/useCloudSync.js`: `pushCloudSync('bodega_sales_v1')` ahora delega
+  en `pushSalesDelta()` (hash-gating propio por día); nuevo `pushSalesWindow()`
+  exportado para el cierre; `_applyFromCloud` fusiona deltas entrantes con
+  `mergeSales` sobre `bodega_sales_v1` local (idempotente).
+- `src/hooks/useMonitorSync.js`: el monitor fusiona deltas en la vista de
+  ventas del negocio pareado (feed en vivo sin ventana completa).
+- `src/services/supervisorContracts.js`: `isSupervisorSyncKey` y
+  `validateSupervisorSyncDocument` aceptan deltas por prefijo+formato (la key
+  es dinámica por día, no cabe en la allowlist exacta).
+- `tests/syncDelta.test.js`: 6 tests nuevos (formato, filtro por día,
+  validación, idempotencia, contrato, extracción).
+
+**Verificado (sin commit):**
+- `npx vitest run tests/syncDelta.test.js` → 19/19 verde.
+- `npx vitest run tests/supervisorSync.test.js` → 8/8 verde.
+- E2E `estacion-2026/scripts/e2e_quota003.mjs` contra el proyecto del cliente
+  (LIC-8P3CQY): 12/12 verde ×2 corridas — vendedor A (5) → supervisor ve 5;
+  vendedor B (3) → 8 sin duplicados; offline (2 más) → 7 en el delta;
+  re-pull idempotente → 10 únicos; la ventana completa jamás se sube.
+- `capacity_free_tier.mjs` re-ejecutado: 46,594MB/mes hoy vs 339MB/mes con
+  el fix (S7, 138x).
+
+**Por qué:** El tier gratis de Supabase (5GB egress/mes) no aguanta re-subir
+16MB por venta. El delta es O(tickets de hoy) en vez de O(ventana de 90 días).
+
+**Rama:** `fix/quota-003-sales-delta`. Pendiente: autorización de luigi para
+merge + deploy.
+
 ## 2026-09-30 — Pro: modo demo eliminado + CloudGate (código → login nube → PIN)
 
 **Qué:** El Pro quedó sin rastro de demo ni mensualidad (decisión de luigi: Pro

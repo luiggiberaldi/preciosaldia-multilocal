@@ -1,3 +1,5 @@
+import { isSalesDeltaKey, isValidSalesDelta } from '../utils/syncDelta.js';
+
 // Contratos puros del Modo Supervisor.
 // Este módulo no conoce React, Supabase ni localStorage: sirve como frontera
 // común para validar datos antes de conectarlos a persistencia o Realtime.
@@ -55,6 +57,9 @@ const SYNC_VALIDATORS = Object.freeze({
 export const SUPERVISOR_SYNC_KEYS = Object.freeze(Object.keys(SYNC_VALIDATORS));
 
 export function isSupervisorSyncKey(docId) {
+    // QUOTA-003: las keys de delta diario (`bodega_sales_delta_YYYY-MM-DD`)
+    // son dinámicas; se aceptan por prefijo+formato, no por allowlist exacta.
+    if (isSalesDeltaKey(docId)) return true;
     return typeof docId === 'string' && Object.prototype.hasOwnProperty.call(SYNC_VALIDATORS, docId);
 }
 
@@ -65,6 +70,13 @@ export function validateSupervisorSyncDocument(docId, payload) {
 
     if (payload == null) {
         return { valid: false, error: `Payload vacío: ${docId}` };
+    }
+
+    // QUOTA-003: el delta valida por su propio contrato (fecha + array).
+    if (isSalesDeltaKey(docId)) {
+        return isValidSalesDelta(payload)
+            ? { valid: true, error: null }
+            : { valid: false, error: `Schema inválido: ${docId}` };
     }
 
     const valid = SYNC_VALIDATORS[docId](payload);
