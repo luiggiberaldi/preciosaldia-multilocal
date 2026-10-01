@@ -117,9 +117,14 @@ export default function App() {
     return true;
   });
 
-  // Al recargar la página, cerrar sesión si el login está activado
+  // Al recargar la página, cerrar sesión si el login está activado.
+  // El cajero queda exento: su sesión nunca se cierra automáticamente,
+  // solo con logout manual.
   useEffect(() => {
-    if (requireLogin) logout();
+    if (!requireLogin) return;
+    const persisted = useAuthStore.getState().usuarioActivo;
+    if (persisted && isCashier(persisted)) return;
+    logout();
   }, []);
 
   // Al iniciar sesión, redirigir según el rol (Fase 1.5: cajero→ventas,

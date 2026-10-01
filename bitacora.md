@@ -723,3 +723,19 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
   `landingTab` como antes. Cajero y administrador sin cambios.
 - El gate existente (`allowedTabIds`) sigue protegiendo contra pestañas no
   permitidas.
+
+## 2026-10-01 — El cajero no se desloguea solo
+- Pedido de luigi: el cajero no debe salir al login de PIN automáticamente,
+  pase el tiempo que pase o cambie de pestaña; solo sale con logout manual.
+- Tres mecanismos lo sacaban; los tres eximen ahora al cajero:
+  1. `src/App.jsx`: al recargar la página se hacía `logout()` si el login
+     estaba activado. Ahora se revisa la sesión persistida y si es cajero
+     no se toca.
+  2. `src/hooks/useAutoLock.js`: el bloqueo por inactividad (5 min) ya no
+     aplica al cajero.
+  3. `src/hooks/useAutoLock.js`: el bloqueo al minimizar/cambiar de pestaña
+     (`visibilitychange`) ya no aplica al cajero.
+- Dueño y administrador sin cambios (siguen con auto-bloqueo).
+- Tests: 805/817 verdes; 2 archivos con fallas preexistentes verificadas sin
+  estos cambios (`supervisorLifecycle` referencia un archivo borrado,
+  `receivablesDeterministic` falla en el inyector).

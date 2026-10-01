@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef, useState } from 'react';
 import { useAuthStore } from './store/useAuthStore';
 import { logEvent } from '../services/auditService';
 import { AUTOLOCK_POLICY } from '../utils/securityConstants';
-import { hasAdminAccess } from '../utils/roles';
+import { hasAdminAccess, isCashier } from '../utils/roles';
 
 /**
  * useAutoLock — Bloqueo automático de sesión por inactividad o minimizar la app.
@@ -26,15 +26,12 @@ import { hasAdminAccess } from '../utils/roles';
 export function useAutoLock() {
     const usuarioActivo = useAuthStore(s => s.usuarioActivo);
     const requireLogin = useAuthStore(s => s.requireLogin);
-    const requireCajeroPin = useAuthStore(s => s.requireCajeroPin ?? true);
     const isCloudConfigured = useAuthStore(s => s.isCloudConfigured);
     const logout = useAuthStore(s => s.logout);
     const unlock = useAuthStore(s => s.unlock);
-    const isCajeroNoPin = usuarioActivo?.rol === 'CAJERO' && requireCajeroPin === false;
-
-    // SEC-004/HOOK-001: el auto-lock aplica cuando hay sesión activa y el login es requerido.
-    // Si el usuario activo es Cajero y tiene deshabilitado el PIN, no requiere auto-lock.
-    const isLoginRequired = Boolean(requireLogin && usuarioActivo && !isCajeroNoPin);
+    // El cajero nunca se bloquea automáticamente: ni por inactividad ni al
+    // minimizar/cambiar de pestaña. Solo sale con logout manual.
+    const isLoginRequired = Boolean(requireLogin && usuarioActivo && !isCashier(usuarioActivo));
     // Si hay cloud, también aplicamos auto-lock para no-admin (antes solo ADMIN).
     // Si no hay cloud pero requireLogin=true, igual aplicamos (POS local con PIN).
     const timeoutRef = useRef(null);
