@@ -108,3 +108,63 @@ describe('syncDelta — ventas podadas y fusión', () => {
         expect(mergeSales([sale('a', 1)], null).map((s) => s.id)).toEqual(['a']);
     });
 });
+
+describe('syncDelta — delta diario de ventas (QUOTA-003)', () => {
+    it('isSalesDeltaKey detecta el formato YYYY-MM-DD', async () => {
+        const m = await import('../src/utils/syncDelta');
+        expect(m.isSalesDeltaKey('bodega_sales_delta_2026-10-01')).toBe(true);
+        expect(m.isSalesDeltaKey('bodega_sales_v1')).toBe(false);
+        expect(m.isSalesDeltaKey('bodega_sales_delta_ayer')).toBe(false);
+        expect(m.isSalesDeltaKey(null)).toBe(false);
+    });
+
+    it('buildSalesDeltaPayload filtra solo los tickets del día', async () => {
+        const m = await import('../src/utils/syncDelta');
+        const day = '2026-10-01';
+        const tickets = [
+            { id: 't1', timestamp: '2026-10-01T10:00:00', totalUsd: 5 },
+            { id: 't2', timestamp: '2026-10-01T23:59:00', totalUsd: 3 },
+            { id: 't3', timestamp: '2026-09-30T20:00:00', totalUsd: 7 },
+            { id: 't4', timestamp: '2026-10-02T00:01:00', totalUsd: 9 },
+        ];
+        const payload = m.buildSalesDeltaPayload(tickets, day);
+        expect(payload.date).toBe(day);
+        expect(payload.tickets.map((t) => t.id).sort()).toEqual(['t1', 't2']);
+        expect(m.isValidSalesDelta(payload)).toBe(true);
+    });
+
+    it('isValidSalesDelta rechaza payloads malformados', async () => {
+        const m = await import('../src/utils/syncDelta');
+        expect(m.isValidSalesDelta(null)).toBe(false);
+        expect(m.isValidSalesDelta([])).toBe(false);
+        expect(m.isValidSalesDelta({ date: 'ayer', tickets: [] })).toBe(false);
+        expect(m.isValidSalesDelta({ date: '2026-10-01' })).toBe(false);
+        expect(m.isValidSalesDelta({ date: '2026-10-01', tickets: [] })).toBe(true);
+    });
+
+    it('el delta es idempotente: mergeSales no duplica al recibir dos veces', async () => {
+        const m = await import('../src/utils/syncDelta');
+        const local = [{ id: 't1', timestamp: '2026-10-01T10:00:00' }];
+        const delta = [{ id: 't1', timestamp: '2026-10-01T10:00:00' }, { id: 't2', timestamp: '2026-10-01T11:00:00' }];
+        const once = m.mergeSales(local, delta);
+        const twice = m.mergeSales(once, delta);
+        expect(twice.map((t) => t.id).sort()).toEqual(['t1', 't2']);
+    });
+
+    it('validateSupervisorSyncDocument acepta el delta diario', async () => {
+        const c = await import('../src/services/supervisorContracts');
+        const key = 'bodega_sales_delta_2026-10-01';
+        expect(c.isSupervisorSyncKey(key)).toBe(true);
+        const ok = c.validateSupervisorSyncDocument(key, { date: '2026-10-01', tickets: [{ id: 't1' }] });
+        expect(ok.valid).toBe(true);
+        const bad = c.validateSupervisorSyncDocument(key, { date: 'ayer', tickets: [] });
+        expect(bad.valid).toBe(false);
+    });
+
+    it('salesDeltaTickets extrae tickets del payload o array legacy', async () => {
+        const m = await import('../src/utils/syncDelta');
+        expect(m.salesDeltaTickets({ date: '2026-10-01', tickets: [{ id: 'a' }] })).toEqual([{ id: 'a' }]);
+        expect(m.salesDeltaTickets([{ id: 'b' }])).toEqual([{ id: 'b' }]);
+        expect(m.salesDeltaTickets(null)).toEqual([]);
+    });
+});

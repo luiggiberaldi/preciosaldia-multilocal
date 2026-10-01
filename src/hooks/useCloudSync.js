@@ -13,11 +13,17 @@ import { mergeLedgerEntries, rebuildCustomersFromLedger } from '../utils/custome
 // QUOTA-001: sincronización delta (stock liviano vs catálogo) + poda de ventas.
 import {
     applyStockMap,
+    buildSalesDeltaPayload,
     buildStockMap,
     catalogHash,
+    isSalesDeltaKey,
+    isValidSalesDelta,
     isValidStockMap,
     mergeSales,
     pruneSalesForSync,
+    salesDayString,
+    salesDeltaKeyForDate,
+    salesDeltaTickets,
 } from '../utils/syncDelta';
 import { RETENTION } from '../utils/retentionPolicy';
 import {
@@ -149,11 +155,14 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
         return { ok: true, skipped: true, reason: 'Sin cambios' };
     }
 
-    // QUOTA-002: las ventas viajan podadas a los últimos 90 días. El receptor
-    // fusiona por id (mergeSales), así que la ventana nunca borra historial.
-    const payloadValue = (key === 'bodega_sales_v1' && Array.isArray(value))
-        ? pruneSalesForSync(value, RETENTION.SALES_SYNC_DAYS)
-        : value;
+    // QUOTA-003: las ventas viajan como DELTA diario, no como ventana completa.
+    // Cada venta solo sube los tickets de hoy (~KB en vez de ~MB). El receptor
+    // fusiona por id (mergeSales, idempotente). La ventana de 90 días se sube
+    // solo al cierre (pushSalesWindow) o bajo demanda.
+    if (key === 'bodega_sales_v1' && Array.isArray(value)) {
+        return await pushSalesDelta(value, forceUnconditional);
+    }
+    const payloadValue = value;
 
     const collectionType = LOCAL_KEYS.includes(key) ? 'local' : 'store';
     const updatedAt = new Date().toISOString();
@@ -183,6 +192,87 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
     } catch (error) {
         console.warn('[CloudSync] No se pudo confirmar el push:', error?.message ?? error);
         return { ok: false, skipped: false, error: error?.message || 'Error de sincronización' };
+    }
+};
+
+/**
+ * QUOTA-003: sube el DELTA diario de ventas (solo los tickets de hoy).
+ * El doc_id es `bodega_sales_delta_YYYY-MM-DD` (por negocio vía toCloudDocId).
+ * Pesa ~KB en vez de ~MB. El receptor fusiona por id (mergeSales).
+ *
+ * @param {Array} salesArray - array local completo de ventas
+ */
+const pushSalesDelta = async (salesArray, forceUnconditional = false) => {
+    const day = salesDayString();
+    const deltaKey = salesDeltaKeyForDate(day);
+    const docId = toCloudDocId(deltaKey);
+    const payload = buildSalesDeltaPayload(salesArray, day);
+
+    // Hash-gating propio del delta: si los tickets de hoy no cambiaron, no subir.
+    const hashKey = LAST_PUSH_HASH_PREFIX + docId;
+    const currentHash = quickHash(payload);
+    if (!forceUnconditional && localStorage.getItem(hashKey) === currentHash) {
+        return { ok: true, skipped: true, reason: 'Delta sin cambios' };
+    }
+
+    const updatedAt = new Date().toISOString();
+    const document = {
+        device_id: _currentDeviceId,
+        collection: 'store',
+        doc_id: docId,
+        data: buildSyncEnvelope(payload, updatedAt),
+        updated_at: updatedAt,
+    };
+
+    try {
+        const result = await withSyncRetry(async () => {
+            const response = await supabaseCloud
+                .from('sync_documents')
+                .upsert(document, { onConflict: 'device_id,collection,doc_id' });
+            if (response.error) throw response.error;
+            return response;
+        });
+        localStorage.setItem(hashKey, currentHash);
+        return { ok: true, skipped: false, updatedAt, data: result.data ?? null, deltaTickets: payload.tickets.length };
+    } catch (error) {
+        console.warn('[CloudSync] No se pudo confirmar el push del delta:', error?.message ?? error);
+        return { ok: false, skipped: false, error: error?.message || 'Error de sincronización' };
+    }
+};
+
+/**
+ * QUOTA-003: sube la ventana completa de 90 días de ventas (podada).
+ * Uso: 1 vez al día al cierre del negocio, o bajo demanda cuando un
+ * supervisor pide historial completo. NO se llama en cada venta.
+ */
+export const pushSalesWindow = async () => {
+    if (!supabaseCloud || !isCloudSyncActive || !_currentDeviceId) {
+        return { ok: false, skipped: true, error: 'Sync no activo' };
+    }
+    try {
+        const salesArray = await appForage.getItem('bodega_sales_v1');
+        if (!Array.isArray(salesArray)) return { ok: false, error: 'Sin ventas locales' };
+        const payloadValue = pruneSalesForSync(salesArray, RETENTION.SALES_SYNC_DAYS);
+        const docId = toCloudDocId('bodega_sales_v1');
+        const updatedAt = new Date().toISOString();
+        const document = {
+            device_id: _currentDeviceId,
+            collection: 'store',
+            doc_id: docId,
+            data: buildSyncEnvelope(payloadValue, updatedAt),
+            updated_at: updatedAt,
+        };
+        const response = await withSyncRetry(async () => {
+            const res = await supabaseCloud
+                .from('sync_documents')
+                .upsert(document, { onConflict: 'device_id,collection,doc_id' });
+            if (res.error) throw res.error;
+            return res;
+        });
+        return { ok: true, updatedAt, windowTickets: payloadValue.length };
+    } catch (error) {
+        console.warn('[CloudSync] No se pudo subir la ventana de ventas:', error?.message ?? error);
+        return { ok: false, error: error?.message || 'Error de sincronización' };
     }
 };
 
@@ -308,6 +398,18 @@ async function _applyFromCloud(docId, collection, data) {
         }
 
         // DATA-001: Validación de Schema antes de escribir en almacenamiento local
+        // QUOTA-003: el delta valida por su propio contrato (no está en STORE_SCHEMAS
+        // porque la key es dinámica por día).
+        if (isSalesDeltaKey(key)) {
+            let deltaToValidate = payload;
+            if (typeof payload === 'string') {
+                try { deltaToValidate = JSON.parse(payload); } catch { /* silenciar */ }
+            }
+            if (!isValidSalesDelta(deltaToValidate)) {
+                console.warn(`[CloudSync] Schema validation falló para ${key}, ignorando payload remoto.`);
+                return false;
+            }
+        }
         const validator = STORE_SCHEMAS[key];
         if (validator) {
             let dataToValidate = payload;
@@ -364,6 +466,20 @@ async function _applyFromCloud(docId, collection, data) {
             if (key === 'bodega_sales_v1' && Array.isArray(payload)) {
                 const localSales = await appForage.getItem(key);
                 payloadToStore = mergeSales(localSales, payload);
+            }
+            // QUOTA-003: el delta diario trae { date, tickets }; se fusiona por
+            // id sobre las ventas locales (idempotente: duplicados no hacen daño)
+            // y se guarda en `bodega_sales_v1`, no bajo la key del delta.
+            if (isSalesDeltaKey(key)) {
+                const localSales = await appForage.getItem('bodega_sales_v1');
+                const deltaTickets = salesDeltaTickets(payload);
+                payloadToStore = mergeSales(localSales, deltaTickets);
+                await appForage.setItem('bodega_sales_v1', payloadToStore);
+                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_sales_v1', source: 'remote' } }));
+                const hashKey = LAST_PUSH_HASH_PREFIX + docId;
+                localStorage.setItem(hashKey, quickHash(payloadToStore));
+                if (envelope.updatedAt) localStorage.setItem(metadataKey, envelope.updatedAt);
+                return true;
             }
             await appForage.setItem(key, payloadToStore);
             if (key === 'bodega_customer_ledger_v1') {

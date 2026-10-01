@@ -134,3 +134,76 @@ export function mergeSales(localSales, remoteSales) {
 export function physicalDocId(negocioId, baseKey) {
     return negocioId ? `nb_${negocioId}:${baseKey}` : baseKey;
 }
+
+/* ─── QUOTA-003: delta diario de ventas (append-only) ──────────────────────
+ *
+ * Problema: `bodega_sales_v1` se re-subía con la ventana completa de 90 días
+ * en cada venta (~16MB por push con 100 ventas/día → 46GB/mes, revienta los
+ * 5GB del tier gratis). La poda a 90 días (QUOTA-002) acota la DB pero NO el
+ * tráfico: el push seguía siendo O(ventana).
+ *
+ * Solución: en cada venta solo viaja el DELTA del día
+ * (`bodega_sales_delta_YYYY-MM-DD`): los tickets de hoy de este equipo.
+ * El receptor fusiona por id con mergeSales (idempotente: los duplicados no
+ * hacen daño). La ventana de 90 días se sigue generando pero solo se sube
+ * 1 vez al día al cierre (pushSalesWindow) o bajo demanda.
+ */
+
+/** Prefijo de las keys de delta diario de ventas. */
+export const SALES_DELTA_KEY_PREFIX = 'bodega_sales_delta_';
+
+/** Fecha local YYYY-MM-DD del negocio (sin hora, para partir el delta por día). */
+export function salesDayString(date = new Date()) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+/** Key de delta para un día: `bodega_sales_delta_2026-10-01`. */
+export function salesDeltaKeyForDate(dateStr) {
+    return `${SALES_DELTA_KEY_PREFIX}${dateStr}`;
+}
+
+/** ¿Es esta key un delta diario de ventas? */
+export function isSalesDeltaKey(key) {
+    return typeof key === 'string'
+        && key.startsWith(SALES_DELTA_KEY_PREFIX)
+        && /^\d{4}-\d{2}-\d{2}$/.test(key.slice(SALES_DELTA_KEY_PREFIX.length));
+}
+
+/** Filtra los tickets cuya fecha de venta cae en el día dado (YYYY-MM-DD local). */
+export function filterTicketsForDay(tickets, dateStr) {
+    if (!Array.isArray(tickets)) return [];
+    return tickets.filter((t) => {
+        const ts = saleTime(t);
+        if (!ts) return false;
+        return salesDayString(new Date(ts)) === dateStr;
+    });
+}
+
+/**
+ * Construye el payload del delta: { date, tickets } con solo los tickets
+ * del día. Puro y testeable.
+ */
+export function buildSalesDeltaPayload(tickets, dateStr) {
+    const day = dateStr || salesDayString();
+    return { date: day, tickets: filterTicketsForDay(tickets, day) };
+}
+
+/** Validador del payload del delta para STORE_SCHEMAS / contratos. */
+export function isValidSalesDelta(payload) {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+    if (typeof payload.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(payload.date)) return false;
+    return Array.isArray(payload.tickets);
+}
+
+/**
+ * Extrae los tickets de un payload de delta ya validado.
+ * Acepta tanto el formato nuevo { date, tickets } como un array legacy.
+ */
+export function salesDeltaTickets(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray(payload.tickets)) return payload.tickets;
+    return [];
+}

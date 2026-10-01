@@ -6,7 +6,7 @@ import { parseCloudDocId, isGlobalKey } from '../utils/negocioContext';
 import { validateSupervisorSyncDocument } from '../services/supervisorContracts';
 import { ensureSupervisorSession } from '../services/supervisorAuth';
 // QUOTA-001/002: fusión delta al recibir (stock liviano, ventas podadas).
-import { applyStockMap, mergeSales, physicalDocId } from '../utils/syncDelta';
+import { applyStockMap, isSalesDeltaKey, mergeSales, physicalDocId, salesDeltaTickets } from '../utils/syncDelta';
 import {
     getSyncMetadataKey,
     isNewerSyncDocument,
@@ -135,6 +135,14 @@ export function useMonitorSync(pairedDeviceId) {
                 const merged = mergeSales(current, envelope.payload);
                 await localforage.setItem(docId, merged);
                 window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key, source: 'remote' } }));
+            } else if (isSalesDeltaKey(key)) {
+                // QUOTA-003: el delta diario trae { date, tickets }; se fusiona
+                // por id en la vista de ventas del negocio pareado (idempotente).
+                const salesDocId = physicalDocId(negocioId, 'bodega_sales_v1');
+                const current = await localforage.getItem(salesDocId);
+                const merged = mergeSales(current, salesDeltaTickets(envelope.payload));
+                await localforage.setItem(salesDocId, merged);
+                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_sales_v1', source: 'remote' } }));
             } else if (collection === 'local') {
                 const stringPayload = typeof envelope.payload === 'string'
                     ? envelope.payload
