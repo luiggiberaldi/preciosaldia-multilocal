@@ -69,7 +69,7 @@ function getClientName(deviceId) {
     return `Bodega_${(deviceId || 'Unknown').substring(0, 8)}`;
 }
 
-export function useAutoBackup(isPremium, isDemo, deviceId) {
+export function useAutoBackup(isPremium, deviceId) {
     const intervalRef = useRef(null);
     const initialTimerRef = useRef(null);
     const performBackupRef = useRef(null);
@@ -77,13 +77,13 @@ export function useAutoBackup(isPremium, isDemo, deviceId) {
     const runningTimeoutRef = useRef(null);
     const processedIdsRef = useRef(new Set());
 
-    const configRef = useRef({ isPremium, isDemo, deviceId });
+    const configRef = useRef({ isPremium, deviceId });
     useEffect(() => {
-        configRef.current = { isPremium, isDemo, deviceId };
-    }, [isPremium, isDemo, deviceId]);
+        configRef.current = { isPremium, deviceId };
+    }, [isPremium, deviceId]);
 
     const performBackup = useCallback(async (forceUpload = false) => {
-        const { isPremium: premium, isDemo: demo, deviceId: devId } = configRef.current;
+        const { isPremium: premium, deviceId: devId } = configRef.current;
         try {
                 // ── Recolectar IndexedDB ────────────────────────────────
                 const idbData = {};
@@ -115,9 +115,6 @@ export function useAutoBackup(isPremium, isDemo, deviceId) {
                 await storageService.setItem(BACKUP_KEY, fullBackup);
 
                 // Subir a la nube solo si hay conexión, deviceId y emparejamiento/licencia cloud activa
-                // GUARDA-RAIL LICENCIA: los equipos en modo demo NO suben respaldos periódicos a Drive ni a la nube, salvo que sea una solicitud forzada
-                if (demo && !forceUpload) return;
-
                 const hasCloudPairing = localStorage.getItem('pda_cloud_session') || localStorage.getItem('pda_paired_device') || premium;
                 const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
@@ -249,15 +246,14 @@ export function useAutoBackup(isPremium, isDemo, deviceId) {
     }, []);
 
     // ── Suscripción a solicitudes de backup en tiempo real ─────────────────
-    // Solo dispositivos con cuenta activa (permanent/monthly/demo) mantienen este
-    // socket abierto — evita gastar cupo de conexiones Realtime en instalaciones
-    // sin licencia (free/demo vencida) que nunca usarán el backup remoto forzado.
+    // Solo dispositivos con licencia permanente activa escuchan solicitudes
+    // remotas de la Estación Maestra — evita gastar cupo de conexiones Realtime
+    // en instalaciones sin licencia que nunca usarán el backup remoto forzado.
     useEffect(() => {
-        // Solo dispositivos con licencia activa (no demo) escuchan solicitudes remotas de la Estación Maestra.
-        // Los demos no tienen acceso a backup remoto en Drive.
+        // Solo dispositivos con licencia permanente activa escuchan solicitudes remotas de la Estación Maestra.
         // Guard deviceBackend: sin la tabla backup_requests no hay nada que escuchar.
-        const { isDemo: demoActive } = configRef.current;
-        if (!deviceId || !supabaseCloud || demoActive || isDeviceBackendDown()) return;
+        const { isPremium: premium } = configRef.current;
+        if (!deviceId || !supabaseCloud || !premium || isDeviceBackendDown()) return;
 
         let channel = null;
 

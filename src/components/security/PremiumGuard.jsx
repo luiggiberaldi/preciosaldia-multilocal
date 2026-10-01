@@ -1,16 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
-import { Lock, Copy, Check, Star, Sparkles, Send, Store, CreditCard, Gift, BarChart3, Bell, Volume2, Search, Cloud, Package, FileText, Share2, Users } from 'lucide-react';
+import { Lock, Copy, Check, Star, Sparkles, Send, Store, CreditCard, BarChart3, Bell, Volume2, Search, Cloud, Package, FileText, Share2, Users } from 'lucide-react';
 import { useSecurity } from '../../hooks/useSecurity';
-import { Modal } from '../Modal';
 
 export default function PremiumGuard({ children, featureName = "Esta función", isShop = false }) {
-    const { deviceId, isPremium, loading, unlockApp, activateDemo, demoUsed } = useSecurity();
-    const [inputCode, setInputCode] = useState('');
-    const [error, setError] = useState(false);
-    const [success, setSuccess] = useState(false);
+    const { deviceId, isPremium, loading } = useSecurity();
     const [copied, setCopied] = useState(false);
-    const [demoLoading, setDemoLoading] = useState(false);
     const qrCanvasRef = useRef(null);
 
     useEffect(() => {
@@ -33,61 +28,8 @@ export default function PremiumGuard({ children, featureName = "Esta función", 
         }
     }, [deviceId, isPremium, loading]);
 
-    // Estado para Modales
-    const [messageModal, setMessageModal] = useState({ open: false, isSuccess: false, title: '', content: '' });
-
     if (loading) return <div className="p-10 text-center text-slate-400">Verificando licencia...</div>;
     if (isPremium) return children;
-
-    // --- Handlers ---
-    const handleUnlock = async (e) => {
-        e.preventDefault();
-        const result = await unlockApp(inputCode);
-        if (result.success) {
-            setSuccess(true);
-            setError(false);
-        } else {
-            setError(true);
-            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-            setTimeout(() => setError(false), 2000);
-        }
-    };
-
-    const handleActivateDemo = async () => {
-        setDemoLoading(true);
-        const result = await activateDemo();
-        setDemoLoading(false);
-
-        if (result.success) {
-            setMessageModal({
-                open: true,
-                isSuccess: true,
-                title: 'Periodo de Prueba Activado',
-                content: 'Disfruta de todas las funciones de la versión completa durante 3 días. Aprovecha al máximo la herramienta.'
-            });
-        } else if (result.status === 'DEMO_USED') {
-            setMessageModal({
-                open: true,
-                isSuccess: false,
-                title: 'Prueba no disponible',
-                content: 'El periodo de prueba ya fue utilizado en este dispositivo. Contacta a soporte para adquirir tu licencia comercial.'
-            });
-        } else if (result.status === 'RPC_NOT_FOUND') {
-            setMessageModal({
-                open: true,
-                isSuccess: false,
-                title: 'Error de Configuración',
-                content: 'Las funciones de activación no están instaladas en el servidor. Por favor contacta al administrador del sistema para resolver este problema.'
-            });
-        } else if (result.status === 'SERVER_ERROR') {
-            setMessageModal({
-                open: true,
-                isSuccess: false,
-                title: 'Sin Conexión',
-                content: 'No se pudo conectar con el servidor de activación. Verifica tu conexión a internet e inténtalo de nuevo.'
-            });
-        }
-    };
 
     const copyToClipboard = () => {
         if (typeof window !== 'undefined') {
@@ -173,24 +115,10 @@ export default function PremiumGuard({ children, featureName = "Esta función", 
                 {/* CTA: Solicitar Licencia */}
                 <button
                     onClick={openWhatsApp}
-                    className="w-full bg-brand hover:bg-brand-dark text-white dark:text-slate-950 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 mb-2 transition-all shadow-lg shadow-brand/20 hover:-translate-y-0.5 active:scale-95 text-sm"
+                    className="w-full bg-brand hover:bg-brand-dark text-white dark:text-slate-950 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 mb-3 transition-all shadow-lg shadow-brand/20 hover:-translate-y-0.5 active:scale-95 text-sm"
                 >
                     <Send size={16} className="fill-white dark:fill-slate-950" />
                     <span>Solicitar Licencia</span>
-                </button>
-
-                {/* CTA: Probar gratis 3 días */}
-                <button
-                    onClick={handleActivateDemo}
-                    disabled={demoUsed || demoLoading}
-                    className={`w-full py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 mb-3 text-sm font-bold transition-all border active:scale-95
-                        ${demoUsed
-                            ? 'bg-slate-100 dark:bg-slate-800/40 text-slate-400 dark:text-slate-600 border-transparent cursor-not-allowed'
-                            : 'bg-brand-light dark:bg-slate-800/20 text-brand-dark dark:text-brand border-brand/20 dark:border-slate-800/30 hover:bg-brand-light/70 dark:hover:bg-slate-800/30'
-                        }`}
-                >
-                    <Gift size={16} />
-                    <span>{demoUsed ? 'Demo ya utilizada' : demoLoading ? 'Activando...' : 'Probar gratis 3 días'}</span>
                 </button>
 
                 {/* Device ID */}
@@ -223,28 +151,6 @@ export default function PremiumGuard({ children, featureName = "Esta función", 
                         Escanea este código QR desde la estación maestra para activar la licencia de este dispositivo.
                     </p>
                 </div>
-
-                {/* Modal de Mensajes */}
-                <Modal
-                    isOpen={messageModal.open}
-                    onClose={() => setMessageModal({ ...messageModal, open: false })}
-                    title={messageModal.title}
-                >
-                    <div className="text-center py-4">
-                        <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
-                            {messageModal.content}
-                        </p>
-                        <button
-                            onClick={() => {
-                                setMessageModal({ ...messageModal, open: false });
-                                if (messageModal.isSuccess) window.location.reload();
-                            }}
-                            className="w-full py-3 bg-brand hover:bg-brand-dark text-white dark:text-slate-950 font-bold rounded-xl shadow-lg shadow-brand/20 active:scale-95 transition-all"
-                        >
-                            Entendido
-                        </button>
-                    </div>
-                </Modal>
 
             </div>
         </div>

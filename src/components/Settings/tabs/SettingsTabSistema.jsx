@@ -110,7 +110,7 @@ export default function SettingsTabSistema({
                             <p className="text-xs text-slate-500 dark:text-slate-400">Restaurar o guardar backup en la nube</p>
                         </div>
                         {!isLicensedCloud && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 uppercase tracking-wide">Demo</span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 uppercase tracking-wide">Premium</span>
                         )}
                         <ChevronRight size={16} className="text-slate-300" />
                     </button>

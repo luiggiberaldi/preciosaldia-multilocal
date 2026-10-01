@@ -1,11 +1,10 @@
 import React from 'react';
-import { TrendingUp, Package, ShoppingBag, ArrowUpRight, Users, ChevronDown, ChevronUp, Key, LockIcon, CheckCircle2, Wallet, Plus } from 'lucide-react';
+import { TrendingUp, Package, ShoppingBag, ArrowUpRight, Users, ChevronDown, ChevronUp, LockIcon, CheckCircle2, Wallet, Plus } from 'lucide-react';
 import { formatBs, formatCop } from '../../utils/calculatorUtils';
 import AnimatedCounter from '../AnimatedCounter';
 import CasheaIcon from '../CasheaIcon';
 
 export default function DashboardStats({
-    isDemo, demoTimeLeft, deviceId,
     todayTotalUsd, todayTotalBs, todayTotalCop, todaySales, todayItemsSold,
     todayExpenses, todayExpensesUsd, todayGastosUsd = 0,
     todayProfit, bcvRate,
@@ -17,27 +16,6 @@ export default function DashboardStats({
 }) {
     return (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-            {/* Licencia Demo */}
-            {isDemo && demoTimeLeft && (
-                <div className="col-span-2 lg:col-span-4 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl p-4 shadow-sm relative overflow-hidden text-white flex items-center justify-between">
-                    <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                    <div className="flex items-center gap-3 relative z-10">
-                        <div className="w-10 h-10 bg-black/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <Key size={20} className="text-amber-100" />
-                        </div>
-                        <div>
-                            <h3 className="text-[13px] font-bold text-amber-50 leading-tight">Licencia de Prueba</h3>
-                            <p className="text-2xl font-outfit font-semibold mt-0.5">{demoTimeLeft}</p>
-                        </div>
-                    </div>
-                    <div className="relative z-10 text-right">
-                        <button className="text-[10px] font-bold bg-white/20 hover:bg-white/30 transition-colors px-3 py-1.5 rounded-lg active:scale-95" onClick={() => window.open(`https://wa.me/584124051793?text=Hola! Quiero adquirir la licencia Premium de PreciosAlDía Bodega. Mi ID de instalación es: ${deviceId || 'N/A'}`.replace(/\s+/g, '%20'), '_blank')}>
-                            ADQUIRIR
-                        </button>
-                    </div>
-                </div>
-            )}
-
             {/* Ventas Hoy */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
                 <div className={`absolute -right-4 -top-4 w-16 h-16 ${copEnabled && copPrimary ? 'bg-amber-50 dark:bg-amber-900/10' : 'bg-emerald-50 dark:bg-emerald-900/10'} rounded-full blur-2xl`}></div>

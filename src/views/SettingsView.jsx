@@ -53,9 +53,9 @@ export default function SettingsView({ onClose, theme, toggleTheme, triggerHapti
 
     const isAdmin = !requireLogin || !usuarioActivo || hasAdminAccess(usuarioActivo);
 
-    const { deviceId, forceHeartbeat, isPremium, isDemo } = useSecurity();
-    // LICENCIA-CLOUD: solo licencias completas (premium y no demo) acceden a la nube.
-    const isLicensedCloud = isPremium && !isDemo;
+    const { deviceId, forceHeartbeat, isPremium } = useSecurity();
+    // LICENCIA-CLOUD: solo licencias permanentes activas acceden a la nube.
+    const isLicensedCloud = isPremium;
     const { log: auditLog } = useAudit();
     const fileInputRef = useRef(null);
     const [activeTab, setActiveTab] = useState('negocio');

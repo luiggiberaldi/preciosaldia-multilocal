@@ -4,6 +4,64 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-09-30 — Pro: modo demo eliminado + CloudGate (código → login nube → PIN)
+
+**Qué:** El Pro quedó sin rastro de demo ni mensualidad (decisión de luigi: Pro
+siempre Premium, pago único permanente) y con la puerta de entrada a la nube
+por cliente: código de licencia (una vez) → login del dueño en su Supabase
+propio (una vez) → PIN local. Después, proyecto y sesión se recuerdan y la
+caja abre sin internet.
+
+**Demo eliminado (verificado, sin commit):**
+- Borrado `src/hooks/useDemoCountdown.js`; sin `isDemo`, `demoTimeLeft`,
+  `activateDemo`, countdown ni gracia mensual en todo `src/` (solo quedan la
+  llave legada `pda_demo_flag_v1` en listas de claves protegidas y comentarios
+  que documentan que demo ya no existe).
+- `PremiumGuard` quedó como gate puro de Premium (sin variantes demo).
+- QA: `npx vitest run` → 774 pasan, 11 saltados; 2 fallos PREEXISTENTES ajenos
+  a demo: `supervisorLifecycle.test.js` (lee `PairingManager.jsx`, borrado en
+  el commit 2987dd4 de esta mañana) y `receivablesDeterministic.test.js`
+  (fixture con fecha 2026-09-20, deriva con el día actual).
+- `npm run build` OK (PWA genera sw.js + workbox).
+
+**CloudGate (integrado, sin commit):**
+- Nuevo `src/components/security/CloudGate.jsx`: estados
+  checking → code → login → ready (+ limit si la cuenta llegó a 6 equipos,
+  con opción de liberar uno). Offline-first: con proyecto + sesión guardados
+  entra sin red.
+- `src/config/supabaseCloud.js`: cliente perezoso por cliente (Proxy que
+  lanza error claro si se usa antes de resolver el proyecto) + cliente fijo
+  del directorio de la Estación (`VITE_DIRECTORY_URL` /
+  `VITE_DIRECTORY_ANON_KEY`).
+- Nuevo `src/services/customerDirectory.js`: `lookupProjectByCode` normaliza
+  el código y llama al RPC `lookup_customer_project` del directorio.
+- `src/main.jsx`: `AppRouter` ahora muestra `<CloudGate onReady={...}/>` antes
+  de `<App/>` (el PIN local queda después, como se aprobó). El listener de
+  `PASSWORD_RECOVERY` solo se ata si ya hay proyecto recordado; el flujo de
+  recuperación por email sigue pasando por `ResetPasswordView`.
+- Corregido bug: `CloudGate.jsx` importaba con `../config` y `../services`
+  (apuntaban a `src/components/...`); ahora usa `../../`.
+- Auditoría de usos tempranos de `supabaseCloud`: 18 archivos lo importan,
+  todos dentro de funciones/hooks que solo corren tras el gate. Ningún acceso
+  a nivel de módulo.
+- `.env.example`: documentadas `VITE_DIRECTORY_URL`,
+  `VITE_DIRECTORY_ANON_KEY`, `VITE_SUPERVISOR_E2E_STAGING`,
+  `VITE_SUPABASE_STAGING_URL/KEY`.
+- Nuevo `tests/cloudGate.test.js`: 9 tests (normalización de código,
+  directorio sin configurar, código inexistente, error de RPC, formato del
+  proyecto, Proxy antes/después de resolver). Todos pasan.
+
+**No tocado:** los cambios del importador Excel de luigi (`package.json`,
+`package-lock.json`, `ProductsToolbar.jsx`, `ProductsView.jsx`,
+`ExcelImportModal.jsx`, `excelImport.js`, `excelImport.test.js`) siguen
+intactos en el working tree.
+
+**Pendiente (requiere a luigi):** commit/push/deploy con autorización
+separada; recuperación de contraseña desde el gate; aplicar la migración 003
+del directorio en la Estación para probar el flujo real código → proyecto.
+
+---
+
 ## 2026-09-29 — Limpieza de consola: guard del backend de dispositivos (404s)
 
 **Qué:** La consola del navegador se llenaba de 404s contra Supabase
@@ -572,3 +630,35 @@ de las sedes pendiente.
 **Archivos:** `src/services/cloudAccount.js`, `src/components/CloudAccountSection.jsx`, `tests/cloudAccount.test.js`, `src/hooks/useCloudSync.js`, `supabase/migrations/004_device_limit.sql` (nueva).
 
 **Verificación:** 28/28 tests del módulo verdes; suite completa 774/786 (los 2 ficheros con fallos son los preexistentes ya verificados: `supervisorLifecycle`, `receivablesDeterministic`). Sintaxis validada. Migración 004 aplicada al proyecto real y verificada (función existe, contiene `LIMIT_REACHED`, grant a `authenticated`). Sin commit/push/deploy (pendiente de autorización). E2E real con teléfonos y realtime del Modo Jefe siguen pendientes.
+
+---
+
+## 2026-09-30 — Plan de tests deterministas CloudGate (luigi: "que todo funcione a la perfección")
+
+**Qué:** se creó `docs/PLAN-TEST-CLOUDGATE.md` con la matriz de 24 flujos
+(F1–F24) + 4 fuera de alcance honesto (X1–X4: provisionamiento real, límite
+real de 6, flujo visual en navegador, y si keepalive evita la pausa del free
+tier — nada de eso es afirmable sin la infra/prueba real).
+
+**Tests nuevos (todos deterministas, sin red):**
+- `tests/cloudGateFlows.test.js` — F7 (cuenta llena → revocar → reintentar →
+  ready, secuencia exacta del componente), F8 (offline con sesión guardada no
+  toca la red).
+- `tests/cloudGateRealConfig.test.js` — F9 con el módulo real (persistencia
+  `pda_customer_project`, cliente construido sin red, clear deja el proxy sin
+  resolver).
+- `tests/provisionContract.test.js` — F13/F14: los 7 SQL en orden exacto
+  (`pairing` antes de `001`, con prueba de que 001 referencia
+  `device_pairings`), cada archivo existe y es idempotente.
+- Estación `scripts/test_keepalive_fleet.py` — F15–F18 (vacío, éxito,
+  2 fallos → status error, dry-run puro).
+- Estación `scripts/test_ui_rules.py` — F20/F21 (12 reglas estáticas).
+
+**Suite completa:** 799 pasan, 11 omitidos; los únicos 2 fallos son los
+preexistentes ajenos (`supervisorLifecycle` — referencia un archivo borrado en
+`2987dd4`; `receivablesDeterministic` — esperaba 43.59, obtuvo 0). Ningún
+archivo de esos tests fue tocado.
+
+**Verificaciones LIVE hechas hoy:** migración 003 aplicada en producción,
+RPC con anon key → 200 y `[]` ante código inexistente, RLS (anon no lee la
+tabla directa), keepalive `--dry-run` contra la Estación real.

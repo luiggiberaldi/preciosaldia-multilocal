@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
-import { Home, ShoppingCart, Store, Users, Download, FlaskConical, Moon, Sun, BarChart3, WifiOff, X, Settings, Clock, Building2 } from 'lucide-react';
+import { Home, ShoppingCart, Store, Users, Download, FlaskConical, Moon, Sun, BarChart3, WifiOff, X, Settings, Building2 } from 'lucide-react';
 
 import DashboardView from './views/DashboardView';
 
@@ -65,9 +65,9 @@ export default function App() {
     setMountedViews(prev => ({...prev, [activeTab]: true}));
   }, [activeTab]);
 
-  const { isPremium, isDemo, demoTimeLeft, demoExpiredMsg, dismissExpiredMsg, deviceId, isMonthlyGracePeriod, monthlyGraceDaysLeft, forceHeartbeat } = useSecurity();
+  const { isPremium, licenseExpiredMsg, dismissLicenseExpiredMsg, deviceId, forceHeartbeat } = useSecurity();
   const { isOnline, cacheRates } = useOfflineQueue();
-  useAutoBackup(isPremium, isDemo, deviceId);
+  useAutoBackup(isPremium, deviceId);
   // QUOTA-003: mantenimiento silencioso — purga diaria del negocio activo,
   // reintento de fotos que quedaron en base64 (offline) y purga mensual de
   // imágenes huérfanas de Storage (solo en el teléfono del dueño).
@@ -416,47 +416,20 @@ export default function App() {
         </div>
       )}
 
-      {/* Monthly License Grace Period Warning Banner */}
-      {isMonthlyGracePeriod && (
-        <div className={`fixed left-0 right-0 z-[200] flex justify-center pt-[env(safe-area-inset-top)] transition-all ${!isOnline ? 'top-12' : 'top-0'}`}>
-          <div className="mt-2 mx-4 px-4 py-2.5 bg-amber-500 text-white rounded-xl border border-amber-600/30 shadow-xl flex items-center justify-between gap-3 animate-in slide-in-from-top-4 max-w-md w-[calc(100%-2rem)]">
-            <div className="flex items-center gap-2">
-              <Clock size={16} className="text-white animate-pulse shrink-0" />
-              <div className="text-left">
-                <p className="text-[11px] font-black leading-tight">Suscripción por pagar</p>
-                <p className="text-[9px] text-white/90 leading-tight">Le quedan {monthlyGraceDaysLeft} {monthlyGraceDaysLeft === 1 ? 'día' : 'días'} de gracia antes de la suspensión.</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                const msg = `Hola! Necesito registrar el pago de mi mensualidad de PreciosAlDía Bodega. ID: ${deviceId}`;
-                window.open(`https://wa.me/584124051793?text=${encodeURIComponent(msg)}`, '_blank');
-              }}
-              className="px-2.5 py-1 bg-white text-amber-600 font-bold rounded-lg text-[9px] active:scale-95 transition-transform whitespace-nowrap shadow-sm hover:bg-slate-50"
-            >
-              Registrar Pago
-            </button>
-          </div>
-        </div>
-      )}
-
-
-
-
-      {/* Demo Expired Modal */}
-      {demoExpiredMsg && (
+      {/* License Deactivated Modal */}
+      {licenseExpiredMsg && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-5 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-sm shadow-2xl border border-slate-100 dark:border-slate-800 text-center animate-in zoom-in-95 duration-300">
             <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">⏳</span>
+              <span className="text-3xl">⚠️</span>
             </div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Prueba finalizada</h2>
+            <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Licencia desactivada</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
-              {demoExpiredMsg}
+              {licenseExpiredMsg}
             </p>
             <button
               onClick={() => {
-                const msg = `Hola! Quiero adquirir la licencia Premium de PreciosAlDía. Acabo de terminar mi prueba gratuita.`;
+                const msg = `Hola! Quiero adquirir la licencia Premium de PreciosAlDía. Mi ID de instalación es: ${deviceId}`;
                 window.open(`https://wa.me/584124051793?text=${encodeURIComponent(msg)}`, '_blank');
               }}
               className="w-full py-3 bg-brand text-white font-bold rounded-xl shadow-lg shadow-brand/20 active:scale-95 transition-transform text-sm mb-2"
@@ -464,10 +437,10 @@ export default function App() {
               Solicitar Licencia
             </button>
             <button
-              onClick={dismissExpiredMsg}
+              onClick={dismissLicenseExpiredMsg}
               className="w-full py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
             >
-              Continuar con versión gratuita
+              Cerrar
             </button>
           </div>
         </div>
@@ -522,7 +495,7 @@ export default function App() {
 
         <div className={`flex-1 flex flex-col ${activeTab === 'inicio' ? '' : 'hidden'}`}>
           <ErrorBoundary>
-            <DashboardView rates={rates} triggerHaptic={triggerHaptic} onNavigate={(tab) => { if (tab === 'ajustes') { if (hasAdminAccess(usuarioActivo) || !requireLogin) setActiveTab('ajustes'); } else { setActiveTab(tab); } }} theme={theme} toggleTheme={toggleTheme} isActive={activeTab === 'inicio'} isDemo={isDemo} demoTimeLeft={demoTimeLeft} />
+            <DashboardView rates={rates} triggerHaptic={triggerHaptic} onNavigate={(tab) => { if (tab === 'ajustes') { if (hasAdminAccess(usuarioActivo) || !requireLogin) setActiveTab('ajustes'); } else { setActiveTab(tab); } }} theme={theme} toggleTheme={toggleTheme} isActive={activeTab === 'inicio'} />
           </ErrorBoundary>
         </div>
 

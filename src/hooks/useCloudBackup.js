@@ -33,8 +33,8 @@ import {
  * @param {string}   params.deviceId
  * @param {Function} params.auditLog
  * @param {Function} params.forceHeartbeat
- * @param {boolean}  [params.isLicensedCloud] Licencia completa activa (no demo).
- *   La sincronización con la nube es exclusiva de licencias completas.
+ * @param {boolean}  [params.isLicensedCloud] Licencia permanente activa.
+ *   La sincronización con la nube es exclusiva de licencias permanentes.
  * @param {Function} [params.triggerHaptic]
  */
 export function useCloudBackup({
@@ -185,8 +185,7 @@ export function useCloudBackup({
 
     // ─── HANDLER: Sync cloud (initial connect) ────────────────────────────────
     const handleSyncCloud = async () => {
-        // LICENCIA-CLOUD: la nube es exclusiva de licencias completas.
-        // Los demos solo tienen respaldo local (exportar/importar archivo).
+        // LICENCIA-CLOUD: la nube es exclusiva de licencias permanentes activas.
         if (!isLicensedCloud) {
             showToast('La sincronización con la nube requiere licencia completa', 'error');
             return;

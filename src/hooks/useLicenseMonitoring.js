@@ -24,11 +24,8 @@ const activeSubscriptions = new Map(); // deviceId -> { channel, count, callback
 export function useLicenseMonitoring({
     deviceId,
     isPremium,
-    isDemo,
     onRevoked,
     onPermanentActivated,
-    onDemoActivated,
-    onMonthlyActivated,
 }) {
     useEffect(() => {
         if (!deviceId || !import.meta.env.VITE_SUPABASE_URL) return;
@@ -72,29 +69,6 @@ export function useLicenseMonitoring({
                     localStorage.removeItem('pda_license_cache');
                     onRevoked("Tu licencia ha sido desactivada. Contacta al administrador.");
                 } else if (license && license.is_active === true) {
-                    // Verificar si demo venció por fecha
-                    if ((license.type === 'demo7' || license.type === 'demo3') && license.expires_at) {
-                        const expiresAt = new Date(license.expires_at).getTime();
-                        if (Date.now() >= expiresAt && isPremium) {
-                            localStorage.removeItem('pda_premium_token');
-                            localStorage.removeItem('pda_license_cache');
-                            onRevoked("Tu licencia temporal ha finalizado. Esperamos que hayas disfrutado la experiencia completa.");
-                            return;
-                        }
-                    }
-
-                    // Verificar si mensual venció por fecha incluyendo 5 días de gracia
-                    if (license.type === 'monthly' && license.expires_at) {
-                        const expiresAt = new Date(license.expires_at).getTime();
-                        const gracePeriodEnd = expiresAt + 5 * 24 * 60 * 60 * 1000;
-                        if (Date.now() >= gracePeriodEnd && isPremium) {
-                            localStorage.removeItem('pda_premium_token');
-                            localStorage.removeItem('pda_license_cache');
-                            onRevoked("Tu suscripción mensual ha expirado y el período de gracia de 5 días ha finalizado. Por favor, regulariza tu pago.");
-                            return;
-                        }
-                    }
-
                     // Sincronizar cache offline
                     const expiresAt = license.expires_at ? new Date(license.expires_at).getTime() : null;
                     localStorage.setItem('pda_license_cache', JSON.stringify({
@@ -106,27 +80,10 @@ export function useLicenseMonitoring({
                         updatedAt: Date.now()
                     }));
 
-                    // Si el backend cambió el tipo de licencia, actualizar estado local.
+                    // Si el backend activó la licencia permanente, actualizar estado local.
                     // SEC-001: NO creamos tokens XOR; solo actualizamos estado React.
-                    if (license.type === 'permanent' && (!isPremium || isDemo)) {
+                    if (license.type === 'permanent' && !isPremium) {
                         onPermanentActivated();
-                    } else if ((license.type === 'demo7' || license.type === 'demo3') && (!isPremium || !isDemo) && license.expires_at) {
-                        const expiresAt = new Date(license.expires_at).getTime();
-                        if (Date.now() < expiresAt) {
-                            onDemoActivated(expiresAt);
-                        }
-                    } else if (license.type === 'monthly' && license.expires_at) {
-                        const expiresAtValue = new Date(license.expires_at).getTime();
-                        const gracePeriodEnd = expiresAtValue + 5 * 24 * 60 * 60 * 1000;
-                        if (Date.now() < gracePeriodEnd) {
-                            const isGrace = Date.now() >= expiresAtValue;
-                            const graceDays = isGrace 
-                                ? Math.max(0, Math.ceil((gracePeriodEnd - Date.now()) / (1000 * 60 * 60 * 24)))
-                                : 0;
-                            if (onMonthlyActivated) {
-                                onMonthlyActivated(expiresAtValue, isGrace, graceDays);
-                            }
-                        }
                     }
                 }
             } catch (e) {
@@ -169,7 +126,7 @@ export function useLicenseMonitoring({
         };
         document.addEventListener('visibilitychange', handleVisibility);
 
-        // Solo dispositivos con cuenta activa (permanent/monthly/demo) mantienen el
+        // Solo dispositivos con licencia permanente activa mantienen el
         // socket `licenses_sync_` abierto — evita gastar cupo de conexiones Realtime
         // en instalaciones sin licencia. Esas detectan una activación vía el heartbeat
         // de arriba en vez de Realtime. Si el backend no existe, ni se suscribe.
@@ -229,5 +186,5 @@ export function useLicenseMonitoring({
                 }
             }
         };
-    }, [isPremium, isDemo, deviceId]);
+    }, [isPremium, deviceId]);
 }

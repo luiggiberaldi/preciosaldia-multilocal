@@ -4,6 +4,29 @@ Aprendizajes reutilizables del proyecto. Lo operativo del día a día va en `bit
 
 ---
 
+## 2026-09-30 — CloudGate: un solo build, N proyectos Supabase por cliente
+- Patrón que funcionó: cliente Supabase perezoso vía `Proxy` — todo el código
+  existente sigue usando `supabaseCloud.from(...)` / `.auth...` sin cambios;
+  si se toca antes de resolver el proyecto lanza un error claro en vez de
+  fallar en silencio. La auditoría de "usos antes del gate" se hace buscando
+  accesos a nivel de módulo (los imports solos no disparan el Proxy).
+- Directorio central mínimo: la Estación solo expone `lookup_customer_project`
+  (código → url + anon key) con RLS; el email del dueño nunca sale del
+  directorio. El cliente del directorio es separado, sin `persistSession`.
+- Orden de gates en `main.jsx`: recovery-url → CloudGate → App(PIN). El
+  listener de `PASSWORD_RECOVERY` solo se ata con proyecto recordado; en
+  primera activación no hay sesión que escuchar todavía.
+- Lección de fechas: `date -u` puede decir 2026-10-01 mientras en Caracas
+  (tz de luigi) sigue siendo 2026-09-30. Las entradas de bitácora usan la
+  fecha local de luigi; verificar con `TZ=America/Caracas date` antes de
+  fechar. (Casi se fechó mal esta entrada por mirar el reloj UTC.)
+- `npm run build` no detecta imports rotos en archivos que nadie importa:
+  `CloudGate.jsx` tenía `../config` en vez de `../../config` y el build
+  pasaba igual porque aún no estaba conectado. Integrar primero, compilar
+  después.
+
+---
+
 ## 2026-09-29 — Multi-negocio: router de storage con clave lógica vs física
 - Patrón que funcionó: UNA función (`routeStorageKey`) decide el prefijo; el resto
   de la app sigue hablando en claves lógicas. Eventos, colas y circuit breakers
@@ -68,3 +91,13 @@ Lección reutilizable del límite de 6 equipos:
 2. **Re-vincular no consume cupo** (upsert idempotente); un equipo revocado que vuelve a entrar con la contraseña sí pasa por el conteo — si la cuenta está llena, se rechaza igual que uno nuevo.
 3. **Ante el límite, no dejar sesiones a medias:** si el login es válido pero el equipo no se pudo vincular, se cierra la sesión de inmediato. Una sesión "conectada" que no sincroniza es peor que un error claro.
 4. **En modo cuenta, el pull multi-dispositivo mezcla `doc_id` de hermanos:** cualquier lógica de "¿ya existe en la nube?" debe filtrar por `device_id` propio (traerlo en el `select`), o un hermano suprime el push propio.
+
+## 2026-09-30 — `vi.unmock` también se eleva (hoisting) en Vitest
+
+Lección del plan de tests CloudGate: llamar `vi.unmock('...')` dentro de un
+`it()` desactivó el `vi.mock` de **todo el archivo** (los tests anteriores
+empezaron a cargar el módulo real y fallaron con "[CloudGate] Proyecto sin
+resolver"). El unmock no es solo "para lo que sigue": el registro de mocks
+se evalúa elevado. Regla: si un archivo necesita el mock y otro caso necesita
+el módulo real, van en **archivos de test separados** (`cloudGateFlows`
+mockeado vs `cloudGateRealConfig` sin mock), no con unmock a mitad de archivo.

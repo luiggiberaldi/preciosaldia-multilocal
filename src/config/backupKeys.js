@@ -64,7 +64,7 @@ export const LS_KEYS = Object.freeze([
  * re-disparar migraciones o resetear estados críticos.
  */
 export const PROTECTED_KEYS = Object.freeze([
-  'pda_demo_flag_v1',         // Flag de demo ya inicializada
+  'pda_demo_flag_v1',         // Flag legado de demo (ya no se escribe)
   'bodega_autobackup_v1',     // Último backup local (emergencia)
   'priceCop_migration_v1',    // Migración one-time de priceCop
 ]);

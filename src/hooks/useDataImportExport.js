@@ -86,7 +86,7 @@ export function useDataImportExport({
 
                 // ── FASE 1: LIMPIEZA SELECTIVA (HOOK-025) ─────────────────────────
                 // HOOK-025: NO usar `localforage.clear()` — borraría flags críticos
-                // como `pda_demo_flag_v1` y `bodega_autobackup_v1`. La limpieza ahora
+                // como `bodega_autobackup_v1`. La limpieza ahora
                 // vive en backupRestoreService.clearAppKeysForRestore (mismo contrato:
                 // solo claves del catálogo canónico, preservando PROTECTED_KEYS y sesión).
                 setStatusMessage('Limpiando datos del dispositivo...');

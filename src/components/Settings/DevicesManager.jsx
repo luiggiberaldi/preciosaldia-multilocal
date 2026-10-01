@@ -3,7 +3,7 @@ import { supabase } from '../../core/supabaseClient';
 import { showToast } from '../Toast';
 import { 
     Smartphone, Monitor, Wifi, WifiOff, CheckCircle2, 
-    Shield, Clock, RefreshCw, Copy, Check, Lock, Zap
+    Shield, RefreshCw, Copy, Check, Lock, Zap
 } from 'lucide-react';
 
 const PRODUCT_ID = 'bodega';
@@ -104,13 +104,6 @@ export default function DevicesManager({ triggerHaptic, currentDeviceId }) {
             return (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/40 flex items-center gap-1">
                     <Shield size={10} /> Mensual
-                </span>
-            );
-        }
-        if (item.type === 'demo7' || item.type === 'demo3') {
-            return (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 flex items-center gap-1">
-                    <Clock size={10} /> Demo ({item.type === 'demo7' ? '7d' : '3d'})
                 </span>
             );
         }

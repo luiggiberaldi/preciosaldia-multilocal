@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import ResetPasswordView from './views/ResetPasswordView.jsx'
+import CloudGate from './components/security/CloudGate.jsx'
 import { ToastProvider } from './components/Toast.jsx'
 import { SecurityProvider } from './hooks/useSecurity.jsx'
-import { supabaseCloud } from './config/supabaseCloud.js'
+import { supabaseCloud, hasCustomerProject } from './config/supabaseCloud.js'
 import { registerSW } from 'virtual:pwa-register'
 import { bootNegocios } from './utils/bootNegocios'
 import './index.css'
@@ -150,6 +151,10 @@ function detectRecovery() {
 
 function AppRouter() {
   const [isRecovery, setIsRecovery] = useState(detectRecovery);
+  // Puerta de nube: primero el código de licencia + login del dueño (una sola
+  // vez); después la app recuerda proyecto y sesión y abre sin internet.
+  // Todo lo que toca supabaseCloud vive dentro de <App/>, detrás del gate.
+  const [cloudReady, setCloudReady] = useState(false);
 
   // HOOK-033: wheel listener con cleanup correcto.
   useEffect(() => _attachWheelGuard(), []);
@@ -165,7 +170,9 @@ function AppRouter() {
   }, []);
 
   useEffect(() => {
-    if (!supabaseCloud) return;
+    // El cliente es perezoso: solo existe tras resolver el proyecto del cliente
+    // (CloudGate). Sin proyecto no hay sesión que escuchar.
+    if (!hasCustomerProject()) return;
     const { data: { subscription } } = supabaseCloud.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setIsRecovery(true);
     });
@@ -181,6 +188,10 @@ function AppRouter() {
         }}
       />
     );
+  }
+
+  if (!cloudReady) {
+    return <CloudGate onReady={() => setCloudReady(true)} />;
   }
 
   return <App />;

@@ -19,7 +19,6 @@ import { useNotifications } from '../hooks/useNotifications';
 import SyncStatus from '../components/SyncStatus';
 import { useProductContext } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
-import { useSecurity } from '../hooks/useSecurity';
 import { useAudit } from '../hooks/useAudit';
 import { useAuthStore } from '../hooks/store/useAuthStore';
 import { getLocalISODate } from '../utils/dateHelpers';
@@ -70,9 +69,8 @@ const extractAdvancesFromSales = (salesArray) => {
     return list;
 };
 
-export default function DashboardView({ rates, triggerHaptic, onNavigate, theme, toggleTheme, isActive, isDemo, demoTimeLeft }) {
+export default function DashboardView({ rates, triggerHaptic, onNavigate, theme, toggleTheme, isActive }) {
     const { notifyCierrePendiente, requestPermission } = useNotifications();
-    const { deviceId } = useSecurity();
     const isAdmin = true;
     const isCajero = useAuthStore(s => s.requireLogin && s.usuarioActivo?.rol === 'CAJERO');
     const usuarioActivo = useAuthStore(s => s.usuarioActivo);
@@ -602,9 +600,6 @@ export default function DashboardView({ rates, triggerHaptic, onNavigate, theme,
                 <div>
                 {/* Stats Cards */}
                 <DashboardStats
-                    isDemo={isDemo}
-                    demoTimeLeft={demoTimeLeft}
-                    deviceId={deviceId}
                     todayTotalUsd={todayTotalUsd}
                     todayTotalBs={todayTotalBs}
                     todayTotalCop={todayTotalCop}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { KeyRound, ShieldAlert, ShieldCheck, Clock, Calendar, Hash, Copy, Check } from 'lucide-react';
+import { KeyRound, ShieldAlert, ShieldCheck, Hash, Copy, Check } from 'lucide-react';
 import { SectionCard } from '../../SettingsShared';
 
 export default function SettingsTabLicencia({ deviceId, triggerHaptic }) {
@@ -34,29 +34,7 @@ export default function SettingsTabLicencia({ deviceId, triggerHaptic }) {
         });
     };
 
-    const isPremium = license?.isActive && license?.type && license.type !== 'revoked' && license.type !== 'registered';
-
-    // Formatear fechas
-    const formatDate = (dateValue) => {
-        if (!dateValue) return 'N/D';
-        try {
-            const date = new Date(dateValue);
-            return date.toLocaleDateString('es-VE', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric'
-            });
-        } catch (e) {
-            return 'N/D';
-        }
-    };
-
-    // Calcular días restantes
-    const getDaysRemaining = (expiresAt) => {
-        if (!expiresAt) return 0;
-        const diffTime = expiresAt - Date.now();
-        return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-    };
+    const isPremium = license?.isActive === true && license?.type === 'permanent';
 
     // Renderizar detalles de acuerdo al tipo de licencia
     const renderLicenseDetails = () => {
@@ -100,79 +78,6 @@ export default function SettingsTabLicencia({ deviceId, triggerHaptic }) {
             );
         }
 
-        if (type === 'demo7' || type === 'demo3') {
-            const daysRemaining = getDaysRemaining(expiresAt);
-            return (
-                <div className="space-y-4">
-                    <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-800/30 rounded-2xl flex gap-3 items-start">
-                        <Clock className="text-amber-500 shrink-0 mt-0.5" size={20} />
-                        <div>
-                            <h4 className="text-sm font-black text-amber-800 dark:text-amber-400">Período de Demostración</h4>
-                            <p className="text-xs text-amber-700 dark:text-amber-500 leading-normal mt-1">
-                                Tienes acceso temporal a todas las funciones premium para evaluar el sistema.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 max-w-sm">
-                        <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl">
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-550 dark:text-slate-450 block mb-1">Días Disponibles</span>
-                            <span className="text-lg font-black text-slate-700 dark:text-white tabular-nums">{daysRemaining} {daysRemaining === 1 ? 'día' : 'días'}</span>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl">
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-550 dark:text-slate-450 block mb-1">Vence el</span>
-                            <span className="text-xs font-bold text-slate-650 dark:text-slate-200">{formatDate(expiresAt)}</span>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        if (type === 'monthly') {
-            const daysRemaining = getDaysRemaining(expiresAt);
-            // Si tiene fecha de vencimiento, estimar último pago como 30 días antes de expiresAt
-            const estimatedLastPayment = expiresAt ? expiresAt - 30 * 24 * 60 * 60 * 1000 : null;
-
-            return (
-                <div className="space-y-4">
-                    <div className="p-4 bg-brand-light/50 dark:bg-surface-800/10 border border-brand/20 rounded-2xl flex gap-3 items-start">
-                        <ShieldCheck className="text-brand shrink-0 mt-0.5" size={20} />
-                        <div>
-                            <h4 className="text-sm font-black text-brand-dark dark:text-brand">Suscripción Mensual Activa</h4>
-                            <p className="text-xs text-slate-600 dark:text-slate-400 leading-normal mt-1">
-                                Tu suscripción mensual está al día. Gracias por confiar en PreciosAlDía Bodega.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl flex items-center justify-between">
-                        <div>
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-550 dark:text-slate-450 block mb-0.5">Días Restantes</span>
-                            <span className="text-lg font-black text-slate-700 dark:text-white tabular-nums">{daysRemaining} {daysRemaining === 1 ? 'día' : 'días'}</span>
-                        </div>
-                        <div className="bg-brand-light dark:bg-surface-800/30 text-brand font-black text-xs px-3 py-1.5 rounded-xl">
-                            Mensual
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl space-y-3">
-                        <div className="flex justify-between items-center text-xs">
-                            <span className="font-bold text-slate-550 dark:text-slate-450 flex items-center gap-1.5"><Calendar size={12} /> Fecha de Pago</span>
-                            <span className="font-bold text-slate-700 dark:text-slate-200">{formatDate(estimatedLastPayment)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs border-t border-slate-100 dark:border-slate-800 pt-3">
-                            <span className="font-bold text-slate-550 dark:text-slate-450 flex items-center gap-1.5"><ShieldAlert size={12} /> Fecha de Corte</span>
-                            <span className="font-bold text-slate-700 dark:text-slate-200">{formatDate(expiresAt)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs border-t border-slate-100 dark:border-slate-800 pt-3">
-                            <span className="font-bold text-slate-550 dark:text-slate-450 flex items-center gap-1.5"><KeyRound size={12} /> Próximo Pago</span>
-                            <span className="font-bold text-brand-dark dark:text-brand">{formatDate(expiresAt)}</span>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
         return null;
     };
 
@@ -189,15 +94,13 @@ export default function SettingsTabLicencia({ deviceId, triggerHaptic }) {
                                     ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400' 
                                     : 'bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400'
                             }`}>
-                                {!isPremium ? 'Sin Licencia' : 
-                                 license.type === 'permanent' ? 'Permanente' :
-                                 (license.type === 'demo7' || license.type === 'demo3') ? 'Demo' : 'Mensual'}
+                                {!isPremium ? 'Sin Licencia' : 'Permanente'}
                             </span>
                         </div>
 
                         {renderLicenseDetails()}
 
-                        {(!license || license.type !== 'permanent') && (
+                        {!isPremium && (
                             <div className="mt-2 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                                 <div className="p-3.5 bg-brand-light/20 dark:bg-surface-800/5 border border-brand/10 rounded-2xl flex flex-col gap-2">
                                     <div className="flex justify-between items-center">

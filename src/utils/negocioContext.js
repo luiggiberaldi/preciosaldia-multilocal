@@ -34,7 +34,7 @@ export const NEGOCIO_CHANGED_EVENT = 'pda:negocio-changed';
  * - Espejo fiscal (`business_*`): `bootNegocios`/`useNegociosStore` lo mantienen
  *   sincronizado con los datos fiscales del negocio ACTIVO, así todo el código
  *   existente que lee `business_name`/`business_rif` sigue funcionando.
- * - Preferencias UI, licencia, demo: a nivel dispositivo.
+ * - Preferencias UI, licencia: a nivel dispositivo.
  */
 export const GLOBAL_STORAGE_KEYS = new Set([
     // Registro de negocios
@@ -75,7 +75,7 @@ export const GLOBAL_STORAGE_KEYS = new Set([
     'printer_paper_width',
     'allow_negative_stock',
     'label_currency_mode',
-    // Demo
+    // Flag legado de demo (ya no se escribe; se conserva protegido)
     'pda_demo_flag_v1',
     // PIN maestro global del dueño (Fase 1.5): jamás namespaced, jamás atado
     // a un negocio. Ver utils/duenoAuth.js.
