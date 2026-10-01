@@ -517,6 +517,9 @@ export default function CheckoutModalPOS({
                 .map(m => {
                     const amount = round2(val(m.id));
                     const currency = m.tipo === 'BS' ? 'BS' : m.tipo === 'COP' ? 'COP' : 'USD';
+                    const amountUsd = currency === 'USD' ? amount
+                        : currency === 'COP' ? (tasaCop > 0 ? amount / tasaCop : 0)
+                        : (tasaSegura > 0 ? amount / tasaSegura : 0);
                     return {
                         id: crypto.randomUUID(),
                         methodId: m.id,
@@ -524,12 +527,13 @@ export default function CheckoutModalPOS({
                         currency,
                         amountInput: amount,
                         amountInputCurrency: currency,
-                        amountUsd: currency === 'USD' ? amount
-                            : currency === 'COP' ? (tasaCop > 0 ? amount / tasaCop : 0)
-                            : (tasaSegura > 0 ? amount / tasaSegura : 0),
+                        amountUsd,
                         amountBs: currency === 'BS' ? amount
                             : currency === 'COP' ? (tasaCop > 0 && tasaSegura > 0 ? (amount / tasaCop) * tasaSegura : 0)
                             : (tasaSegura > 0 ? amount * tasaSegura : 0),
+                        // CRÍTICO-4 (2026-10-01): persistir el monto en COP.
+                        amountCop: currency === 'COP' ? amount
+                            : (copEnabled && tasaCop > 0 ? mulR(amountUsd, tasaCop) : 0),
                         referencia: referencias[m.id] || '',
                     };
                 });
@@ -545,6 +549,7 @@ export default function CheckoutModalPOS({
                     amountInputCurrency: 'USD',
                     amountUsd: casheaAmountUsd,
                     amountBs: mulR(casheaAmountUsd, tasaSegura),
+                    amountCop: copEnabled && tasaCop > 0 ? mulR(casheaAmountUsd, tasaCop) : 0,
                     isCashea: true,
                     casheaPercent: 100 - casheaPercent,
                 });
@@ -561,6 +566,7 @@ export default function CheckoutModalPOS({
                     amountInputCurrency: 'USD',
                     amountUsd: parseFloat(pagoSaldoFavor),
                     amountBs: parseFloat(pagoSaldoFavor) * tasaSegura,
+                    amountCop: copEnabled && tasaCop > 0 ? mulR(parseFloat(pagoSaldoFavor), tasaCop) : 0,
                     isSaldoFavor: true,
                 });
             }

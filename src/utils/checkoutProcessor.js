@@ -295,6 +295,19 @@ export async function processSaleTransaction({
             if (internalCreditUsd > (Number(normalizedValidationCustomer.favor) || 0) + FINANCIAL_EPSILON.PAYMENT_ZERO) {
                 return { success: false, error: `El saldo a favor disponible es insuficiente. Disponible: $${round2(Number(normalizedValidationCustomer.favor) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.` };
             }
+            // M-13 (2026-10-01): límite de crédito por cliente. 0/ausente = sin
+            // límite (comportamiento histórico). Si está configurado, la deuda
+            // resultante no puede superarlo.
+            const limiteCredito = Number(normalizedValidationCustomer.limiteCredito) || 0;
+            if (fiadoAmountUsd > FINANCIAL_EPSILON.PAYMENT_ZERO && limiteCredito > 0) {
+                const deudaResultante = sumR(Number(normalizedValidationCustomer.deuda) || 0, fiadoAmountUsd);
+                if (deudaResultante > limiteCredito + FINANCIAL_EPSILON.PAYMENT_ZERO) {
+                    return {
+                        success: false,
+                        error: `Supera el límite de crédito del cliente ($${round2(limiteCredito).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}). Deuda actual: $${round2(Number(normalizedValidationCustomer.deuda) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
+                    };
+                }
+            }
             // AVISO-CARTERA: congelar la cartera previa en la venta para que el
             // recibo pueda explicar consumos de saldo a favor (H2: un fiado a un
             // cliente con favor consume el favor y la deuda no aumenta).
@@ -402,6 +415,21 @@ export async function processSaleTransaction({
                     sourceId: `${finalPersistedSale.id}:fiado`,
                     sourceSaleId: finalPersistedSale.id,
                     reason: 'Venta fiada',
+                });
+            }
+            // CRÍTICO-3 (2026-10-01): VENTA_CASHEA registra la deuda con Cashea
+            // en el cliente (antes se perdía; la anulación ya la revertía).
+            // Idempotente por sourceId dentro del mismo lock.
+            if (casheaUsd > FINANCIAL_EPSILON.PAYMENT_ZERO) {
+                movements.push({
+                    type: CUSTOMER_MOVEMENT_TYPES.CASHEA_SALE,
+                    direction: 'DEBIT',
+                    amountUsd: casheaUsd,
+                    sourceType: 'SALE',
+                    sourceId: `${finalPersistedSale.id}:cashea`,
+                    sourceSaleId: finalPersistedSale.id,
+                    paymentMethodId: 'cashea',
+                    reason: 'Venta con Cashea (deuda registrada)',
                 });
             }
             if (requestedCreditChangeUsd > FINANCIAL_EPSILON.PAYMENT_ZERO) {

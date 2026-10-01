@@ -19,7 +19,8 @@ export default function TransactionModal({
     tasaCop,
     copEnabled,
     copPrimary,
-    handleTransaction
+    handleTransaction,
+    isSubmitting = false,
 }) {
     if (!transactionModal.isOpen || !transactionModal.customer) return null;
 
@@ -264,14 +265,16 @@ export default function TransactionModal({
                 <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 rounded-b-3xl">
                     <button
                         onClick={handleTransaction}
-                        disabled={!transactionAmount || parseFloat(transactionAmount) <= 0}
+                        disabled={!transactionAmount || parseFloat(transactionAmount) <= 0 || isSubmitting}
                         className={`w-full py-3.5 text-white font-bold rounded-xl active:scale-95 transition-all text-sm flex justify-center items-center gap-2 ${transactionModal.type === 'ABONO'
                             ? 'bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50'
                             : 'bg-red-500 hover:bg-red-600 disabled:bg-red-500/50'
                             }`}
                     >
                         <Save size={18} />
-                        {transactionModal.type === 'ABONO'
+                        {isSubmitting
+                            ? 'Procesando…'
+                            : transactionModal.type === 'ABONO'
                             ? `Abonar ${currencyMode === 'BS' ? 'Bs' : currencyMode === 'COP' ? 'COP' : '$'}${transactionAmount || '0.00'}`
                             : `Cargar Deuda ${currencyMode === 'BS' ? 'Bs' : currencyMode === 'COP' ? 'COP' : '$'}${transactionAmount || '0.00'}`
                         }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 // v1.2.0: useReveal hook para animaciones reveal-on-scroll (design system "Precios al Día")
 import { useReveal } from '../hooks/useReveal';
 import { Users, Plus, Search, User, X, Trash2, Pencil, Phone, RefreshCw, Save, ArrowDownRight, ArrowUpRight, Clock, CheckCircle2, CreditCard, ShoppingBag, Truck, Smartphone, Download } from 'lucide-react';
@@ -49,6 +49,9 @@ export default function CustomersView({ triggerHaptic, rates, isActive }) {
     const [transactionAmount, setTransactionAmount] = useState('');
     const [currencyMode, setCurrencyMode] = useState('BS'); // 'BS' | 'USD'
     const [paymentMethod, setPaymentMethod] = useState('efectivo_bs');
+    // ALTO-5 (2026-10-01): guardia anti doble-tap en abonos/créditos.
+    const [isTransactionSubmitting, setIsTransactionSubmitting] = useState(false);
+    const transactionInFlightRef = useRef(false);
     const [activePaymentMethods, setActivePaymentMethods] = useState([]);
     const [resetBalanceCustomer, setResetBalanceCustomer] = useState(null);
     const { effectiveRate: bcvRate, tasaCop, copEnabled, copPrimary } = useProductContext();
@@ -206,10 +209,14 @@ export default function CustomersView({ triggerHaptic, rates, isActive }) {
     // casheaDeuda en 0 sin registrar dinero, sin monto en auditoría y sin parciales
     // — y además nunca llegó a cablearse a ningún botón.
     const handleCasheaRemittance = async ({ transactionAmount, currencyMode, paymentMethod: metodo }) => {
+        // ALTO-5 (mismo patrón): doble-tap duplicaría la remesa.
+        if (transactionInFlightRef.current) return;
+        transactionInFlightRef.current = true;
         triggerHaptic();
         const target = casheaModalCustomer;
-        if (!target) return;
+        if (!target) { transactionInFlightRef.current = false; return; }
 
+        try {
         const res = await processCasheaRemittance({
             transactionAmount,
             currencyMode,
@@ -229,12 +236,20 @@ export default function CustomersView({ triggerHaptic, rates, isActive }) {
         showToast(`Remesa Cashea de $${res.aplicado.toFixed(2)} registrada para ${target.name}`, 'success');
         auditLog('CLIENTE', 'REMESA_CASHEA', `Remesa Cashea de $${res.aplicado.toFixed(2)} recibida por ${target.name}`);
         setCasheaModalCustomer(null);
+        } finally {
+            transactionInFlightRef.current = false;
+        }
     };
 
     const handleTransaction = async () => {
         if (!transactionAmount || isNaN(transactionAmount) || parseFloat(transactionAmount) <= 0) return;
+        // ALTO-5: el ref ve el segundo tap aunque no haya re-render todavía.
+        if (transactionInFlightRef.current) return;
+        transactionInFlightRef.current = true;
+        setIsTransactionSubmitting(true);
         triggerHaptic();
 
+        try {
         const transactionResult = await processCustomerTransaction({
             transactionAmount,
             currencyMode,
@@ -259,6 +274,10 @@ export default function CustomersView({ triggerHaptic, rates, isActive }) {
         setTransactionAmount('');
         setCurrencyMode('BS');
         setPaymentMethod('efectivo_bs');
+        } finally {
+            transactionInFlightRef.current = false;
+            setIsTransactionSubmitting(false);
+        }
     };
 
     if (activeTab === 'proveedores') {
@@ -560,6 +579,7 @@ export default function CustomersView({ triggerHaptic, rates, isActive }) {
                 copEnabled={copEnabled}
                 copPrimary={copPrimary}
                 handleTransaction={handleTransaction}
+                isSubmitting={isTransactionSubmitting}
             />
 
             {/* Customer Detail Bottom Sheet */}
@@ -1144,11 +1164,13 @@ function EditCustomerModal({ customer, onClose, onSave }) {
     const [name, setName] = useState(customer.name);
     const [documentId, setDocumentId] = useState(customer.documentId || '');
     const [phone, setPhone] = useState(customer.phone || '');
+    // M-13 (2026-10-01): límite de crédito en USD; 0/vacío = sin límite.
+    const [limiteCredito, setLimiteCredito] = useState(customer.limiteCredito ? String(customer.limiteCredito) : '');
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!name.trim()) return;
-        onSave({ ...customer, name: name.trim(), documentId: documentId.trim(), phone: phone.trim() });
+        onSave({ ...customer, name: name.trim(), documentId: documentId.trim(), phone: phone.trim(), limiteCredito: parseFloat(limiteCredito) || 0 });
     };
 
     return (
@@ -1203,6 +1225,19 @@ function EditCustomerModal({ customer, onClose, onSave }) {
                         </div>
                         <p className="text-[9px] text-surface-400 mt-1 ml-1">Venezuela · Ej: 0412 1234567</p>
                     </div>
+                    <div>
+                        <label className="block text-xs font-bold text-surface-400 uppercase mb-2">Límite de crédito (USD)</label>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={limiteCredito}
+                            onChange={(e) => setLimiteCredito(e.target.value.replace(',', '.'))}
+                            placeholder="0 = sin límite"
+                            className="input w-full bg-surface-100 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-xl px-4 py-3 text-surface-700 dark:text-white placeholder:text-surface-400 focus:ring-2 focus:ring-brand/50 transition-all font-medium"
+                        />
+                        <p className="text-[9px] text-surface-400 mt-1 ml-1">Tope de deuda en fiados. 0 = sin límite.</p>
+                    </div>
                     {/* v1.2.0: touch target ≥ 48px */}
                     <button
                         type="submit"
@@ -1221,6 +1256,8 @@ function AddCustomerModal({ onClose, onSave }) {
     const [name, setName] = useState('');
     const [documentId, setDocumentId] = useState('');
     const [phone, setPhone] = useState('');
+    // M-13 (2026-10-01): límite de crédito en USD; 0/vacío = sin límite.
+    const [limiteCredito, setLimiteCredito] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -1233,6 +1270,7 @@ function AddCustomerModal({ onClose, onSave }) {
             phone: phone.trim(),
             deuda: 0,
             favor: 0,
+            limiteCredito: parseFloat(limiteCredito) || 0,
             createdAt: new Date().toISOString()
         });
     };
@@ -1290,6 +1328,19 @@ function AddCustomerModal({ onClose, onSave }) {
                             />
                         </div>
                         <p className="text-[9px] text-surface-400 mt-1 ml-1">Venezuela · Ej: 0412 1234567</p>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-surface-400 uppercase mb-2">Límite de crédito (USD)</label>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={limiteCredito}
+                            onChange={(e) => setLimiteCredito(e.target.value.replace(',', '.'))}
+                            placeholder="0 = sin límite"
+                            className="input w-full bg-surface-100 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-xl px-4 py-3 text-surface-700 dark:text-white placeholder:text-surface-400 focus:ring-2 focus:ring-brand/50 transition-all font-medium"
+                        />
+                        <p className="text-[9px] text-surface-400 mt-1 ml-1">Tope de deuda en fiados. 0 = sin límite.</p>
                     </div>
 
                     {/* v1.2.0: touch target ≥ 48px */}

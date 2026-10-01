@@ -157,8 +157,10 @@ export function resumenPlataHoy(sales, today) {
 }
 
 /**
- * Fiados en movimiento: otorgados hoy (VENTA_FIADA) vs cobrados hoy
- * (COBRO_DEUDA + COBRO_CASHEA).
+ * Fiados en movimiento: otorgados hoy (VENTA_FIADA + porción Cashea de
+ * VENTA_CASHEA) vs cobrados hoy (COBRO_DEUDA + COBRO_CASHEA).
+ * M-14 (2026-10-01): antes la VENTA_CASHEA no sumaba a otorgado pero la
+ * remesa sí sumaba a cobrado — asimétrico.
  */
 export function fiadosHoy(sales, today) {
     let otorgadoUsd = 0;
@@ -172,6 +174,14 @@ export function fiadosHoy(sales, today) {
         if (s.tipo === 'VENTA_FIADA') {
             otorgadoUsd = sumR(otorgadoUsd, num(s.fiadoUsd ?? s.totalUsd));
             otorgadoCount += 1;
+        } else if (s.tipo === 'VENTA_CASHEA') {
+            // Solo la porción financiada por Cashea es crédito otorgado; la
+            // inicial ya entró a caja.
+            const cashea = num(s.casheaUsd);
+            if (cashea > 0) {
+                otorgadoUsd = sumR(otorgadoUsd, cashea);
+                otorgadoCount += 1;
+            }
         } else if (SET_COBRO.has(s.tipo)) {
             cobradoUsd = sumR(cobradoUsd, Math.abs(num(s.totalUsd)));
             cobradoCount += 1;

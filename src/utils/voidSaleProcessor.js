@@ -96,6 +96,22 @@ export async function processVoidSale(sale, currentSales, currentProducts) {
 
         const savedCustomers = await storageService.getItem(CUSTOMERS_KEY, []);
         let updatedCustomers = savedCustomers;
+
+        // M-15 (2026-10-01): anular una venta fiada que ya tiene cobros
+        // registrados creaba favor fantasma: la reversión completa del fiado
+        // superaba la deuda restante y el excedente caía a favor. Se bloquea
+        // con mensaje claro — primero se anulan los cobros, luego la venta.
+        const fiadoOriginal = round2(Number(freshSale.fiadoUsd) || 0);
+        if (freshSale.customerId && fiadoOriginal > 0) {
+            const vCustomer = savedCustomers.find(c => c.id === freshSale.customerId);
+            const deudaActual = round2(Number(vCustomer?.deuda) || 0);
+            if (deudaActual < fiadoOriginal - 0.01) {
+                throw new Error(
+                    `Esta venta fiada ya tiene cobros registrados (deuda actual $${deudaActual.toFixed(2)}` +
+                    ` < $${fiadoOriginal.toFixed(2)} fiados). Anule primero los cobros y luego la venta.`
+                );
+            }
+        }
         const savedLedger = await storageService.getItem(CUSTOMER_LEDGER_KEY, []);
         let ledgerMovements = savedLedger.filter(m => m.customerId === freshSale.customerId
             && (m.sourceSaleId === freshSale.id || m.sourceId?.startsWith(`${freshSale.id}:`))

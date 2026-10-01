@@ -783,6 +783,21 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 - M-23: chequeo "PIN ya en uso" ahora verifica contra los hashes con `verifyPin` (en crear y cambiar PIN).
 - M-24: `cambiarPin`/`agregarUsuario` son async reales; la UI espera al hash antes del toast de éxito.
 - B-2: queda como decisión pendiente (documentar riesgo de sesión local vs HMAC atado al PIN).
-- B-3: verificado — el lookup de licencias es un RPC público directo de Supabase (sin endpoint en la Estación donde poner rate-limit); códigos de 6 caracteres (~30 bits). Riesgo aceptado; rate-limit server-side requeriría Edge Function (trabajo futuro).
+- B-3: NO verificado plenamente — el lookup de licencias es un RPC público directo de Supabase (no se encontró endpoint/migración de rate-limit en la búsqueda local, pero no se confirmó server-side). Pendiente de verificación; rate-limit server-side requeriría Edge Function (trabajo futuro). No se afirma riesgo aceptado.
 - Tests: nuevo `tests/securityFase1.test.js` (10 guardrails). Suite: 819 passed / 0 failed. Build OK. Tag `fix-fase-1`.
 - NOTA para luigi: debes configurar tu Clave Maestra de Emergencia en Ajustes → Usuarios (con tu sesión de dueño) para activar la recuperación de emergencia. Sin ella, el flujo queda deshabilitado.
+
+## 2026-10-01 — Plan de fixeo: Fase 2 (dinero y datos críticos)
+- CRÍTICO-3: `VENTA_CASHEA` ahora incrementa `casheaDeuda` vía movement `CASHEA_SALE` en el ledger (antes la deuda Cashea nunca subía). Idempotente por `sourceId`.
+- CRÍTICO-4: `amountCop` se persiste en pagos normales, Cashea y saldo a favor (chip COP ya no queda en $0).
+- ALTO-3: guardia anti doble-submit en `registrarGasto`/`registrarAutoconsumo` (`inFlightRef` + lectura fresca de ventas) y botón deshabilitado con `isSubmitting` en `GastosInternosModal`.
+- ALTO-4: `anularGasto` con busy-flag por gasto + idempotencia (`status === 'ANULADA'` chequeado en storage fresco); botón "Sí, Anular" deshabilitado durante el proceso.
+- ALTO-5: guardia anti doble-tap en `handleTransaction` (abonos/créditos) y `handleCasheaRemittance` en `CustomersView`; botón del `TransactionModal` deshabilitado con "Procesando…".
+- M-13: campo `limiteCredito` por cliente (USD, 0 = sin límite, default preserva comportamiento actual) en modales de crear/editar; el checkout bloquea fiados que superen el límite con mensaje claro.
+- M-14: `fiadosHoy` simétrico — la porción `casheaUsd` de `VENTA_CASHEA` suma a otorgado (antes solo la remesa sumaba a cobrado).
+- M-15: anular `VENTA_FIADA` con cobros parciales se BLOQUEA con mensaje ("anule primero los cobros") en vez de crear favor fantasma.
+- Corrección Fase 1: el commit `99664d99` incluyó por error archivos del importador Excel de un tercero (estaban sin commitear en el árbol; `git add -A`). Contenido preservado intacto; solo la atribución del commit es incorrecta. Lección: stagear rutas explícitas, nunca `git add -A`.
+- Corrección Fase 1: retirado el literal de la antigua clave de fábrica de `tests/securityFase1.test.js`; el guardrail ahora es indirecto (ningún literal numérico de 8 dígitos en el código de seguridad).
+- Corrección Fase 1: entrada B-3 reescrita — rate-limit del lookup NO verificado plenamente, pendiente.
+- Tests: nuevos `tests/casheaDeudaVenta.test.js`, `tests/copAmountPersistido.test.js`, `tests/dineroFase2.test.js`. Suite: 837 passed / 11 skipped / 0 failed. Build OK.
+- Pendiente decisión de luigi: default del límite de crédito (¿sin límite o con tope sugerido por cliente?).

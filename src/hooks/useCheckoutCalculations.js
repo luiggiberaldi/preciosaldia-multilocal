@@ -300,6 +300,9 @@ export function useCheckoutCalculations({
             .filter(m => CurrencyService.safeParse(barValues[m.id]) > 0)
             .map(m => {
                 const amount = round2(CurrencyService.safeParse(barValues[m.id]));
+                const amountUsd = m.currency === 'USD' || m.currency === 'INTERNAL_CREDIT' ? amount
+                    : m.currency === 'COP' ? (safeTasaCop > 0 ? divR(amount, safeTasaCop) : 0)
+                    : (safeRate > 0 ? divR(amount, safeRate) : 0);
                 return {
                     id: crypto.randomUUID(),
                     methodId: m.id,
@@ -307,13 +310,16 @@ export function useCheckoutCalculations({
                     currency: m.currency,
                     amountInput: amount,
                     amountInputCurrency: m.currency,
-                    amountUsd: m.currency === 'USD' || m.currency === 'INTERNAL_CREDIT' ? amount
-                        : m.currency === 'COP' ? (safeTasaCop > 0 ? divR(amount, safeTasaCop) : 0)
-                        : (safeRate > 0 ? divR(amount, safeRate) : 0),
+                    amountUsd,
                     amountBs: m.currency === 'BS' ? amount
                         : m.currency === 'INTERNAL_CREDIT' ? 0
                         : m.currency === 'COP' ? (safeTasaCop > 0 && safeRate > 0 ? mulR(divR(amount, safeTasaCop), safeRate) : 0)
                         : (safeRate > 0 ? mulR(amount, safeRate) : 0),
+                    // CRÍTICO-4 (2026-10-01): persistir el monto en COP. El chip
+                    // COP de supervisión/recibos lee amountCop y daba $0.
+                    amountCop: m.currency === 'COP' ? amount
+                        : m.currency === 'INTERNAL_CREDIT' ? 0
+                        : (copEnabled && safeTasaCop > 0 ? mulR(amountUsd, safeTasaCop) : 0),
                 };
             });
 
@@ -328,6 +334,7 @@ export function useCheckoutCalculations({
                 amountInputCurrency: 'USD',
                 amountUsd: casheaAmountUsd,
                 amountBs: mulR(casheaAmountUsd, safeRate),
+                amountCop: copEnabled && safeTasaCop > 0 ? mulR(casheaAmountUsd, safeTasaCop) : 0,
                 isCashea: true,
                 casheaPercent: 100 - casheaPercent,
             });

@@ -99,6 +99,7 @@ export default function GastosInternosModal({
     registrarGasto,
     registrarAutoconsumo,
     anularGasto,
+    isSubmitting = false,
     triggerHaptic
 }) {
     const { usuarioActivo, requireLogin } = useAuthStore();
@@ -785,9 +786,9 @@ export default function GastosInternosModal({
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={isSubmitDisabled}
+                        disabled={isSubmitDisabled || isSubmitting}
                         className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all duration-300 shadow-md ${
-                            isSubmitDisabled
+                            isSubmitDisabled || isSubmitting
                                 ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none'
                                 : isAutoconsumo
                                     ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-violet-500/10 hover:shadow-lg hover:shadow-violet-500/20 hover:brightness-105 active:scale-95'
@@ -795,7 +796,9 @@ export default function GastosInternosModal({
                         }`}
                     >
                         {isAutoconsumo ? <ShoppingBag size={16} strokeWidth={3} /> : <TrendingDown size={16} strokeWidth={3} />}
-                        {isAutoconsumo ? 'Registrar Retiro de Inventario' : 'Registrar Gasto de Caja Chica'}
+                        {isSubmitting
+                            ? 'Procesando…'
+                            : isAutoconsumo ? 'Registrar Retiro de Inventario' : 'Registrar Gasto de Caja Chica'}
                     </button>
                 </form>
             ) : (
@@ -941,9 +944,10 @@ export default function GastosInternosModal({
                                     await anularGasto(gastoToVoid.id);
                                     setGastoToVoid(null);
                                 }}
-                                className="flex-1 py-2.5 rounded-xl font-bold text-xs bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20 active:scale-95 transition-all"
+                                disabled={isSubmitting}
+                                className="flex-1 py-2.5 rounded-xl font-bold text-xs bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white shadow-md shadow-red-500/20 active:scale-95 transition-all"
                             >
-                                Sí, Anular
+                                {isSubmitting ? 'Anulando…' : 'Sí, Anular'}
                             </button>
                         </div>
                     </div>

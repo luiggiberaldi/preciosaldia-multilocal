@@ -1,6 +1,7 @@
 import { storageService } from '../utils/storageService.js';
 import { withLock } from '../utils/withLock.js';
 import { hasAdminAccess } from '../utils/roles.js';
+import { round2, sumR } from '../utils/dinero.js';
 import {
     CUSTOMER_LEDGER_KEY,
     CUSTOMER_MOVEMENT_TYPES,
@@ -95,7 +96,15 @@ export async function applyCustomerMovementsWithinLock({
         }
 
         const before = getCustomerBalance(workingCustomer);
-        const nextCustomer = transitionCustomerBalance(workingCustomer, movement);
+        // CRÍTICO-3: VENTA_CASHEA incrementa casheaDeuda sin tocar favor/deuda.
+        // Cashea es contraparte separada (la anulación y la remesa también la
+        // manejan directo). El balance neto del ledger queda intacto.
+        const nextCustomer = movement.type === CUSTOMER_MOVEMENT_TYPES.CASHEA_SALE
+            ? normalizeCustomer({
+                ...workingCustomer,
+                casheaDeuda: sumR(round2(Number(workingCustomer.casheaDeuda) || 0), amount),
+            })
+            : transitionCustomerBalance(workingCustomer, movement);
         const after = getCustomerBalance(nextCustomer);
         const created = createCustomerLedgerMovement({
             ...movement,

@@ -13,6 +13,11 @@ export const CUSTOMER_MOVEMENT_TYPES = Object.freeze({
     CREDIT_ADJUSTMENT: 'AJUSTE_CREDITO',
     DEBIT_ADJUSTMENT: 'AJUSTE_DEBITO',
     REVERSAL: 'ANULACION',
+    // CRÍTICO-3 (2026-10-01): venta con Cashea. Cashea es contraparte separada:
+    // incrementa `casheaDeuda` del cliente SIN tocar favor/deuda (la remesa la
+    // reduce directo en casheaRemittanceProcessor). El balance neto del ledger
+    // no cambia con este movimiento.
+    CASHEA_SALE: 'VENTA_CASHEA',
 });
 
 const CREDIT_TYPES = new Set([

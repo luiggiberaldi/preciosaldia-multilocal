@@ -89,6 +89,8 @@ export async function processCasheaRemittance({
                 currency: currencyMode,
                 amountUsd: aplicado,
                 amountBs: totalEnBs,
+                // CRÍTICO-4 (2026-10-01): el chip COP leía amountCop y daba $0.
+                amountCop: copEnabled ? totalEnCop : 0,
                 methodLabel: paymentMethod.replace('_', ' '),
             }],
             // Cero a propósito: la remesa NO genera saldo a favor del cliente.

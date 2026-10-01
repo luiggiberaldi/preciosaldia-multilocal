@@ -156,6 +156,7 @@ export default function DashboardView({ rates, triggerHaptic, onNavigate, theme,
     const {
         isAddGastoOpen,
         setIsAddGastoOpen,
+        isSubmitting: isGastoSubmitting,
         registrarGasto,
         registrarAutoconsumo,
         anularGasto
@@ -897,6 +898,7 @@ export default function DashboardView({ rates, triggerHaptic, onNavigate, theme,
                 registrarGasto={registrarGasto}
                 registrarAutoconsumo={registrarAutoconsumo}
                 anularGasto={anularGasto}
+                isSubmitting={isGastoSubmitting}
                 triggerHaptic={triggerHaptic}
             />
             {showMonitor && (

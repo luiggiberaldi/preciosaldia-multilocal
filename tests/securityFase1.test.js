@@ -11,9 +11,14 @@ const app = readFileSync('src/App.jsx', 'utf8');
 
 describe('Fase 1: sin claves hardcodeadas', () => {
     it('CRÍTICO-1: no existe clave de fábrica en el código', () => {
-        expect(emergencyModal).not.toContain('24457713');
-        expect(authStore).not.toContain('24457713');
-        expect(usersManager).not.toContain('24457713');
+        // Guardrail indirecto: la antigua clave de fábrica era un literal
+        // numérico de 8 dígitos. No se reproduce el secreto en el test; se
+        // verifica que ningún literal así exista en el código de seguridad.
+        // (Los placeholders "000000" y la lista de PINs débiles son de 6
+        // dígitos y quedan fuera de este patrón a propósito.)
+        const securitySources = [emergencyModal, usersManager, authStore, app].join('\n');
+        const hardcodedPin = /['"`](\d{8})['"`]/.exec(securitySources);
+        expect(hardcodedPin, 'PIN numérico hardcodeado en código de seguridad').toBeNull();
     });
 
     it('CRÍTICO-1: sin clave personalizada el flujo queda deshabilitado', () => {
