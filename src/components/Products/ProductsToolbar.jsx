@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Store, Plus, Trash2, Pencil, Search, LayoutGrid, List, Percent, CheckSquare, Boxes, TrendingUp, DollarSign, PieChart, ChevronDown, ChevronUp, AlertTriangle, X, Wrench } from 'lucide-react';
+import { Store, Plus, Trash2, Pencil, Search, LayoutGrid, List, Percent, CheckSquare, Boxes, TrendingUp, DollarSign, PieChart, ChevronDown, ChevronUp, AlertTriangle, X, Wrench, FileSpreadsheet } from 'lucide-react';
 import { CATEGORY_COLORS } from '../../config/categories';
 import { useProductContext } from '../../context/ProductContext';
 import { formatBs, formatCop } from '../../utils/calculatorUtils';
@@ -24,6 +24,7 @@ const ProductsToolbar = ({
     setIsDeleteAllModalOpen,
     setIsCategoryManagerOpen,
     setIsStockBatchOpen,
+    setIsExcelImportOpen,
     triggerHaptic,
     onSelectAllToast,
 }) => {
@@ -245,6 +246,27 @@ const ProductsToolbar = ({
                                         <div className="min-w-0">
                                             <p className="text-xs font-bold text-slate-800 dark:text-white">Ajuste Masivo de Precios</p>
                                             <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Subir o bajar precios en % o dólares ($)</p>
+                                        </div>
+                                    </button>
+
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-1" />
+
+                                    {/* Importar Excel (EXCEL-IMPORT-001) */}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowToolsMenu(false);
+                                            triggerHaptic && triggerHaptic();
+                                            setIsExcelImportOpen && setIsExcelImportOpen(true);
+                                        }}
+                                        className="w-full flex items-start gap-2.5 p-2 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer group"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+                                            <FileSpreadsheet size={16} strokeWidth={2} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-bold text-slate-800 dark:text-white">Importar Excel</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Cargar inventario desde .xlsx a esta sede</p>
                                         </div>
                                     </button>
 

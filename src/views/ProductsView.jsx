@@ -20,6 +20,8 @@ import ConfirmModal from '../components/ConfirmModal';
 import CategoryManagerModal from '../components/Products/CategoryManagerModal';
 import BulkPriceAdjustModal from '../components/Products/BulkPriceAdjustModal';
 import StockBatchModal from '../components/Products/StockBatchModal';
+import ExcelImportModal from '../components/Products/ExcelImportModal';
+import { useNegociosStore } from '../hooks/store/useNegociosStore';
 import { useProductContext } from '../context/ProductContext';
 import SmartImage from '../components/SmartImage';
 import EmptyState from '../components/EmptyState';
@@ -88,6 +90,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isBulkPriceOpen, setIsBulkPriceOpen] = useState(false);
     const [isStockBatchOpen, setIsStockBatchOpen] = useState(false);
+    const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
     const [deleteCategoryConfirmId, setDeleteCategoryConfirmId] = useState(null);
 
     // Share State
@@ -523,6 +526,36 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         }
     };
 
+    // EXCEL-IMPORT-001: importar inventario desde Excel a la sede ACTIVA.
+    // storageService ya prefija la clave por negocio (nb_<id>:), así que nunca
+    // toca otra sede. En modo 'agregar' omite códigos que ya existen en la sede.
+    const negocioActivo = useNegociosStore((s) => s.getNegocioActivo());
+    const sedeNombre = negocioActivo?.nombre || 'esta sede';
+
+    const handleExcelImport = async (nuevos, modo) => {
+        let importados = nuevos;
+        let omitidosExistentes = 0;
+        let eliminados = 0;
+        if (modo === 'reemplazar') {
+            eliminados = products.length;
+        } else {
+            const existentes = new Set(products.map((p) => p.barcode).filter(Boolean));
+            importados = [];
+            for (const p of nuevos) {
+                if (p.barcode && existentes.has(p.barcode)) { omitidosExistentes++; continue; }
+                if (p.barcode) existentes.add(p.barcode);
+                importados.push(p);
+            }
+        }
+        const updatedProducts = modo === 'reemplazar' ? importados : [...importados, ...products];
+        await storageService.setItem('bodega_products_v1', updatedProducts);
+        setProducts(updatedProducts);
+        auditLog('INVENTARIO', 'IMPORTACION_EXCEL',
+            `Importados ${importados.length} productos desde Excel a "${sedeNombre}" (${modo})`);
+        triggerHaptic && triggerHaptic();
+        return { importados: importados.length, omitidosExistentes, eliminados };
+    };
+
     const handleClose = () => {
         resetForm();
         setPriceCop('');
@@ -604,6 +637,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                 setIsDeleteAllModalOpen={setIsDeleteAllModalOpen}
                 setIsCategoryManagerOpen={setIsCategoryManagerOpen}
                 setIsStockBatchOpen={setIsStockBatchOpen}
+                setIsExcelImportOpen={setIsExcelImportOpen}
                 triggerHaptic={triggerHaptic}
                 onSelectAllToast={() => showToast('Todo el inventario seleccionado', 'success')}
             />
@@ -690,6 +724,8 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                         description="Aún no tienes productos registrados. Empieza a llenar tus anaqueles para poder vender."
                         actionLabel="NUEVO PRODUCTO"
                         onAction={() => { triggerHaptic && triggerHaptic(); setIsModalOpen(true); }}
+                        secondaryActionLabel="IMPORTAR EXCEL"
+                        onSecondaryAction={() => { triggerHaptic && triggerHaptic(); setIsExcelImportOpen(true); }}
                     />
                 </div>
             ) : filteredProducts.length === 0 ? (
@@ -946,6 +982,16 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                 copEnabled={copEnabled}
                 tasaCop={tasaCop}
                 copPrimary={copPrimary}
+            />
+
+            {/* Importar Excel (sede activa) */}
+            <ExcelImportModal
+                isOpen={isExcelImportOpen}
+                onClose={() => setIsExcelImportOpen(false)}
+                sedeNombre={sedeNombre}
+                existentes={products.length}
+                effectiveRate={effectiveRate}
+                onImport={handleExcelImport}
             />
 
             {/* Confirmación precio alto */}

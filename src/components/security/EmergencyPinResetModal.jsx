@@ -1,38 +1,93 @@
 import React, { useState } from 'react';
-import { ShieldAlert, KeyRound, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { ShieldAlert, KeyRound, CheckCircle2, AlertCircle, X, Lock } from 'lucide-react';
 import CustomSelect from '../CustomSelect';
+import { LOGIN_RATE_LIMIT } from '../../utils/securityConstants';
 
 /**
  * EmergencyPinResetModal Component
- * Permite restablecer el PIN de cualquier usuario tras ingresar la Clave de Emergencia.
- * Acepta siempre la clave de fábrica '24457713' o la clave personalizada guardada en Ajustes.
+ * Permite restablecer el PIN de un usuario tras ingresar la Clave de Emergencia
+ * configurada por el dueño en Ajustes.
+ *
+ * Fase 1 (CRÍTICO-1): se eliminó la clave de fábrica hardcodeada. Sin una clave
+ * personalizada configurada, el flujo queda DESHABILITADO (no hay fallback).
+ * Los intentos fallidos aplican rate-limit con backoff (LOGIN_RATE_LIMIT).
+ * Fase 1 (CRÍTICO-5): el flujo nunca puede restablecer el PIN maestro ('dueno'
+ * se excluye de la lista; el store también lo rechaza en defensa en profundidad).
  */
+const EMERGENCY_KEY_LS = 'pda_emergency_pin';
+const EMERGENCY_RL_LS = 'pda_emergency_rl';
+
+function _readRateLimit() {
+    try {
+        return JSON.parse(localStorage.getItem(EMERGENCY_RL_LS)) || {};
+    } catch { return {}; }
+}
+
+function _writeRateLimit(rl) {
+    try { localStorage.setItem(EMERGENCY_RL_LS, JSON.stringify(rl)); } catch { /* noop */ }
+}
+
 export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
+    // El PIN maestro nunca es elegible para restablecimiento por emergencia.
+    const eligibleUsers = (usuarios || []).filter(u => u.id !== 'dueno');
     const [step, setStep] = useState(1);
     const [emergencyInput, setEmergencyInput] = useState('');
-    const [selectedUserId, setSelectedUserId] = useState(usuarios[0]?.id || 1);
+    const [selectedUserId, setSelectedUserId] = useState(eligibleUsers[0]?.id ?? 1);
     const [newPin, setNewPin] = useState('');
     const [confirmPin, setConfirmPin] = useState('');
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Validar clave de emergencia
+    // Sin clave personalizada configurada por el dueño, el flujo no existe.
+    const customMasterKey = (() => {
+        try { return localStorage.getItem(EMERGENCY_KEY_LS) || ''; } catch { return ''; }
+    })();
+    const isDisabled = !customMasterKey;
+
+    const _lockoutRemainingMs = () => {
+        const rl = _readRateLimit();
+        const remaining = (rl.lockUntil || 0) - Date.now();
+        return remaining > 0 ? remaining : 0;
+    };
+
+    // Validar clave de emergencia (con rate-limit persistido)
     const handleVerifyEmergencyKey = (e) => {
         e.preventDefault();
         setError('');
 
-        const defaultMasterKey = '24457713';
-        const customMasterKey = localStorage.getItem('pda_emergency_pin') || '';
+        const remaining = _lockoutRemainingMs();
+        if (remaining > 0) {
+            const secs = Math.ceil(remaining / 1000);
+            setError(`Demasiados intentos fallidos. Intenta de nuevo en ${secs}s.`);
+            return;
+        }
 
         const trimmedInput = emergencyInput.trim();
-
-        if (trimmedInput === defaultMasterKey || (customMasterKey && trimmedInput === customMasterKey)) {
+        if (trimmedInput && trimmedInput === customMasterKey) {
+            _writeRateLimit({});
             setStep(2);
             setError('');
-        } else {
-            setError('Clave Maestra de Emergencia incorrecta.');
+            return;
         }
+
+        // Fallo: registrar intento con backoff exponencial.
+        const now = Date.now();
+        const rl = _readRateLimit();
+        let failed = (rl.failedAttempts || 0) + 1;
+        if (rl.lastFailedAttemptTs && now - rl.lastFailedAttemptTs > LOGIN_RATE_LIMIT.RESET_WINDOW_MS) {
+            failed = 1;
+        }
+        const next = { failedAttempts: failed, lastFailedAttemptTs: now, lockUntil: 0, consecutiveLockouts: rl.consecutiveLockouts || 0 };
+        if (failed >= LOGIN_RATE_LIMIT.MAX_ATTEMPTS) {
+            const consecutive = next.consecutiveLockouts + 1;
+            const rawLockout = LOGIN_RATE_LIMIT.LOCKOUT_MS * Math.pow(LOGIN_RATE_LIMIT.BACKOFF_FACTOR, consecutive - 1);
+            next.lockUntil = now + Math.min(rawLockout, LOGIN_RATE_LIMIT.MAX_LOCKOUT_MS);
+            next.consecutiveLockouts = consecutive;
+            next.failedAttempts = 0;
+        }
+        _writeRateLimit(next);
+        setError('Clave Maestra de Emergencia incorrecta.');
     };
 
     // Aplicar el nuevo PIN
@@ -51,8 +106,8 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
 
         setIsSubmitting(true);
         try {
-            // Fase 1.5: 'dueno' restablece el PIN maestro global (no se convierte a número).
-            const res = await onResetPin(selectedUserId === 'dueno' ? 'dueno' : Number(selectedUserId), newPin);
+            // 'dueno' nunca llega aquí (filtrado de la lista + rechazo en el store).
+            const res = await onResetPin(Number(selectedUserId), newPin);
             if (res?.ok) {
                 setSuccessMessage('¡PIN restablecido con éxito! Ya puedes iniciar sesión.');
                 setTimeout(() => {
@@ -104,6 +159,27 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                         <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
                             {successMessage}
                         </p>
+                    </div>
+                ) : isDisabled ? (
+                    /* SIN CLAVE CONFIGURADA: el flujo de emergencia no existe hasta
+                       que el dueño defina una clave en Ajustes (Fase 1, CRÍTICO-1). */
+                    <div className="space-y-4">
+                        <div className="bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-xs text-slate-600 dark:text-slate-300 flex gap-3">
+                            <Lock size={18} className="shrink-0 mt-0.5 text-slate-400" />
+                            <p>
+                                La recuperación de emergencia está <strong>deshabilitada</strong> porque
+                                el dueño aún no ha configurado una Clave Maestra de Emergencia.
+                                <br /><br />
+                                El dueño puede configurarla en <strong>Ajustes → Usuarios → Clave Maestra de Emergencia</strong>.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="w-full py-3 px-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        >
+                            Entendido
+                        </button>
                     </div>
                 ) : step === 1 ? (
                     /* PASO 1: Ingreso de Clave de Emergencia */
@@ -163,7 +239,7 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                             <CustomSelect
                                 value={selectedUserId}
                                 onChange={(v) => setSelectedUserId(v)}
-                                options={usuarios.map(u => ({
+                                options={eligibleUsers.map(u => ({
                                     value: u.id,
                                     label: `${u.nombre}${u.rol ? ` (${u.rol})` : ''}`,
                                 }))}

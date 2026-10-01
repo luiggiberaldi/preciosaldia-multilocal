@@ -4,6 +4,7 @@ import { showToast } from '../Toast';
 import { verifyPin } from '../../utils/crypto';
 import { PIN_POLICY } from '../../utils/securityConstants';
 import { canCreateRole, canManageUser, hasAdminAccess } from '../../utils/roles';
+import { getDuenoSession, verifyMasterPin } from '../../utils/duenoAuth';
 import {
     UserPlus, Trash2, KeyRound, Shield, ShoppingCart,
     Crown, X, Check, Eye, EyeOff, AlertTriangle, Edit2, Lock, Unlock
@@ -184,6 +185,12 @@ export default function UsersManager({ triggerHaptic }) {
     const [emergencyKeyInput, setEmergencyKeyInput] = useState('');
     const [emergencyKeyConfirm, setEmergencyKeyConfirm] = useState('');
     const [showEmergencyKeyText, setShowEmergencyKeyText] = useState(false);
+    // Fase 1 (CRÍTICO-5): configurar la clave de emergencia exige sesión de
+    // dueño + verificación del PIN maestro. Paso 1 = verificar PIN maestro,
+    // paso 2 = definir la clave.
+    const [emergencyStep, setEmergencyStep] = useState(1);
+    const [masterPinCheck, setMasterPinCheck] = useState('');
+    const [isDuenoSession] = useState(() => getDuenoSession() !== null);
 
     const isWeakPin = (pin) => {
         if (!pin || pin.length < 6) return false;
@@ -210,15 +217,24 @@ export default function UsersManager({ triggerHaptic }) {
     }, [currentPinValue, pinValue, confirmPinValue, changePinStep, changePinUser]);
 
     // ─── Handlers ────────────────────────────────────
-    const handleAdd = () => {
+    const handleAdd = async () => {
         const requiredLen = PIN_POLICY.MIN_LENGTH;
         if (!newName.trim()) return showToast('Ingresa un nombre', 'error');
         if (newPin.length !== requiredLen) return showToast(`El PIN debe tener ${requiredLen} dígitos`, 'error');
-        if (usuarios.some(u => u.pin === newPin)) return showToast('Ese PIN ya esta en uso', 'error');
+        // Fase 1 (M-23): el PIN guardado es un hash; comparar en claro nunca
+        // funcionaba. Se verifica contra cada hash existente.
+        for (const u of usuarios) {
+            try {
+                const check = await verifyPin(newPin, u.pin);
+                if (check.valid) return showToast('Ese PIN ya está en uso', 'error');
+            } catch { /* hash ilegible: se ignora para este chequeo */ }
+        }
         // Fase B: el administrador solo puede crear cajeros.
         if (!canCreateRole(usuarioActivo, newRole)) return showToast('No tienes permiso para crear ese rol', 'error');
 
-        agregarUsuario(newName.trim(), newRole, newPin);
+        // Fase 1 (M-24): esperar a que el hash exista antes de confirmar.
+        const res = await agregarUsuario(newName.trim(), newRole, newPin);
+        if (res && res.error) return showToast(res.error, 'error');
         showToast(`Usuario "${newName.trim()}" creado`, 'success');
         triggerHaptic?.();
         setNewName('');
@@ -264,18 +280,25 @@ export default function UsersManager({ triggerHaptic }) {
         triggerHaptic?.();
     };
 
-    const handleChangePin = () => {
+    const handleChangePin = async () => {
         const requiredLen = PIN_POLICY.MIN_LENGTH;
-        
+
         if (pinValue !== confirmPinValue) {
             return showToast('Los PINs no coinciden', 'error');
         }
 
-        if (usuarios.some(u => u.id !== changePinUser.id && u.pin === pinValue)) {
-            return showToast('Ese PIN ya está en uso', 'error');
+        // Fase 1 (M-23): comparar contra los hashes con verifyPin (la comparación
+        // directa hash === texto plano nunca era verdadera).
+        for (const u of usuarios) {
+            if (u.id === changePinUser.id) continue;
+            try {
+                const check = await verifyPin(pinValue, u.pin);
+                if (check.valid) return showToast('Ese PIN ya está en uso', 'error');
+            } catch { /* hash ilegible: se ignora para este chequeo */ }
         }
 
-        const res = cambiarPin(changePinUser.id, pinValue);
+        // Fase 1 (M-24): esperar a que el hash exista antes de confirmar.
+        const res = await cambiarPin(changePinUser.id, pinValue);
         if (res && res.error) {
             return showToast(res.error, 'error');
         }
@@ -345,6 +368,9 @@ export default function UsersManager({ triggerHaptic }) {
             </div>
 
             {/* ─── Clave Maestra de Emergencia Section ────────────────────── */}
+            {/* Fase 1 (CRÍTICO-5): solo visible con sesión de dueño. Un administrador
+                ya no puede configurarla ni usarla para escalar a dueño. */}
+            {isDuenoSession && (
             <div className="bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 my-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -366,6 +392,8 @@ export default function UsersManager({ triggerHaptic }) {
                             setEmergencyKeyInput(existing);
                             setEmergencyKeyConfirm(existing);
                             setShowEmergencyKeyText(false);
+                            setMasterPinCheck('');
+                            setEmergencyStep(1);
                             setShowEmergencyConfigModal(true);
                             triggerHaptic?.();
                         }}
@@ -375,6 +403,7 @@ export default function UsersManager({ triggerHaptic }) {
                     </button>
                 </div>
             </div>
+            )}
 
             {/* Add Button / Form */}
             {!showAddForm ? (
@@ -721,10 +750,54 @@ export default function UsersManager({ triggerHaptic }) {
                             </div>
                             <h3 className="text-base font-bold text-slate-800 dark:text-white">Clave Maestra de Emergencia</h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                Establece una clave secreta para la autorización de recuperación de PINs de los usuarios.
+                                {emergencyStep === 1
+                                    ? 'Por seguridad, confirma tu PIN maestro para continuar.'
+                                    : 'Establece una clave secreta para la autorización de recuperación de PINs de los usuarios.'}
                             </p>
                         </div>
 
+                        {emergencyStep === 1 ? (
+                            /* PASO 1 (CRÍTICO-5): re-autenticar al dueño con su PIN maestro
+                               antes de permitir configurar la clave de emergencia. */
+                            <div className="mb-5 space-y-3">
+                                <div>
+                                    <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5 ml-1">PIN maestro del dueño</label>
+                                    <input
+                                        autoFocus
+                                        type="password"
+                                        inputMode="numeric"
+                                        maxLength={32}
+                                        value={masterPinCheck}
+                                        onChange={e => setMasterPinCheck(e.target.value.replace(/\D/g, ''))}
+                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-amber-500/30 outline-none text-slate-800 dark:text-white transition-all text-center tracking-[0.4em]"
+                                        placeholder="••••••"
+                                    />
+                                </div>
+                                <button
+                                    onClick={async () => {
+                                        if (!masterPinCheck) return showToast('Ingresa tu PIN maestro', 'error');
+                                        const res = await verifyMasterPin(masterPinCheck);
+                                        if (res?.ok) {
+                                            setMasterPinCheck('');
+                                            setEmergencyStep(2);
+                                            triggerHaptic?.();
+                                        } else {
+                                            showToast(res?.error || 'PIN maestro incorrecto', 'error');
+                                        }
+                                    }}
+                                    className="w-full py-3 text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-2xl active:scale-95 transition-all shadow-md shadow-amber-500/20"
+                                >
+                                    Verificar
+                                </button>
+                                <button
+                                    onClick={() => setShowEmergencyConfigModal(false)}
+                                    className="w-full py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        ) : (
+                        <>
                         <div className="mb-5 space-y-3">
                             <div>
                                 <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5 ml-1">Nueva Clave Secreta</label>
@@ -781,8 +854,10 @@ export default function UsersManager({ triggerHaptic }) {
                                         return showToast('La clave debe tener al menos 6 caracteres', 'error');
                                     }
                                     if (!val) {
+                                        // Fase 1 (CRÍTICO-1): ya no hay "valor por defecto".
+                                        // Vacío = deshabilitar el flujo de emergencia.
                                         localStorage.removeItem('pda_emergency_pin');
-                                        showToast('Clave de Emergencia restablecida al valor por defecto', 'success');
+                                        showToast('Recuperación de emergencia deshabilitada', 'success');
                                     } else {
                                         localStorage.setItem('pda_emergency_pin', val);
                                         showToast('Clave Maestra de Emergencia actualizada', 'success');
@@ -799,13 +874,14 @@ export default function UsersManager({ triggerHaptic }) {
                                 onClick={() => {
                                     localStorage.removeItem('pda_emergency_pin');
                                     setEmergencyKeyInput('');
-                                    showToast('Clave restablecida al valor por defecto', 'info');
+                                    setEmergencyKeyConfirm('');
+                                    showToast('Recuperación de emergencia deshabilitada', 'info');
                                     triggerHaptic?.();
                                     setShowEmergencyConfigModal(false);
                                 }}
                                 className="w-full py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800/60 rounded-2xl transition-all"
                             >
-                                Restablecer por Defecto
+                                Deshabilitar Emergencia
                             </button>
 
                             <button
@@ -815,6 +891,8 @@ export default function UsersManager({ triggerHaptic }) {
                                 Cancelar
                             </button>
                         </div>
+                        </>
+                        )}
                     </div>
                 </div>
             )}

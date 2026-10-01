@@ -23,13 +23,12 @@
  */
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 import { logEvent } from '../../services/auditService';
 import { hashPin, verifyPin } from '../../utils/crypto';
 import { routeAuthKey } from '../../utils/negocioContext';
 import {
     verifyMasterPin,
-    setMasterPin,
     getDuenoSession,
     setDuenoSession,
     clearDuenoSession,
@@ -72,15 +71,16 @@ function _generateRandomPin() {
  * @returns {Promise<{ usuarios: Array, initialPins: Array<{id,nombre,rol,pin}> }>}
  */
 async function _createDefaultUsersWithRandomPins() {
-    // Para facilitar el acceso en el primer arranque:
-    // Ambos usuarios inician con '000000' (seis ceros)
-    const adminPin = '000000';
-    const cajeroPin = '000000';
+    // Fase 1 (ALTO-2): PINs aleatorios no predecibles y PIN obligatorio.
+    // Antes: ambos usuarios nacían con '000000' y requirePin:false (acceso directo).
+    // Los PINs se muestran UNA sola vez en el primer arranque (InitialPinsModal).
+    const adminPin = _generateRandomPin();
+    const cajeroPin = _generateRandomPin();
     const adminHash = await hashPin(adminPin);
     const cajeroHash = await hashPin(cajeroPin);
     const usuarios = [
-        { id: 1, nombre: 'Administrador', rol: 'ADMIN', pin: adminHash, requirePin: false },
-        { id: 2, nombre: 'Cajero', rol: 'CAJERO', pin: cajeroHash, requirePin: false },
+        { id: 1, nombre: 'Administrador', rol: 'ADMIN', pin: adminHash, requirePin: true },
+        { id: 2, nombre: 'Cajero', rol: 'CAJERO', pin: cajeroHash, requirePin: true },
     ];
     const initialPins = [
         { id: 1, nombre: 'Administrador', rol: 'ADMIN', pin: adminPin },
@@ -398,7 +398,7 @@ export const useAuthStore = create(
                 if (usuarioActivo.rol === 'DUENO') {
                     try {
                         const result = await verifyMasterPin(String(pinInput ?? ''));
-                        if (result.valid) {
+                        if (result.ok) {
                             set({
                                 failedAttempts: 0,
                                 lockUntil: null,
@@ -485,15 +485,15 @@ export const useAuthStore = create(
              * @returns {Promise<{ ok: boolean, error?: string }>}
              */
             resetPinEmergency: async (userId, nuevoPin) => {
+                // Fase 1 (CRÍTICO-5): el flujo de emergencia NUNCA puede restablecer
+                // el PIN maestro del dueño. Defensa en profundidad: aunque la UI
+                // filtre la opción 'dueno', el store la rechaza.
+                if (userId === 'dueno') {
+                    logEvent('AUTH', 'PIN_MAESTRO_RESET_BLOQUEADO', 'Intento de restablecer el PIN maestro por emergencia (bloqueado).', get().usuarioActivo);
+                    return { ok: false, error: 'El PIN maestro no se puede restablecer por emergencia.' };
+                }
                 const err = validatePin(String(nuevoPin ?? ''));
                 if (err) return { ok: false, error: err };
-
-                // Fase 1.5: el PIN maestro también se puede recuperar por emergencia.
-                if (userId === 'dueno') {
-                    const res = await setMasterPin(String(nuevoPin));
-                    if (res.ok) logEvent('AUTH', 'PIN_MAESTRO_RESET', 'PIN maestro restablecido por emergencia.', null);
-                    return res;
-                }
 
                 try {
                     const hashedPin = await hashPin(String(nuevoPin));
@@ -517,41 +517,41 @@ export const useAuthStore = create(
 
             /**
              * Cambia el PIN de un usuario.
+             * Fase 1 (M-24): async real — resuelve DESPUÉS de persistir el hash,
+             * así la UI puede mostrar el éxito solo cuando el PIN existe de verdad.
              * @param {number} userId
              * @param {string} nuevoPin - PIN en claro (será validado y hasheado).
-             * @returns {{ ok: boolean, error?: string }}
+             * @returns {Promise<{ ok: boolean, error?: string }>}
              */
-            cambiarPin: (userId, nuevoPin) => {
+            cambiarPin: async (userId, nuevoPin) => {
                 const err = validatePin(String(nuevoPin ?? ''));
                 if (err) return { ok: false, error: err };
 
-                // hashPin es async; delegamos en una acción async interna y devolvemos sync.
-                // Los callers existentes (ConfigView, etc.) no esperan el resultado del hash.
-                (async () => {
-                    try {
-                        const hashedPin = await hashPin(String(nuevoPin));
-                        set((state) => ({
-                            usuarios: state.usuarios.map(u =>
-                                u.id === userId ? { ...u, pin: hashedPin } : u
-                            )
-                        }));
-                        const target = get().usuarios.find(u => u.id === userId);
-                        logEvent('AUTH', 'PIN_CAMBIADO', `PIN cambiado para ${target?.nombre || 'usuario'}`, get().usuarioActivo);
-                    } catch (e) {
-                        console.error('[useAuthStore] cambiarPin falló:', e);
-                    }
-                })();
-                return { ok: true };
+                try {
+                    const hashedPin = await hashPin(String(nuevoPin));
+                    set((state) => ({
+                        usuarios: state.usuarios.map(u =>
+                            u.id === userId ? { ...u, pin: hashedPin } : u
+                        )
+                    }));
+                    const target = get().usuarios.find(u => u.id === userId);
+                    logEvent('AUTH', 'PIN_CAMBIADO', `PIN cambiado para ${target?.nombre || 'usuario'}`, get().usuarioActivo);
+                    return { ok: true };
+                } catch (e) {
+                    console.error('[useAuthStore] cambiarPin falló:', e);
+                    return { ok: false, error: 'Error al procesar el hash del nuevo PIN' };
+                }
             },
 
             /**
              * Crea un usuario nuevo con PIN validado y hasheado.
+             * Fase 1 (M-24): async real — resuelve DESPUÉS de persistir el hash.
              * @param {string} nombre
              * @param {string} rol
              * @param {string} pin - en claro
-             * @returns {{ ok: boolean, error?: string }}
+             * @returns {Promise<{ ok: boolean, error?: string }>}
              */
-            agregarUsuario: (nombre, rol, pin) => {
+            agregarUsuario: async (nombre, rol, pin) => {
                 const err = validatePin(String(pin ?? ''));
                 if (err) return { ok: false, error: err };
                 // Fase B: en un negocio solo existen administradores (ADMIN) y
@@ -560,21 +560,21 @@ export const useAuthStore = create(
                     return { ok: false, error: 'Rol inválido' };
                 }
 
-                (async () => {
-                    try {
-                        const hashedPin = await hashPin(String(pin));
-                        set((state) => {
-                            const maxId = state.usuarios.reduce((max, u) => Math.max(max, u.id), 0);
-                            return {
-                                usuarios: [...state.usuarios, { id: maxId + 1, nombre, rol, pin: hashedPin, requirePin: false }]
-                            };
-                        });
-                        logEvent('USUARIO', 'USUARIO_CREADO', `Usuario "${nombre}" (${rol}) creado`, get().usuarioActivo);
-                    } catch (e) {
-                        console.error('[useAuthStore] agregarUsuario falló:', e);
-                    }
-                })();
-                return { ok: true };
+                try {
+                    const hashedPin = await hashPin(String(pin));
+                    set((state) => {
+                        const maxId = state.usuarios.reduce((max, u) => Math.max(max, u.id), 0);
+                        return {
+                            // Fase 1 (ALTO-2): los usuarios nuevos exigen PIN (antes: acceso directo).
+                            usuarios: [...state.usuarios, { id: maxId + 1, nombre, rol, pin: hashedPin, requirePin: true }]
+                        };
+                    });
+                    logEvent('USUARIO', 'USUARIO_CREADO', `Usuario "${nombre}" (${rol}) creado`, get().usuarioActivo);
+                    return { ok: true };
+                } catch (e) {
+                    console.error('[useAuthStore] agregarUsuario falló:', e);
+                    return { ok: false, error: 'Error al procesar el hash del PIN' };
+                }
             },
 
             eliminarUsuario: (userId) => {
@@ -701,14 +701,12 @@ export const useAuthStore = create(
         }),
         {
             name: 'abasto-auth-storage',
-            // FASE 1: usuarios/PIN por negocio. El nombre se enruta por negocio
-            // activo EN CADA OPERACIÓN, así cambiar de negocio rehidrata el
-            // personal correcto sin recrear el store.
-            storage: createJSONStorage(() => ({
-                getItem: (name) => localStorage.getItem(routeAuthKey(name)),
-                setItem: (name, value) => localStorage.setItem(routeAuthKey(name), value),
-                removeItem: (name) => localStorage.removeItem(routeAuthKey(name)),
-            })),
+            // NOTA Fase 1 (M-1): aquí había un segundo bloque `storage:` con
+            // enrutado por negocio (routeAuthKey) que NUNCA estuvo activo: en un
+            // objeto literal gana la última clave, así que el persist real es el
+            // de abajo (clave global 'abasto-auth-storage'). Se eliminó el bloque
+            // muerto. Modelo real: usuarios/PINs globales; solo la SESIÓN se
+            // enruta por negocio (routeAuthKey(SESSION_KEY)).
             partialize: (state) => ({
                 usuarios: state.usuarios,
                 requireLogin: state.requireLogin,

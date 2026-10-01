@@ -773,3 +773,16 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 - M-19: `tests/supervisorLifecycle.test.js` leía `PairingManager.jsx`, eliminado a propósito en `2987dd4` (era flujo del Lite). Se retiró el test del flujo eliminado; los otros 3 guardrails siguen verificando archivos existentes.
 - M-16: `injectDeterministicSales` no aceptaba `dateStr` → inyectaba con fecha de hoy pero el test filtraba `2026-09-18..2026-09-22` (0 ventas en rango, 43.59 vs 0). El injector ahora acepta `dateStr` opcional y el test pasa `DETERMINISTIC_DATE`. Era bug del harness, no del motor.
 - Baseline: suite completa 809 passed / 11 skipped / 0 failed; `npm run build` OK. Tag `pre-fixeo-2026-10-01` como punto de rollback.
+
+## 2026-10-01 — Plan de fixeo: Fase 1 (seguridad crítica)
+- CRÍTICO-1: eliminada la clave de fábrica hardcodeada (`EmergencyPinResetModal.jsx`). Sin clave personalizada configurada, el flujo de emergencia queda DESHABILITADO (ya no hay fallback). Intentos con rate-limit persistido (LOGIN_RATE_LIMIT: 5 intentos → lockout 30s con backoff x2 hasta 15min). grep confirma 0 ocurrencias en `src/`.
+- CRÍTICO-5: la sección "Clave Maestra de Emergencia" en `UsersManager.jsx` solo se muestra con sesión de dueño; configurarla exige verificar el PIN maestro (paso previo en el modal). Vacío = deshabilitar (antes: volvía a la clave de fábrica). El flujo de emergencia nunca puede restablecer el PIN maestro: filtrado en el modal + rechazo en `resetPinEmergency` (defensa en profundidad, evento `PIN_MAESTRO_RESET_BLOQUEADO`).
+- ALTO-2: usuarios iniciales con PINs aleatorios (`_generateRandomPin()`) y `requirePin: true` (antes: '000000' + acceso directo). Nuevo `InitialPinsModal` muestra los PINs UNA sola vez tras el setup del PIN maestro (flag `pda_initial_pins_shown`). Usuarios nuevos también nacen con `requirePin: true`.
+- M-1: eliminado bloque `storage:` muerto en el persist (el enrutado por negocio nunca estuvo activo; modelo real: usuarios globales, solo la sesión se enruta por negocio).
+- M-2: `unlock()` del dueño ahora lee `result.ok` (antes `result.valid` → nunca desbloqueaba).
+- M-23: chequeo "PIN ya en uso" ahora verifica contra los hashes con `verifyPin` (en crear y cambiar PIN).
+- M-24: `cambiarPin`/`agregarUsuario` son async reales; la UI espera al hash antes del toast de éxito.
+- B-2: queda como decisión pendiente (documentar riesgo de sesión local vs HMAC atado al PIN).
+- B-3: verificado — el lookup de licencias es un RPC público directo de Supabase (sin endpoint en la Estación donde poner rate-limit); códigos de 6 caracteres (~30 bits). Riesgo aceptado; rate-limit server-side requeriría Edge Function (trabajo futuro).
+- Tests: nuevo `tests/securityFase1.test.js` (10 guardrails). Suite: 819 passed / 0 failed. Build OK. Tag `fix-fase-1`.
+- NOTA para luigi: debes configurar tu Clave Maestra de Emergencia en Ajustes → Usuarios (con tu sesión de dueño) para activar la recuperación de emergencia. Sin ella, el flujo queda deshabilitado.

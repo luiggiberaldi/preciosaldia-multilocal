@@ -30,6 +30,7 @@ import { useRemoteCommands } from './hooks/useRemoteCommands';
 import CommandPalette from './components/CommandPalette';
 import LockScreen from './components/security/LockScreen';
 import MasterPinSetupModal from './components/security/MasterPinSetupModal';
+import InitialPinsModal from './components/security/InitialPinsModal';
 import { isMasterPinSetup } from './utils/duenoAuth';
 import { visibleTabIds, landingTab, isCashier, isOwner, hasAdminAccess, canManageBusinesses } from './utils/roles';
 import { useAutoLock } from './hooks/useAutoLock';
@@ -100,6 +101,34 @@ export default function App() {
   const [showMasterSetup, setShowMasterSetup] = useState(
     () => requireLogin && !isMasterPinSetup()
   );
+
+  // Fase 1 (ALTO-2): mostrar UNA sola vez los PINs iniciales aleatorios para que
+  // el dueño los anote. Se alimenta del evento 'initial-pins-ready' que dispara
+  // _ensureDefaultUsers (o de window.__INITIAL_PINS__ si ya se disparó).
+  const [initialPins, setInitialPins] = useState(() => {
+    try {
+      if (typeof window === 'undefined') return null;
+      if (localStorage.getItem('pda_initial_pins_shown') === 'true') return null;
+      return window.__INITIAL_PINS__ || null;
+    } catch { return null; }
+  });
+  useEffect(() => {
+    const onReady = (e) => {
+      try {
+        if (localStorage.getItem('pda_initial_pins_shown') === 'true') return;
+      } catch { /* noop */ }
+      setInitialPins(e?.detail || null);
+    };
+    window.addEventListener('initial-pins-ready', onReady);
+    return () => window.removeEventListener('initial-pins-ready', onReady);
+  }, []);
+  const dismissInitialPins = () => {
+    try {
+      localStorage.setItem('pda_initial_pins_shown', 'true');
+      window.__INITIAL_PINS__ = null;
+    } catch { /* noop */ }
+    setInitialPins(null);
+  };
 
   // Flujo de primer arranque (multi-local): Términos → PIN maestro →
   // configuración del primer negocio. Los términos se aceptan una vez por
@@ -396,6 +425,14 @@ export default function App() {
         <MasterPinSetupModal
           isOpen={showMasterSetup}
           onDone={() => setShowMasterSetup(false)}
+        />
+      )}
+
+      {/* Fase 1 (ALTO-2): PINs iniciales aleatorios, una sola vez, tras el PIN maestro */}
+      {initialPins && !showMasterSetup && (
+        <InitialPinsModal
+          pins={initialPins}
+          onDone={dismissInitialPins}
         />
       )}
 
