@@ -885,3 +885,20 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 **Verificación:** suite completa 896 passed / 11 skipped / 0 failed; `npm run build` exitoso.
 
 ---
+
+---
+
+## 2026-10-01 — Seguimiento de la auditoría general post-plan (fixes hallazgos 1–6)
+
+La auditoría general de debugging (subagente, solo lectura) verificó los 58 hallazgos implementados en Fases 0–6, tags remotos `fix-fase-1`..`fix-fase-6`, suite 896/11/0 con `TZ='America/Caracas'`, y encontró 6 puntos nuevos implementables. Se aplicaron aquí:
+
+1. **B-17 incompleto (medio-bajo):** `PaymentMethodsManager.handleToggleState` contaba métodos virtuales (p. ej. saldo a favor) como "método activo", pero el checkout (`CheckoutModalPOS`) solo ofrece reales. Podía dejar el checkout sin método de cobro. Predicado puro extraído: `canDeactivatePaymentMethod(methods, id)` — los virtuales no cuentan como respaldo. Tests en `tests/auditoriaPostPlan.test.js`.
+2. **B-13a incompleto (bajo):** `SYNC_PUSH_ERROR_EVENT` se emitía pero ninguna UI lo consumía. `src/components/SyncStatus.jsx` ahora mantiene `pushError` en estado, se suscribe al evento vía `useCloudSync`, y renderiza aviso rojo "Error de sincronización" (desaparece al tocarlo; el registro en `useCloudSync` conserva el último error). Sin testing-library no hay test de montaje; el contrato del evento sigue cubierto en `tests/fase6.test.js`.
+3. **B-18 incompleto (bajo):** `CasheaRemittanceModal`, `TransactionModal` y `GastosInternosModal` podían cerrarse durante un submit async. Fix: `CasheaRemittanceModal.safeClose()` (ignora cierre si `busy`; backdrop/Escape/X lo usan), `TransactionModal.handleClose()` (ignora cierre si `isSubmitting`; X y backdrop/Escape lo usan), `GastosInternosModal` con `disableClose={isSubmitting}`. Además: `CasheaRemittanceModal.handleConfirm` ahora usa `try/finally` para no quedar en `busy` permanente si `onConfirm` lanza. (Los otros 3 modales de Monitor ya lo tenían de Fase 6.)
+4. **Monitoreo legacy Lite en Pro (bajo):** `useLicenseMonitoring.js` enviaba heartbeats cada 3 min y consultaba RPCs/tabla `licenses` con `product_id='bodega'` — mina de scoping Lite/Pro + requests 404 por sesión hasta que el guard `deviceBackend` caía. Queda como no-op documentado (API intacta; CloudGate es el gate real). `_fetchRemoteLicense` en `useSecurity.jsx` retorna `{ data: null, error: null }` (el cuerpo legacy con `product_id='bodega'` se eliminó). `DevicesManager.jsx` estaba muerto (sin imports) y se eliminó. NOTA: las funciones de activación manual legadas de `useSecurity` (`auto_register_device`, `heartbeat_device`, `verify_activation_code`) quedan pendientes de limpieza en el refactor de licencias; solo se invocan desde acciones explícitas, no por sesión.
+5. **Lease de `withLock` sin heartbeat (bajo):** documentado explícitamente en `withLock.js` — el lease de 8s sin renovación puede perderse en operaciones > 8s; las secciones críticas son escrituras de ms, muy por debajo. Si alguna crítica supera ~5s, añadir heartbeat.
+6. **INFO:** eliminado el re-export sin consumidores de `divR` en `fase6Money.js`. `totalPagadoBS` conserva fórmula inline equivalente a `paymentMethodToBs` (sin bug detectado).
+
+**Verificación:** focales `auditoriaPostPlan` + `fase6` + `withLock` = 36 passed / 0 failed; suite completa con `TZ='America/Caracas'`: **903 passed / 11 skipped / 0 failed**; `npm run build` exitoso.
+
+**Pendientes que siguen en pie (no se fingieron resueltos):** ALTO-6, M-8 y B-10 (importador Excel del tercero, diffs exactos en `~/workspace/your_files/fase-4-diffs-coordinacion-tercero-2026-10-01.md`); B-2 (sesión local manipulable — decisión HMAC/PIN); B-3 (RPC público sin rate-limit, requiere server-side).

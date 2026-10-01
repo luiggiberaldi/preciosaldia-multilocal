@@ -17,37 +17,18 @@ const PRODUCT_ID = 'bodega';
 
 // Helper seguro para obtener el estado de la licencia respetando RLS o haciendo fallback.
 // Guard deviceBackend: si el backend no está implementado, no se llama (evita 404).
+//
+// Auditoría post-plan (2026-10-01): el monitoreo remoto legacy queda
+// DESACTIVADO en Pro (consultaba `licenses` con product_id='bodega', ID de
+// Lite — mina de scoping — y disparaba 404 cada sesión). El gate real es
+// CloudGate. La verificación local de tokens RSA sigue viva en checkLicense.
+// Las funciones de activación manual legadas más abajo (auto_register_device,
+// heartbeat_device, verify_activation_code) quedan pendientes de limpieza en
+// el refactor de licencias; solo se invocan desde acciones explícitas del
+// usuario, no en cada sesión.
 async function _fetchRemoteLicense(currentDeviceId) {
-    if (isDeviceBackendDown()) { noteDeviceBackendSkipped('useSecurity'); return { data: null, error: null }; }
-    try {
-        const { data, error } = await supabase.rpc('get_license_status', { p_device_id: currentDeviceId });
-        if (error) {
-            // Función inexistente → la tabla tampoco existe: no intentar el fallback.
-            if (isBackendMissingError(error)) { markDeviceBackendDown(); noteDeviceBackendSkipped('useSecurity'); return { data: null, error: null }; }
-        } else if (data) {
-            const record = Array.isArray(data) ? data[0] : data;
-            if (record) {
-                markDeviceBackendUp();
-                return { data: record, error: null };
-            }
-        }
-    } catch (e) {
-        if (isBackendMissingError(e)) { markDeviceBackendDown(); noteDeviceBackendSkipped('useSecurity'); return { data: null, error: null }; }
-        // Silencioso
-    }
-    const res = await supabase
-        .from('licenses')
-        .select('type, is_active, expires_at, created_at')
-        .eq('device_id', currentDeviceId)
-        .eq('product_id', PRODUCT_ID)
-        .maybeSingle();
-    if (res.error && isBackendMissingError(res.error)) {
-        markDeviceBackendDown();
-        noteDeviceBackendSkipped('useSecurity');
-        return { data: null, error: null };
-    }
-    markDeviceBackendUp();
-    return res;
+    void currentDeviceId;
+    return { data: null, error: null };
 }
 
 // SEC-022 / INFRA-011: Security headers (CSP, X-Frame-Options, X-Content-Type-Options,

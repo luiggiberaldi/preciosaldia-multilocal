@@ -150,3 +150,11 @@ mockeado vs `cloudGateRealConfig` sin mock), no con unmock a mitad de archivo.
 - **Ack remoto lento + cierre de modal = setState en desmontado:** `useMountedRef` en los 3 modales remotos; además bloquear el cierre durante el envío (`disableClose` en `Modal` base) porque cerrar a mitad del ack dejaba la orden en limbo visual.
 - **No se puede desactivar el último método de pago:** guard de negocio simple en el toggle (el checkout quedaría sin forma de cobrar). Y eliminar método = `ConfirmModal`, no acción directa.
 - **B-3 verificado, no resuelto:** `lookup_customer_project` es un RPC SQL público sin rate-limit; throttlearlo bien requiere Edge Function (la IP no llega confiable al SQL). Se documenta como pendiente server-side, no se finge un fix.
+
+## 2026-10-01 — Lecciones del seguimiento post-auditoría
+
+- **Los eventos sin UI son bugs silenciosos:** `SYNC_PUSH_ERROR_EVENT` existía desde Fase 4 pero nadie lo escuchaba. Al implementar un canal de error, verificar siempre el consumidor en la misma tarea.
+- **Los guards de "último X" deben excluir los X falsos:** el guard B-17 contaba virtuales como métodos activos; el checkout solo ofrece reales. Un guard que protege un recurso debe usar la misma definición que el consumidor del recurso.
+- **No confíes en la primera lectura de un modal:** `TransactionModal` tenía `handleClose` corregido pero el botón X seguía llamando al setter directo. Grepear todos los cierres (X, backdrop, Escape, botones Cancelar) antes de dar por cerrado un B-18.
+- **Monitoreo legacy con product_id ajeno = mina de scoping:** en Pro, cualquier código que consulte `product_id='bodega'` es Lite. Desactivarlo es mejor que guardarlo con flags: los 404 por sesión desaparecen y la mina se elimina. Si se necesita la API, un no-op documentado es más seguro que un guard que "casi siempre" cae.
+- **Documentar el trade-off cuando no se endurece:** el lease de `withLock` sin heartbeat es aceptable para escrituras de ms, pero quedó escrito en el código para que el próximo que lo toque lo sepa.

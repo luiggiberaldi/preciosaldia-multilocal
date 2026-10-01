@@ -358,6 +358,7 @@ export default function GastosInternosModal({
             onClose={onClose}
             title="Egresos y Gastos Internos"
             size="max-w-2xl"
+            disableClose={isSubmitting} // Auditoría post-plan (2026-10-01): misma familia que B-18.
         >
             {/* Tabs Selector */}
             <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl mb-6 border border-slate-200/30 dark:border-slate-700/30">

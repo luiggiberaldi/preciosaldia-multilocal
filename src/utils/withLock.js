@@ -82,6 +82,13 @@ export function isLocksSupported() {
  *
  * No es tan fuerte como navigator.locks (relojes y carreras de ~10ms), pero
  * elimina la gran mayoría de las colisiones entre pestañas en la LAN.
+ *
+ * Auditoría post-plan (2026-10-01): compromiso documentado — el lease (8s)
+ * NO tiene heartbeat: una operación crítica que dure más de 8s puede ser
+ * considerada expirada por otra pestaña (doble adquisición). En la práctica
+ * las secciones críticas son escrituras cortas (ms), muy por debajo del
+ * lease. Si alguna vez una operación crítica supera ~5s, hay que añadir
+ * renovación periódica del lease.
  */
 const _STORAGE_LEASE_MS = 8000;
 const _STORAGE_TIMEOUT_MS = 10000;

@@ -111,6 +111,3 @@ export function cleanBusinessData(name, rif) {
 export function titleCaseUnicode(name) {
     return String(name || '').trim().replace(/(^[\p{L}])|([\s]+[\p{L}])/gu, (letter) => letter.toUpperCase());
 }
-
-// Re-export para que los llamadores no necesiten importar dinero.js.
-export { divR };

@@ -17,6 +17,16 @@ const ICON_OPTIONS = [
     { key: 'Fingerprint', Icon: Fingerprint },
 ];
 
+// Auditoría post-plan (2026-10-01): predicado puro del guard B-17. Los
+// virtuales (p. ej. saldo a favor) NO cuentan como método activo porque el
+// checkout solo ofrece métodos reales.
+export function canDeactivatePaymentMethod(methods, id) {
+    const target = (methods || []).find(m => m.id === id);
+    const isEnabled = target ? target.isEnabled !== false : true;
+    if (!isEnabled) return true; // activarlo siempre se permite
+    return (methods || []).some(m => m.id !== id && !m.isVirtual && m.isEnabled !== false);
+}
+
 export default function PaymentMethodsManager({ triggerHaptic }) {
     const [methods, setMethods] = useState([]);
     const [showAdd, setShowAdd] = useState(false);
@@ -82,14 +92,11 @@ export default function PaymentMethodsManager({ triggerHaptic }) {
         triggerHaptic && triggerHaptic();
         // B-17 (2026-10-01): no permitir desactivar el último método activo —
         // sin métodos activos el checkout queda sin forma de cobrar.
-        const target = methods.find(m => m.id === id);
-        const isEnabled = target ? target.isEnabled !== false : true;
-        if (isEnabled) {
-            const othersEnabled = methods.some(m => m.id !== id && m.isEnabled !== false);
-            if (!othersEnabled) {
-                showToast('Debe quedar al menos un método de pago activo', 'warning');
-                return;
-            }
+        // Auditoría post-plan: el guard excluye virtuales (p. ej. saldo a favor),
+        // porque el checkout solo ofrece métodos reales (CheckoutModalPOS).
+        if (!canDeactivatePaymentMethod(methods, id)) {
+            showToast('Debe quedar al menos un método de pago activo', 'warning');
+            return;
         }
         const updated = await togglePaymentMethodEnabled(id);
         setMethods(updated);

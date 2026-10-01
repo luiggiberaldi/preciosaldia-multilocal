@@ -14,7 +14,10 @@ export default function CasheaRemittanceModal({
     const [paymentMethod, setPaymentMethod] = useState('efectivo_usd');
     const [busy, setBusy] = useState(false);
 
-    const panelRef = useModalBehavior(isOpen, onClose);
+    // Auditoría post-plan (2026-10-01): misma familia que B-18 — no cerrar a
+    // mitad del envío (pierde el feedback del ack).
+    const safeClose = () => { if (!busy) onClose(); };
+    const panelRef = useModalBehavior(isOpen, safeClose);
     if (!isOpen || !customer) return null;
 
     const pendiente = customer.casheaDeuda || 0;
@@ -33,17 +36,20 @@ export default function CasheaRemittanceModal({
     const handleConfirm = async () => {
         if (busy) return;
         setBusy(true);
-        await onConfirm({ transactionAmount: amount, currencyMode, paymentMethod: metodoEfectivo });
-        setBusy(false);
-        setAmount('');
+        try {
+            await onConfirm({ transactionAmount: amount, currencyMode, paymentMethod: metodoEfectivo });
+            setAmount('');
+        } finally {
+            setBusy(false);
+        }
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={safeClose}>
             <div ref={panelRef} className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-black text-slate-800 dark:text-white">Registrar remesa de Cashea</h3>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                    <button onClick={safeClose} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                         <X size={18} />
                     </button>
                 </div>
