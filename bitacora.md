@@ -739,3 +739,13 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 - Tests: 805/817 verdes; 2 archivos con fallas preexistentes verificadas sin
   estos cambios (`supervisorLifecycle` referencia un archivo borrado,
   `receivablesDeterministic` falla en el inyector).
+
+## 2026-10-01 — Versión 2.0.0
+- Bump de versión pedido por luigi: `1.7.2` → `2.0.0`.
+- Tocados: `package.json` (solo el campo `version`; se preserva la
+  dependencia `xlsx` del trabajo del importador Excel, sin commitear),
+  `src/components/security/LockScreen.jsx` (badge `v2.0.0`),
+  `src/views/SettingsView.jsx` (`PreciosAlDía Bodegas v2.0.0`).
+- Incluye todo lo de la sesión: QUOTA-003 (deltas de ventas), fix cápsulas
+  Supervisión, COP solo si está activado, dueño retoma última pestaña,
+  cajero sin deslogueo automático.
