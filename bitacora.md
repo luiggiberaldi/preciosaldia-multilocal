@@ -759,3 +759,11 @@ tabla directa), keepalive `--dry-run` contra la Estación real.
 - Verificado: `npm run build` OK, 14/14 tests CloudGate OK, captura con CSS real compilado (modo claro verificado visualmente).
 - Nota: `dark:` usa la escala surface invertida de tokens.css (intencional); modo oscuro conserva las clases del original sin regresión. App en modo claro por defecto.
 - **Desplegado a producción 2026-10-01** (autorizado por luigi): `preciosaldia-multilocal.vercel.app` (deploy `preciosaldia-multilocal-13a9eigju-luiggi2`, status Ready, 200 OK).
+
+## 2026-10-01 — Auditoría de debugging de todos los flujos y modales
+- luigi pidió auditoría minuciosa de debugging de todos los flujos y modales + informe completo.
+- 8 áreas auditadas en paralelo (análisis estático, solo lectura, sin modificar archivos): Auth/seguridad, POS/venta, Productos/inventario, Fiados, Sync/nube, Supervisión/Modo Jefe, Ajustes, inventario de ~40 modales.
+- Resultado: **63 hallazgos** — 5 críticos, 9 altos, 30 medios, 19 bajos. Los 5 críticos fueron re-verificados contra el código.
+- Críticos: (1) clave maestra de emergencia '24457713' hardcodeada en el bundle + admin puede escalar a dueño; (2) ventas offline fuera del día actual nunca se sincronizan (`pushSalesWindow` es código muerto); (3) VENTA_CASHEA nunca registra `casheaDeuda` → remesa incobrable; (4) chip COP de "Plata de hoy" siempre $0 (`amountCop` jamás se escribe); (5) admin configura la clave de emergencia sin re-autenticación.
+- Informe completo entregado: `~/workspace/your_files/auditoria-debugging-pro-2026-10-01.md`.
+- Sin cambios de código en esta pasada (pendiente autorización de luigi para corregir).
