@@ -11,7 +11,7 @@
  * UI: todo redondeado, sin <select> nativo, una sola señal de foco,
  * iconos lucide, sin alert/confirm/prompt.
  */
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     Banknote, Wallet, Coins, CreditCard, Zap, Eye, HandCoins, Scale,
     TrendingUp, TrendingDown, Minus, TriangleAlert, BadgePercent,
@@ -60,13 +60,15 @@ export function FrescuraBadge({ updatedAt }) {
 }
 
 function MonedaChips({ porMoneda }) {
+    // Si el COP no está activado, no aparece en el sistema.
+    const [copEnabled] = useState(() => localStorage.getItem('cop_enabled') === 'true');
     const chips = [
         { icon: Banknote, label: 'USD', value: `$${formatUsd(porMoneda.USD)}`, tone: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
         { icon: Wallet, label: 'Bs', value: `Bs ${formatBs(porMoneda.BS)}`, tone: 'bg-sky-500/10 text-sky-600 dark:text-sky-400' },
-        { icon: Coins, label: 'COP', value: `$ ${formatCop(porMoneda.COP)}`, tone: 'bg-violet-500/10 text-violet-600 dark:text-violet-400' },
+        ...(copEnabled ? [{ icon: Coins, label: 'COP', value: `$ ${formatCop(porMoneda.COP)}`, tone: 'bg-violet-500/10 text-violet-600 dark:text-violet-400' }] : []),
     ];
     return (
-        <div className="grid grid-cols-3 gap-2">
+        <div className={`grid gap-2 ${chips.length > 2 ? 'grid-cols-3' : 'grid-cols-2'}`}>
             {chips.map(({ icon: Icon, label, value, tone }) => (
                 <div key={label} className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl px-2 py-2.5 text-center">
                     <div className={`inline-flex w-7 h-7 rounded-xl items-center justify-center mb-1 ${tone}`}>

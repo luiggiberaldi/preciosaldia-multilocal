@@ -366,7 +366,7 @@ export default function SupervisionView({ triggerHaptic, isActive }) {
 
                 {/* Selector de sede (solo dueño con más de un negocio) */}
                 {owner && negocios.length > 1 && (
-                    <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
+                    <div className="flex gap-2 mb-5 overflow-x-auto pt-2 pb-1">
                         <button
                             onClick={() => { triggerHaptic && triggerHaptic(); setSelected('consolidado'); }}
                             className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-extrabold transition-all outline-none focus:ring-2 focus:ring-brand/50 ${

@@ -703,3 +703,13 @@ archivo de esos tests fue tocado.
 **Verificaciones LIVE hechas hoy:** migración 003 aplicada en producción,
 RPC con anon key → 200 y `[]` ante código inexistente, RLS (anon no lee la
 tabla directa), keepalive `--dry-run` contra la Estación real.
+
+## 2026-10-01 — Fixes Supervisión (cápsulas + COP)
+- **Cápsulas recortadas** (`SupervisionView.jsx`): el contenedor usaba
+  `overflow-x-auto` sin padding arriba; el navegador fuerza `overflow-y:auto`
+  y recortaba la sombra de la cápsula activa. Fix: `pt-2` al contenedor.
+- **COP en Supervisión** (`ModoJefePanel.jsx`, `MonedaChips`): el chip de COP
+  se mostraba siempre. Ahora solo aparece si `cop_enabled==='true'` en
+  localStorage (regla de luigi: sin COP activado, no aparece en el sistema).
+  El grid pasa de 3 a 2 columnas cuando el COP está desactivado. Aplica a
+  "Plata de hoy · detalle" y "Plata de hoy · consolidado".
