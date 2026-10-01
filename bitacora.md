@@ -41,8 +41,9 @@ cierre (`pushSalesWindow`) o bajo demanda. Tráfico modelado: 339MB/mes (138x me
 **Por qué:** El tier gratis de Supabase (5GB egress/mes) no aguanta re-subir
 16MB por venta. El delta es O(tickets de hoy) en vez de O(ventana de 90 días).
 
-**Rama:** `fix/quota-003-sales-delta`. Pendiente: autorización de luigi para
-merge + deploy.
+**Rama:** `fix/quota-003-sales-delta` → merge a `main` (`6a37f2d6`) + push +
+deploy a producción. **Desplegado 2026-10-01:** `preciosaldia-multilocal.vercel.app`
+status Ready (200 OK). luigi autorizó merge+deploy en el chat.
 
 ## 2026-09-30 — Pro: modo demo eliminado + CloudGate (código → login nube → PIN)
 
