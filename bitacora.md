@@ -4,6 +4,23 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-10-01 — Fixeo Fase 4: barcode duplicado, restore con confirmación, backup completo
+
+**Qué:** se cierran los hallazgos ALTO restantes implementables. (1) Guardar un producto con un código de barras ya usado por otro producto ahora pide confirmación explícita: antes, el POS escaneaba y cobraba el producto equivocado en silencio (first-match). (2) Restaurar un backup ya no borra los datos a ciegas: valida, muestra fecha del backup vs última venta local, advierte si el backup es más antiguo y solo restaura tras confirmación. (3) El backup manual ahora incluye las claves que faltaban: ventas en espera (`bodega_pending_holds_v1`), modo de tasa, Cashea, modos de redondeo, modos de moneda de recibo/etiqueta, reportes, datos del negocio y preferencias de UI.
+
+**Cambios:**
+- `src/utils/barcodeNormalizer.js`: nuevo `findBarcodeCollision(rawBarcode, products, editingId)` — resuelve el código como lo haría un escaneo (des-shifteo ES/LATAM) y detecta colisión en otro producto; función pura y testeable.
+- `src/views/ProductsView.jsx`: `handleSave` usa `findBarcodeCollision`; modal de advertencia con "Corregir" / "Guardar igual" (ack por intento, se invalida si cambia el código). No toca el flujo del importador Excel.
+- `src/hooks/useDataImportExport.js`: `handleFileChange` ahora valida el JSON y guarda `{json, backupDate, lastSaleDate, backupIsOlder}` en estado `restoreConfirm` sin borrar nada; nuevo `confirmRestore()` (limpieza selectiva + `applyBackupToStorage` + auditoría + reload) y `cancelRestore()`. Nuevo helper `getLastLocalSaleDate()` que lee `bodega_sales_v1` (timestamp/fecha/date).
+- `src/views/SettingsView.jsx`: modal de confirmación de restore con fecha del backup, última venta local y advertencia fuerte si el backup es más antiguo ("restaurar hará que se pierdan las ventas recientes").
+- `src/config/backupKeys.js`: `IDB_KEYS` += `bodega_pending_holds_v1` (y orden alfabético corregido: `bodega_customer_ledger_v1` antes que `bodega_customers_v1`); `LS_KEYS` += 22 claves duraderas (tasas, redondeo, Cashea, reportes, negocio, UI). Excluidos deliberadamente: sesión/pairing, flags de migración, cachés, timestamps operativos, onboarding y `pda_emergency_pin` (secreto).
+- `tests/fase4.test.js`: 11 tests nuevos (colisión exacta, edición del mismo producto, des-shifteo, match por id, cobertura de listas, sin secretos en backup, PROTECTED_KEYS intactas, orden alfabético).
+- Documento de coordinación (fuera del repo): `~/workspace/your_files/fase-4-diffs-coordinacion-tercero-2026-10-01.md` con los diffs exactos de ALTO-6 (Excel "Reemplazar" vs Circuit Breaker) y M-8 (`parseNumero` con múltiples comas) — NO aplicados, pendientes de revisión con el tercero.
+
+**Verificación:** suite completa 865 passed / 11 skipped / 0 failed; `npm run build` exitoso.
+
+---
+
 ## 2026-10-01 — QUOTA-003: ventas como delta diario (fix de egress)
 
 **Qué:** Cada venta subía la ventana completa de 90 días (~16MB por push con

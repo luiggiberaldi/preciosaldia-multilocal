@@ -101,3 +101,18 @@ export function normalizeBarcode(raw, products = []) {
     // 5. Si no se puede traducir a un formato numérico claro, devolver trimmed original
     return trimmed;
 }
+
+/**
+ * ALTO-7 (2026-10-01): detecta si un código colisionaría con otro producto al
+ * escanear (el POS usa first-match: cobraría el producto equivocado en silencio).
+ * Resuelve el código como lo haría un escaneo (normalizeBarcode) y busca
+ * coincidencia en los demás productos, excluyendo el que se está editando.
+ * @returns {object|null} el producto en conflicto, o null si no hay.
+ */
+export function findBarcodeCollision(rawBarcode, products = [], editingId = null) {
+    const trimmed = (rawBarcode || '').trim();
+    if (!trimmed) return null;
+    const others = (products || []).filter(p => p && p.id !== editingId);
+    const resolved = normalizeBarcode(trimmed, others);
+    return others.find(p => p.barcode === resolved || String(p.id) === resolved) || null;
+}

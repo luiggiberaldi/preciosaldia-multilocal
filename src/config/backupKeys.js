@@ -22,10 +22,11 @@
 export const IDB_KEYS = Object.freeze([
   'abasto_audit_log_v1',
   'bodega_accounts_v2',
-  'bodega_customers_v1',
   'bodega_customer_ledger_v1',
+  'bodega_customers_v1',
   'bodega_payment_methods_v1',
   'bodega_pending_cart_v1',
+  'bodega_pending_holds_v1', // ALTO-9 (2026-10-01): ventas en espera — se perdían al restaurar
   'bodega_products_v1',
   'bodega_sales_v1',
   'bodega_supplier_invoices_v1',
@@ -39,23 +40,46 @@ export const IDB_KEYS = Object.freeze([
  * efímeras, ni abasto-auth-storage (datos locales de sesión/PIN hasheado).
  */
 export const LS_KEYS = Object.freeze([
+  'admin_auto_lock_minutes', // ALTO-9 (2026-10-01)
+  'allow_cash_advance', // ALTO-9 (2026-10-01)
   'allow_negative_stock',
   'auto_cop_enabled',
   'bodega_custom_rate',
   'bodega_inventory_view',
+  'bodega_rate_mode', // ALTO-9 (2026-10-01): modo de tasa
   'bodega_use_auto_rate',
+  'business_address', // ALTO-9 (2026-10-01)
+  'business_direccion', // ALTO-9 (2026-10-01)
+  'business_instagram', // ALTO-9 (2026-10-01)
   'business_name',
+  'business_phone', // ALTO-9 (2026-10-01)
   'business_rif',
+  'business_telefono', // ALTO-9 (2026-10-01)
+  'cart_live_resync', // ALTO-9 (2026-10-01)
+  'cash_advance_default_pct', // ALTO-9 (2026-10-01)
+  'cashea_enabled', // ALTO-9 (2026-10-01)
+  'cashea_min_amount', // ALTO-9 (2026-10-01)
   'catalog_custom_usdt_price',
   'catalog_show_cash_price',
   'catalog_use_auto_usdt',
+  'checkout_bs_round_mode', // ALTO-9 (2026-10-01): modo de redondeo Bs
+  'checkout_bs_round_step', // ALTO-9 (2026-10-01): paso de redondeo Bs
+  'checkout_mode', // ALTO-9 (2026-10-01)
+  'checkout_shell_v2', // ALTO-9 (2026-10-01)
+  'checkout_smallest_usd_bill', // ALTO-9 (2026-10-01)
   'cop_enabled',
   'cop_primary',
+  'label_currency_mode', // ALTO-9 (2026-10-01)
   'monitor_rates_v12',
   'premium_token',
   'printer_paper_width',
+  'receipt_currency_mode', // ALTO-9 (2026-10-01)
+  'reportes_fiado_split', // ALTO-9 (2026-10-01)
+  'reportes_reparacion_ledger', // ALTO-9 (2026-10-01)
   'street_rate_bs',
   'tasa_cop',
+  'theme', // ALTO-9 (2026-10-01)
+  'ui_scale', // ALTO-9 (2026-10-01)
 ]);
 
 /**

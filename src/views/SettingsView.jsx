@@ -196,6 +196,9 @@ export default function SettingsView({ onClose, theme, toggleTheme, triggerHapti
         handleExport,
         handleFileChange,
         handleDeleteAllData,
+        restoreConfirm,
+        confirmRestore,
+        cancelRestore,
     } = useDataImportExport({
         auditLog,
         triggerHaptic,
@@ -435,6 +438,58 @@ export default function SettingsView({ onClose, theme, toggleTheme, triggerHapti
                 onChange={handleFileChange}
                 className="hidden"
             />
+
+            {/* ALTO-8: confirmación explícita antes de restaurar un backup */}
+            {restoreConfirm && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={cancelRestore}>
+                    <div className="bg-surface dark:bg-surface-900 rounded-3xl p-6 w-full max-w-sm shadow-tone-lg animate-in zoom-in-95 duration-200 text-center" onClick={e => e.stopPropagation()}>
+                        <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${restoreConfirm.backupIsOlder ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-500' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-500'}`}>
+                            <AlertTriangle size={32} aria-hidden="true" />
+                        </div>
+                        <h3 className="text-xl font-black text-surface-700 dark:text-white mb-2">Restaurar backup?</h3>
+                        <p className="text-sm text-surface-500 dark:text-surface-400 mb-4">
+                            Esto <strong>reemplazará todos los datos del dispositivo</strong> con el contenido del backup.
+                        </p>
+                        <div className="text-left text-sm bg-surface-100 dark:bg-surface-950 rounded-xl px-4 py-3 mb-4 space-y-1.5">
+                            <div className="flex justify-between gap-2">
+                                <span className="text-surface-500 dark:text-surface-400">Backup del:</span>
+                                <span className="font-bold text-surface-700 dark:text-white">
+                                    {restoreConfirm.backupDate && !Number.isNaN(restoreConfirm.backupDate.getTime())
+                                        ? restoreConfirm.backupDate.toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' })
+                                        : 'fecha desconocida'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                <span className="text-surface-500 dark:text-surface-400">Última venta local:</span>
+                                <span className="font-bold text-surface-700 dark:text-white">
+                                    {restoreConfirm.lastSaleDate
+                                        ? restoreConfirm.lastSaleDate.toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' })
+                                        : 'sin ventas'}
+                                </span>
+                            </div>
+                        </div>
+                        {restoreConfirm.backupIsOlder && (
+                            <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mb-4">
+                                El backup es MÁS ANTIGUO que tu última venta: restaurar hará que se pierdan las ventas recientes.
+                            </p>
+                        )}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={cancelRestore}
+                                className="flex-1 py-3 min-h-[48px] text-sm font-bold text-surface-600 dark:text-surface-300 bg-surface-100 dark:bg-surface-800 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-700 active:scale-95 transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmRestore}
+                                className="flex-1 py-3 min-h-[48px] text-sm font-bold text-white bg-blue-500 rounded-xl hover:bg-blue-600 active:scale-95 transition-all"
+                            >
+                                Sí, restaurar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <ShareInventoryModal
                 isOpen={isShareOpen}

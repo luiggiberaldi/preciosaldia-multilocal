@@ -23,6 +23,26 @@ export function useDataImportExport({
 }) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteInput, setDeleteInput] = useState('');
+    // ALTO-8 (2026-10-01): confirmación explícita antes de restaurar.
+    // { json, backupDate, lastSaleDate, backupIsOlder }
+    const [restoreConfirm, setRestoreConfirm] = useState(null);
+
+    // Fecha de la última venta local (para comparar contra el backup).
+    const getLastLocalSaleDate = async () => {
+        try {
+            const sales = await storageService.getItem('bodega_sales_v1', []);
+            if (!Array.isArray(sales) || sales.length === 0) return null;
+            let max = null;
+            for (const s of sales) {
+                const raw = s?.timestamp || s?.fecha || s?.date;
+                if (!raw) continue;
+                const d = new Date(raw);
+                if (Number.isNaN(d.getTime())) continue;
+                if (!max || d > max) max = d;
+            }
+            return max;
+        } catch { return null; }
+    };
 
     const handleExport = async () => {
         try {
@@ -85,28 +105,17 @@ export function useDataImportExport({
                 // dispositivo. Un v2.0 sin data.idb o vacío ya no destruye los datos.
                 validateBackupJson(json);
 
-                // ── FASE 1: LIMPIEZA SELECTIVA (HOOK-025) ─────────────────────────
-                // HOOK-025: NO usar `localforage.clear()` — borraría flags críticos
-                // como `bodega_autobackup_v1`. La limpieza ahora
-                // vive en backupRestoreService.clearAppKeysForRestore (mismo contrato:
-                // solo claves del catálogo canónico, preservando PROTECTED_KEYS y sesión).
-                setStatusMessage('Limpiando datos del dispositivo...');
-                await clearAppKeysForRestore();
-
-                // ── FASE 2: RESTAURACIÓN (directo a localforage, sin eventos) ───────
-                setStatusMessage('Restaurando backup...');
-
-                await applyBackupToStorage(json, { writeMode: 'direct' });
-
-                setImportStatus('success');
-                setStatusMessage('Restauracion completa. Sincronizando con la nube...');
-                localStorage.setItem('pda_backup_imported_flag', 'true');
-                const idbKeyList = json.data?.idb ? Object.keys(json.data.idb).join(', ') : 'legacy';
-                auditLog('SISTEMA', 'BACKUP_IMPORTADO', `Backup restaurado (${json.source || 'archivo'}) — ${idbKeyList}`);
-                triggerHaptic?.();
-
-                // Damos tiempo a guardar los datos antes de reiniciar
-                setTimeout(() => window.location.reload(), 1200);
+                // ALTO-8 (2026-10-01): no restaurar a ciegas. Mostrar fecha del
+                // backup vs última venta local y pedir confirmación explícita.
+                const backupDate = json.timestamp ? new Date(json.timestamp) : null;
+                const lastSaleDate = await getLastLocalSaleDate();
+                const backupIsOlder = Boolean(
+                    backupDate && !Number.isNaN(backupDate.getTime()) &&
+                    lastSaleDate && backupDate < lastSaleDate
+                );
+                setRestoreConfirm({ json, backupDate, lastSaleDate, backupIsOlder });
+                setImportStatus(null);
+                setStatusMessage('Esperando confirmación para restaurar el backup...');
             } catch (error) {
                 console.error('[IMPORT ERROR]', error);
                 setImportStatus('error');
@@ -114,6 +123,48 @@ export function useDataImportExport({
             }
         };
         reader.readAsText(file);
+    };
+
+    const cancelRestore = () => {
+        setRestoreConfirm(null);
+        setImportStatus(null);
+        setStatusMessage('');
+    };
+
+    const confirmRestore = async () => {
+        const pending = restoreConfirm;
+        if (!pending) return;
+        const json = pending.json;
+        setRestoreConfirm(null);
+        try {
+            setImportStatus('loading');
+            // ── FASE 1: LIMPIEZA SELECTIVA (HOOK-025) ─────────────────────────
+            // HOOK-025: NO usar `localforage.clear()` — borraría flags críticos
+            // como `bodega_autobackup_v1`. La limpieza ahora
+            // vive en backupRestoreService.clearAppKeysForRestore (mismo contrato:
+            // solo claves del catálogo canónico, preservando PROTECTED_KEYS y sesión).
+            setStatusMessage('Limpiando datos del dispositivo...');
+            await clearAppKeysForRestore();
+
+            // ── FASE 2: RESTAURACIÓN (directo a localforage, sin eventos) ───────
+            setStatusMessage('Restaurando backup...');
+
+            await applyBackupToStorage(json, { writeMode: 'direct' });
+
+            setImportStatus('success');
+            setStatusMessage('Restauracion completa. Sincronizando con la nube...');
+            localStorage.setItem('pda_backup_imported_flag', 'true');
+            const idbKeyList = json.data?.idb ? Object.keys(json.data.idb).join(', ') : 'legacy';
+            auditLog('SISTEMA', 'BACKUP_IMPORTADO', `Backup restaurado (${json.source || 'archivo'}) — ${idbKeyList}`);
+            triggerHaptic?.();
+
+            // Damos tiempo a guardar los datos antes de reiniciar
+            setTimeout(() => window.location.reload(), 1200);
+        } catch (error) {
+            console.error('[RESTORE ERROR]', error);
+            setImportStatus('error');
+            setStatusMessage('Error: no se pudo restaurar el backup.');
+        }
     };
 
     const handleDeleteAllData = async () => {
@@ -143,6 +194,9 @@ export function useDataImportExport({
         setShowDeleteConfirm,
         deleteInput,
         setDeleteInput,
+        restoreConfirm,
+        confirmRestore,
+        cancelRestore,
         handleExport,
         handleFileChange,
         handleDeleteAllData,

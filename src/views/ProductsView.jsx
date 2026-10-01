@@ -5,6 +5,7 @@ import { storageService } from '../utils/storageService';
 import { showToast } from '../components/Toast';
 import { Package, Plus, Trash2, X, Store, Tag, Pencil, Banknote, Search, ChevronLeft, ChevronRight, AlertTriangle, Box, LayoutGrid, List, Minus, ArrowUpDown, Clock, Percent, Printer, CheckSquare } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { findBarcodeCollision } from '../utils/barcodeNormalizer';
 import { ProductShareModal } from '../components/ProductShareModal';
 import { useAuthStore } from '../hooks/store/useAuthStore';
 
@@ -86,6 +87,9 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [highPriceConfirm, setHighPriceConfirm] = useState(null); // { price, pendingData }
+    // ALTO-7 (2026-10-01): { resolved, conflictingName } cuando el código ya lo usa otro producto.
+    const [dupBarcode, setDupBarcode] = useState(null);
+    const dupBarcodeAckRef = useRef(''); // "editingId:codigo" ya confirmado por el usuario
 
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isBulkPriceOpen, setIsBulkPriceOpen] = useState(false);
@@ -393,6 +397,19 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
             category, lowStockAlert
         }, effectiveRate);
 
+        // ALTO-7 (2026-10-01): un código duplicado hace que el escáner cobre el
+        // producto equivocado. Se detecta la colisión como lo haría un escaneo
+        // y se pide confirmación antes de guardar.
+        const trimmedBarcode = (barcode || '').trim();
+        if (trimmedBarcode) {
+            const conflict = findBarcodeCollision(trimmedBarcode, products, editingId);
+            const ackKey = `${editingId || 'new'}:${trimmedBarcode}`;
+            if (conflict && dupBarcodeAckRef.current !== ackKey) {
+                setDupBarcode({ resolved: trimmedBarcode, conflictingName: conflict.name, ackKey });
+                return;
+            }
+        }
+
         // Advertencia si el precio parece inusualmente alto
         const parsedPrice = parseFloat(priceUsd) || 0;
         if (parsedPrice > 500 && !highPriceConfirm) {
@@ -558,6 +575,8 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
 
     const handleClose = () => {
         resetForm();
+        dupBarcodeAckRef.current = '';
+        setDupBarcode(null);
         setPriceCop('');
         setUnitPriceCop('');
         setCostCop('');
@@ -1020,6 +1039,43 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                     className="flex-1 py-2.5 min-h-[48px] rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors"
                                 >
                                     Sí, es correcto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Código de barras duplicado (ALTO-7) */}
+            {dupBarcode && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+                    <div className="bg-surface dark:bg-surface-900 rounded-2xl p-6 max-w-sm w-full shadow-tone-lg">
+                        <div className="flex flex-col items-center text-center space-y-3">
+                            <div className="w-14 h-14 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
+                                <AlertTriangle size={28} className="text-amber-500" aria-hidden="true" />
+                            </div>
+                            <h4 className="text-base font-black text-surface-700 dark:text-white">Código duplicado</h4>
+                            <p className="text-sm text-surface-500 dark:text-surface-400">
+                                El código <span className="font-black text-amber-600">{dupBarcode.resolved}</span> ya
+                                lo usa <span className="font-bold">«{dupBarcode.conflictingName}»</span>. Si lo guardas,
+                                al escanear se cobrará el producto equivocado.
+                            </p>
+                            <div className="flex gap-2 w-full pt-1">
+                                <button
+                                    onClick={() => setDupBarcode(null)}
+                                    className="flex-1 py-2.5 min-h-[48px] rounded-xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                                >
+                                    Corregir
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        dupBarcodeAckRef.current = dupBarcode.ackKey;
+                                        setDupBarcode(null);
+                                        handleSave();
+                                    }}
+                                    className="flex-1 py-2.5 min-h-[48px] rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors"
+                                >
+                                    Guardar igual
                                 </button>
                             </div>
                         </div>
