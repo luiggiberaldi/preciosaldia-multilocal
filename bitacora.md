@@ -29,7 +29,7 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 **Nota:** el estado vacío de ProductsView muestra "NUEVO PRODUCTO"/"IMPORTAR EXCEL" sin chequear `isCajero` (código del tercero, no tocado por regla). Con los inventarios sembrados no aparece; coordinar con el tercero si se quiere ocultar.
 
-**Deploy:** 2026-10-01 ~20:25 — `vercel --prod` manual → `preciosaldia-multilocal-7oy51nyzi-luiggi2.vercel.app` ● Ready (Production, 30s). Alias `https://preciosaldia-multilocal.vercel.app` → 200 OK. El push estuvo bloqueado horas por la red del sandbox; se diagnosticó que el uploader de fotos (4 workers constantes a Supabase) saturaba el proxy de egress — al pausarlo, el push pasó en 5s.
+**Deploy:** 2026-10-01 ~21:10 — `vercel --prod` manual → `preciosaldia-multilocal-b6x6oppsy-luiggi2.vercel.app` ● Ready (Production). Incluye: fix admin-switch (5a8514a) + fix paginador (c5aad57).
 
 ---
 
