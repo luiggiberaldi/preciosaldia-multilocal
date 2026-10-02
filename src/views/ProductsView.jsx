@@ -787,7 +787,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                             </button>
                         </div>
                     )}
-                    <div className="flex-1 overflow-y-auto pb-4 scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto pb-28 scrollbar-hide">
                         {viewMode === 'grid' ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
                             {paginatedProducts.map(p => (
