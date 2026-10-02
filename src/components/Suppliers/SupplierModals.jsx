@@ -96,6 +96,8 @@ export function AddSupplierModal({ onClose, onSave, editingSupplier = null }) {
 }
 
 export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClose, onSave }) {
+    const [invoiceNumber, setInvoiceNumber] = useState('');
+    const [dueDate, setDueDate] = useState('');
     // Moneda de entrada: USD o BS (conversión bidireccional a tasa BCV)
     const [currencyMode, setCurrencyMode] = useState('USD');
     const [amountInput, setAmountInput] = useState('');

@@ -1185,3 +1185,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Pedido de:** Luigi (el nombre se recortaba en el nav).
 **Cambio:** label del tab y título de la vista cambiados a "Control".
 **Versión:** 2.0.8.
+
+## 2026-10-02 ~19:42 — v2.0.9: fix crash en Cargar Factura
+**Reportado por:** Luigi (console: `invoiceNumber is not defined`).
+**Causa:** al agregar el selector USD/Bs se borraron accidentalmente las declaraciones de `invoiceNumber` y `dueDate`.
+**Fix:** restauradas las declaraciones.
+**Versión:** 2.0.9.
