@@ -1104,3 +1104,11 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Reportado por:** Luigi (screenshot mostrando "Actualizando..." sin avanzar).
 **Causa:** `applyUpdate()` llamaba a `window.__pdaUpdateSW(true)` sin timeout. Si la función del PWA se colgaba, el botón quedaba en "Actualizando..." indefinidamente.
 **Fix:** timeout de seguridad de 5 segundos — si la actualización no completa, fuerza `window.location.reload()`.
+
+## 2026-10-02 ~18:20 — v2.0.1: fix selector de sede en login
+**Reportado por:** Luigi (el selector no aparecía después de cambiar de sede).
+**Causa:** el `useNegociosStore` (zustand persist) podía no estar hidratado cuando el `LockScreen` renderizaba, dejando `negocios` vacío y ocultando el selector (condición `length > 1`).
+**Fix (`src/components/security/LockScreen.jsx`):**
+- Fallback a `localStorage` directo (`pda-negocios-registry`) si el store aún no hidrató.
+- Tanto `negocios` como `negocioActivoId` tienen fallback.
+**Versión:** 2.0.1 (package.json, LockScreen, SettingsView).

@@ -11,7 +11,32 @@ const DUENO_PSEUDO_USER = { id: 'dueno', nombre: 'Dueño' };
 
 export default function LockScreen({ installPrompt, onInstall, showIOSButton, onShowIOSInstall, onOpenRemotion }) {
   const { usuarios, login, loginDirect, requireCajeroPin, requireAdminPin, resetPinEmergency, loginAsDueno } = useAuthStore();
-  const { negocios, negocioActivoId, activarNegocio } = useNegociosStore();
+  const { negocios: negociosStore, negocioActivoId, activarNegocio } = useNegociosStore();
+  // FIX (2.0.1): fallback a localStorage por si el store aún no hidrató.
+  // El registro es GLOBAL (pda-negocios-registry) y se persiste directo.
+  const negocios = useMemo(() => {
+    if (negociosStore && negociosStore.length > 0) return negociosStore;
+    try {
+      const raw = localStorage.getItem('pda-negocios-registry');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const state = parsed?.state ?? parsed;
+        if (state?.negocios && Array.isArray(state.negocios)) return state.negocios;
+      }
+    } catch { /* noop */ }
+    return negociosStore || [];
+  }, [negociosStore]);
+  const activeId = negocioActivoId || (() => {
+    try {
+      const raw = localStorage.getItem('pda-negocios-registry');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const state = parsed?.state ?? parsed;
+        return state?.negocioActivoId || null;
+      }
+    } catch { /* noop */ }
+    return null;
+  })();
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDuenoPin, setShowDuenoPin] = useState(false);
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
@@ -80,7 +105,7 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
 
   // SEDE-LOCKSCREEN: solicitar cambio de sede (pide PIN del dueño)
   const handleNegocioClick = (negocioId) => {
-    if (negocioId === negocioActivoId) return;
+    if (negocioId === activeId) return;
     setPendingNegocioId(negocioId);
     setShowNegocioPin(true);
   };
@@ -143,7 +168,7 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
       {/* Version Tag - Top Left */}
       <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
         <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-900/5 dark:bg-slate-100/10 border border-slate-900/10 dark:border-slate-100/10 rounded-xl backdrop-blur-md">
-          <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 tracking-wider">v2.0.0</span>
+          <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 tracking-wider">v2.0.1</span>
         </div>
       </div>
 
@@ -181,7 +206,7 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               {(negocios || []).map((n) => {
-                const isActive = n.id === negocioActivoId;
+                const isActive = n.id === activeId;
                 return (
                   <button
                     key={n.id}
