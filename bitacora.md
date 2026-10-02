@@ -1037,3 +1037,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `App.jsx`: expone `loading` de `useRates()` como `ratesLoading`.
 - `DashboardView.jsx`: recibe `ratesLoading` y lo pasa a `MonitorView` como `loading`.
 **Nota:** la prueba live corría una versión cacheada del PWA (aviso "Nueva versión disponible" visible). Los fixes requieren actualizar la app.
+
+### Fix botón Sincronizar (2026-10-02)
+**Problema:** en la prueba live, pulsar "Sincronizar con la Nube" no mostraba ningún mensaje ni hacía nada.
+**Causa:** el `onClick` del botón solo mostraba toast si NO había licencia; si había licencia, no llamaba a nada. Recibía `handleSyncCloud` por props pero nunca lo invocaba.
+**Cambio:** `SettingsTabSistema.jsx` ahora llama a `handleSyncCloud()` cuando hay licencia.
+**Deploy:** producción Ready.
