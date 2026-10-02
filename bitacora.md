@@ -1142,3 +1142,12 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Pedido de:** Luigi.
 **Cambio (`src/components/security/LoginAvatar.jsx`):** el admin ahora usa degradado azul (`from-blue-500 to-indigo-600`) para distinguirse del cajero (verde). Colores finales: dueño dorado, admin azul, cajero verde.
 **Versión:** 2.0.2.
+
+## 2026-10-02 ~19:00 — v2.0.3: clave emergencia con "anótala ahora" + hash + 8 chars
+**Pedido de:** Luigi.
+**Cambios:**
+1. **Pantalla "anótala ahora"** (paso 3): después de crear la clave se muestra en grande una sola vez, con checkbox "Ya la anoté en un lugar seguro" obligatorio para cerrar.
+2. **Hash SHA-256**: la clave ya no se guarda en texto plano (`pda_emergency_pin_hash`). Las claves legacy en texto plano se migran automáticamente al usarlas.
+3. **Mínimo 8 caracteres** (antes 6).
+4. **Sin sugerencias de autocompletado** en todos los campos de PIN (`autoComplete="off"`).
+**Versión:** 2.0.3.

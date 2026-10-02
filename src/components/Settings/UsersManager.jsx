@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../hooks/store/useAuthStore';
 import { showToast } from '../Toast';
-import { verifyPin } from '../../utils/crypto';
+import { verifyPin, sha256Hex } from '../../utils/crypto';
 import { PIN_POLICY } from '../../utils/securityConstants';
 import { canCreateRole, canManageUser, hasAdminAccess } from '../../utils/roles';
 import { getDuenoSession, verifyMasterPin } from '../../utils/duenoAuth';
@@ -63,6 +63,7 @@ function PinInput({ value, onChange, label, length = 6, showDigits = false }) {
                     type={showDigits ? "text" : "password"}
                     inputMode="numeric"
                     maxLength={1}
+                    autoComplete="off"
                     value={digits[i]?.trim() || ''}
                     onChange={e => handleChange(i, e.target.value)}
                     onKeyDown={e => handleKeyDown(i, e)}
@@ -203,6 +204,9 @@ export default function UsersManager({ triggerHaptic }) {
     const [emergencyStep, setEmergencyStep] = useState(1);
     const [masterPinCheck, setMasterPinCheck] = useState('');
     const [showMasterPinCheckText, setShowMasterPinCheckText] = useState(false);
+    // Paso 3: mostrar la clave una vez para anotarla
+    const [newEmergencyKey, setNewEmergencyKey] = useState('');
+    const [emergencyKeyNoted, setEmergencyKeyNoted] = useState(false);
     const [isDuenoSession] = useState(() => getDuenoSession() !== null);
     const [showMasterPinChange, setShowMasterPinChange] = useState(false);
 
@@ -408,6 +412,8 @@ export default function UsersManager({ triggerHaptic }) {
                             setShowEmergencyKeyText(false);
                             setMasterPinCheck('');
                             setShowMasterPinCheckText(false);
+                            setNewEmergencyKey('');
+                            setEmergencyKeyNoted(false);
                             setEmergencyStep(1);
                             setShowEmergencyConfigModal(true);
                             triggerHaptic?.();
@@ -803,8 +809,7 @@ export default function UsersManager({ triggerHaptic }) {
                         </div>
 
                         {emergencyStep === 1 ? (
-                            /* PASO 1 (CRÍTICO-5): re-autenticar al dueño con su PIN maestro
-                               antes de permitir configurar la clave de emergencia. */
+                            /* PASO 1 (CRÍTICO-5): re-autenticar al dueño con su PIN maestro                               antes de permitir configurar la clave de emergencia. */
                             <div className="mb-5 space-y-3">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5 ml-1">PIN maestro del dueño</label>
@@ -851,10 +856,10 @@ export default function UsersManager({ triggerHaptic }) {
                                     Cancelar
                                 </button>
                             </div>
-                        ) : (
+                        ) : emergencyStep === 2 ? (
                         <>
                         {/* Explicación primera vez: si no había clave configurada */}
-                        {!localStorage.getItem('pda_emergency_pin') && (
+                        {!localStorage.getItem('pda_emergency_pin') && !localStorage.getItem('pda_emergency_pin_hash') && (
                             <div className="mb-4 flex gap-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-2xl px-3.5 py-3">
                                 <AlertTriangle size={16} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                                 <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-200">
@@ -910,27 +915,35 @@ export default function UsersManager({ triggerHaptic }) {
 
                         <div className="flex flex-col gap-2">
                             <button
-                                onClick={() => {
+                                onClick={async () => {
                                     const val = emergencyKeyInput.trim();
                                     const confirmVal = emergencyKeyConfirm.trim();
 
                                     if (val !== confirmVal) {
                                         return showToast('Las claves no coinciden', 'error');
                                     }
-                                    if (val.length > 0 && val.length < 6) {
-                                        return showToast('La clave debe tener al menos 6 caracteres', 'error');
+                                    if (val.length > 0 && val.length < 8) {
+                                        return showToast('La clave debe tener al menos 8 caracteres', 'error');
                                     }
                                     if (!val) {
                                         // Fase 1 (CRÍTICO-1): ya no hay "valor por defecto".
                                         // Vacío = deshabilitar el flujo de emergencia.
                                         localStorage.removeItem('pda_emergency_pin');
+                                        localStorage.removeItem('pda_emergency_pin_hash');
                                         showToast('Recuperación de emergencia deshabilitada', 'success');
-                                    } else {
-                                        localStorage.setItem('pda_emergency_pin', val);
-                                        showToast('Clave Maestra de Emergencia actualizada', 'success');
+                                        triggerHaptic?.();
+                                        setShowEmergencyConfigModal(false);
+                                        return;
                                     }
+                                    // Hashear antes de guardar (2026-10-02)
+                                    const hash = await sha256Hex(val);
+                                    localStorage.setItem('pda_emergency_pin_hash', hash);
+                                    localStorage.removeItem('pda_emergency_pin'); // limpiar legacy
+                                    // Paso 3: mostrar para anotar
+                                    setNewEmergencyKey(val);
+                                    setEmergencyKeyNoted(false);
+                                    setEmergencyStep(3);
                                     triggerHaptic?.();
-                                    setShowEmergencyConfigModal(false);
                                 }}
                                 className="w-full py-3 text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-2xl active:scale-95 transition-all shadow-md shadow-amber-500/20"
                             >
@@ -959,6 +972,52 @@ export default function UsersManager({ triggerHaptic }) {
                             </button>
                         </div>
                         </>
+                        ) : (
+                        /* PASO 3: mostrar la clave una vez para anotarla */
+                        <div className="space-y-4">
+                            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-4 text-center">
+                                <p className="text-[11px] font-bold text-amber-800 dark:text-amber-200 mb-2 uppercase tracking-wider">
+                                    Anota esta clave ahora
+                                </p>
+                                <p className="text-2xl font-black tracking-widest text-slate-800 dark:text-white bg-white dark:bg-slate-800 rounded-xl py-3 px-4 border-2 border-dashed border-amber-300 dark:border-amber-700 select-all">
+                                    {newEmergencyKey}
+                                </p>
+                                <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-3 leading-relaxed">
+                                    Esta es la <strong>única vez</strong> que la verás. Sin ella no podrás
+                                    recuperar PINs olvidados. Guárdala en un lugar seguro.
+                                </p>
+                            </div>
+                            <label className="flex gap-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={emergencyKeyNoted}
+                                    onChange={(e) => setEmergencyKeyNoted(e.target.checked)}
+                                    className="mt-1 w-4 h-4 accent-amber-600 shrink-0"
+                                />
+                                <span className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">
+                                    <strong>Ya la anoté en un lugar seguro</strong> y entiendo que si la pierdo
+                                    no hay forma de recuperarla.
+                                </span>
+                            </label>
+                            <button
+                                onClick={() => {
+                                    if (!emergencyKeyNoted) {
+                                        return showToast('Confirma que la anotaste para continuar', 'error');
+                                    }
+                                    setNewEmergencyKey('');
+                                    setEmergencyKeyNoted(false);
+                                    setEmergencyKeyInput('');
+                                    setEmergencyKeyConfirm('');
+                                    showToast('Clave Maestra de Emergencia actualizada', 'success');
+                                    triggerHaptic?.();
+                                    setShowEmergencyConfigModal(false);
+                                }}
+                                disabled={!emergencyKeyNoted}
+                                className="w-full py-3 text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-2xl active:scale-95 transition-all shadow-md shadow-amber-500/20 disabled:opacity-40 disabled:pointer-events-none"
+                            >
+                                Entendido, cerrar
+                            </button>
+                        </div>
                         )}
                     </div>
                 </div>

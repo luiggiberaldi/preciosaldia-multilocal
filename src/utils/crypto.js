@@ -178,3 +178,17 @@ export function fromBase64(b64) {
 }
 
 export default { hashPin, verifyPin, generateSalt, constantTimeEqual, toBase64, fromBase64 };
+
+/**
+ * SHA-256 simple (hex) para la clave de emergencia.
+ * No usa salt porque la clave es de alta entropía (8+ caracteres libres).
+ * @param {string} text
+ * @returns {Promise<string>} hash en hexadecimal
+ */
+export async function sha256Hex(text) {
+    const data = _enc.encode(text);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+}

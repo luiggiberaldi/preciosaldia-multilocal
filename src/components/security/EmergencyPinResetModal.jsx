@@ -3,6 +3,7 @@ import { ShieldAlert, KeyRound, CheckCircle2, AlertCircle, X, Lock, Crown, Eye, 
 import CustomSelect from '../CustomSelect';
 import { LOGIN_RATE_LIMIT } from '../../utils/securityConstants';
 import { setMasterPin } from '../../utils/duenoAuth';
+import { sha256Hex } from '../../utils/crypto';
 import { logEvent } from '../../services/auditService';
 
 /**
@@ -48,10 +49,14 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
     const [duenoConfirmed, setDuenoConfirmed] = useState(false);
 
     // Sin clave personalizada configurada por el dueño, el flujo no existe.
-    const customMasterKey = (() => {
+    // Soporta hash (nuevo) y texto plano (legacy, se migra al usar).
+    const storedHash = (() => {
+        try { return localStorage.getItem(EMERGENCY_KEY_LS + '_hash') || ''; } catch { return ''; }
+    })();
+    const legacyPlain = (() => {
         try { return localStorage.getItem(EMERGENCY_KEY_LS) || ''; } catch { return ''; }
     })();
-    const isDisabled = !customMasterKey;
+    const isDisabled = !storedHash && !legacyPlain;
 
     const _lockoutRemainingMs = () => {
         const rl = _readRateLimit();
@@ -60,7 +65,7 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
     };
 
     // Validar clave de emergencia (con rate-limit persistido)
-    const handleVerifyEmergencyKey = (e) => {
+    const handleVerifyEmergencyKey = async (e) => {
         e.preventDefault();
         setError('');
 
@@ -72,7 +77,25 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
         }
 
         const trimmedInput = emergencyInput.trim();
-        if (trimmedInput && trimmedInput === customMasterKey) {
+        let valid = false;
+        if (trimmedInput) {
+            if (storedHash) {
+                // Nuevo: comparar hashes
+                const inputHash = await sha256Hex(trimmedInput);
+                valid = inputHash === storedHash;
+            } else if (legacyPlain) {
+                // Legacy: texto plano (se migra a hash al usar)
+                valid = trimmedInput === legacyPlain;
+                if (valid) {
+                    try {
+                        const h = await sha256Hex(trimmedInput);
+                        localStorage.setItem(EMERGENCY_KEY_LS + '_hash', h);
+                        localStorage.removeItem(EMERGENCY_KEY_LS);
+                    } catch { /* best-effort */ }
+                }
+            }
+        }
+        if (valid) {
             _writeRateLimit({});
             setStep(2);
             setError('');
@@ -228,6 +251,7 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                             <div className="relative">
                                 <KeyRound size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
+                                    autoComplete="off"
                                     type={showEmergencyText ? "text" : "password"}
                                     value={emergencyInput}
                                     onChange={(e) => setEmergencyInput(e.target.value)}
@@ -293,6 +317,7 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                             </label>
                             <div className="relative">
                                 <input
+                                    autoComplete="off"
                                     type={showNewPinText ? "text" : "password"}
                                     maxLength={6}
                                     value={newPin}
@@ -317,6 +342,7 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                             </label>
                             <div className="relative">
                                 <input
+                                    autoComplete="off"
                                     type={showNewPinText ? "text" : "password"}
                                     maxLength={6}
                                     value={confirmPin}
@@ -338,6 +364,7 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                         {isDuenoSelected && (
                             <label className="flex gap-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-3.5 cursor-pointer">
                                 <input
+                                    autoComplete="off"
                                     type="checkbox"
                                     checked={duenoConfirmed}
                                     onChange={(e) => setDuenoConfirmed(e.target.checked)}
