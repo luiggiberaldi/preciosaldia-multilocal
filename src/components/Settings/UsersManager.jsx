@@ -184,6 +184,7 @@ export default function UsersManager({ triggerHaptic }) {
 
     const [changePinUser, setChangePinUser] = useState(null);
     const [changePinStep, setChangePinStep] = useState(1); // 1 = actual, 2 = nuevo, 3 = confirmar
+    const [changePinBypass, setChangePinBypass] = useState(false); // true = admin/dueño cambiando PIN ajeno
     const [currentPinValue, setCurrentPinValue] = useState('');
     const [pinValue, setPinValue] = useState('');
     const [confirmPinValue, setConfirmPinValue] = useState('');
@@ -327,6 +328,7 @@ export default function UsersManager({ triggerHaptic }) {
         // Reset
         setChangePinUser(null);
         setChangePinStep(1);
+        setChangePinBypass(false);
         setCurrentPinValue('');
         setPinValue('');
         setConfirmPinValue('');
@@ -371,6 +373,7 @@ export default function UsersManager({ triggerHaptic }) {
                             setShowPin(false);
                             const isSelf = u.id === usuarioActivo?.id;
                             const isBypass = u.requirePin === false || (!isSelf && hasAdminAccess(usuarioActivo));
+                            setChangePinBypass(isBypass);
                             setChangePinStep(isBypass ? 2 : 1);
                         }}
                         onEditName={u => { setEditNameUser(u); setEditNameValue(u.nombre); }}
@@ -535,6 +538,7 @@ export default function UsersManager({ triggerHaptic }) {
                     onClick={() => { 
                         setChangePinUser(null); 
                         setChangePinStep(1);
+                        setChangePinBypass(false);
                         setCurrentPinValue(''); 
                         setPinValue(''); 
                         setConfirmPinValue(''); 
@@ -562,15 +566,27 @@ export default function UsersManager({ triggerHaptic }) {
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-light dark:bg-surface-800/30 rounded-full mt-3 border border-indigo-200/50 dark:border-surface-700/50">
                                 <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
                                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-brand">
-                                    {changePinStep === 1 && 'Paso 1 de 3: Identidad'}
-                                    {changePinStep === 2 && 'Paso 2 de 3: Nuevo PIN'}
-                                    {changePinStep === 3 && 'Paso 3 de 3: Confirmación'}
+                                    {changePinBypass
+                                        ? (changePinStep === 2 ? 'Paso 1 de 2: Nuevo PIN' : 'Paso 2 de 2: Confirmación')
+                                        : (changePinStep === 1 ? 'Paso 1 de 3: Identidad'
+                                            : changePinStep === 2 ? 'Paso 2 de 3: Nuevo PIN'
+                                            : 'Paso 3 de 3: Confirmación')}
                                 </span>
                             </div>
 
+                            {/* Banner cuando un admin/dueño cambia PIN ajeno */}
+                            {changePinBypass && (
+                                <div className="mt-3 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-full">
+                                    <Shield size={12} className="text-amber-600 dark:text-amber-400" />
+                                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                                        Cambiando el PIN de {changePinUser.nombre} como {isDuenoSession ? 'dueño' : 'administrador'}
+                                    </span>
+                                </div>
+                            )}
+
                             {/* Indicador de pasos visual */}
                             <div className="flex justify-center gap-1.5 mt-3">
-                                {[1, 2, 3].map(step => (
+                                {(changePinBypass ? [2, 3] : [1, 2, 3]).map(step => (
                                     <div
                                         key={step}
                                         className={`h-1.5 rounded-full transition-all duration-300 ${

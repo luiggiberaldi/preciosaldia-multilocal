@@ -42,6 +42,7 @@ function PinBoxes({ value, onChange, idPrefix, visible }) {
                     type={visible ? 'text' : 'password'}
                     inputMode="numeric"
                     maxLength={1}
+                    autoComplete="off"
                     value={digits[i]?.trim() || ''}
                     onChange={(e) => handleChange(i, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(i, e)}

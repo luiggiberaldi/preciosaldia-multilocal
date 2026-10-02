@@ -108,6 +108,7 @@ export default function LoginPinModal({ isOpen, onClose, user, onSubmit }) {
         )}
 
         <input
+                                    autoComplete="off"
           ref={inputRef}
           type="tel"
           maxLength={pinLength}

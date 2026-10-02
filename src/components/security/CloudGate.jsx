@@ -285,6 +285,7 @@ export default function CloudGate({ onReady }) {
                 />
                 <ErrorMsg msg={error} />
                 <input
+                                    autoComplete="off"
                     className={`${inputCode} mb-4`}
                     placeholder="LIC-XXXXXX"
                     value={code}
@@ -324,6 +325,7 @@ export default function CloudGate({ onReady }) {
                     <div className="relative">
                         <Mail className={inputIconCls} />
                         <input
+                                    autoComplete="off"
                             className={`${inputBase} pl-10`}
                             type="email"
                             placeholder="correo@negocio.com"
@@ -336,6 +338,7 @@ export default function CloudGate({ onReady }) {
                     <div className="relative">
                         <Lock className={inputIconCls} />
                         <input
+                                    autoComplete="off"
                             className={`${inputBase} pl-10`}
                             type="password"
                             placeholder="Contraseña"
@@ -346,6 +349,7 @@ export default function CloudGate({ onReady }) {
                     </div>
                     <div className="relative">
                         <input
+                                    autoComplete="off"
                             className={inputBase}
                             type="text"
                             placeholder="Nombre de este equipo (ej: Caja 1)"

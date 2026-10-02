@@ -29,7 +29,6 @@ import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 import { TicketClientModal, DeleteHistoryModal, RecycleOfferModal } from '../components/Dashboard/DashboardModals';
 import { useReveal } from '../hooks/useReveal';
 import MonitorView from './MonitorView';
-import NegocioSelector from '../components/NegocioSelector';
 import { useOfflineQueue } from '../hooks/useOfflineQueue';
 import { useGastosInternos } from '../hooks/useGastosInternos';
 import GastosInternosModal from '../components/GastosInternos/GastosInternosModal';
@@ -485,10 +484,7 @@ export default function DashboardView({ rates, refreshRates, ratesLoading, trigg
                     </div>
                 </div>
 
-                {/* Fila Negocio (Fase 1 multi-negocio): selector del negocio activo */}
-                <div className="flex justify-center mt-1.5">
-                    <NegocioSelector triggerHaptic={triggerHaptic} />
-                </div>
+                {/* Fila Negocio eliminada (2026-10-02): el cambio de sede solo se hace desde el login */}
 
                 {/* Fila Inferior: 4 Fichas Pro (Visibles en Tablet/Desktop sm:grid) */}
                 <div className="hidden sm:grid sm:grid-cols-4 gap-1 sm:gap-3 mt-2 pt-2 border-t border-slate-200/40 dark:border-slate-800/40 w-full max-w-4xl mx-auto">

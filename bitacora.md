@@ -1151,3 +1151,11 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 3. **Mínimo 8 caracteres** (antes 6).
 4. **Sin sugerencias de autocompletado** en todos los campos de PIN (`autoComplete="off"`).
 **Versión:** 2.0.3.
+
+## 2026-10-02 ~19:10 — v2.0.4: quitar selector de sede del dashboard + mejoras cambio PIN
+**Pedido de:** Luigi.
+**Cambios:**
+1. Eliminado `NegocioSelector` del dashboard (`DashboardView.jsx`): el cambio de sede ahora solo se hace desde el login.
+2. Mejoras al modal Cambiar PIN (`UsersManager.jsx`): contador de pasos correcto cuando admin/dueño cambia PIN ajeno ("Paso 1 de 2" en vez de "Paso 2 de 3") + banner "Cambiando el PIN de X como dueño/administrador".
+3. `autoComplete="off"` en todos los campos de PIN (sin sugerencias del navegador).
+**Versión:** 2.0.4.
