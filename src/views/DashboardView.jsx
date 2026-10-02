@@ -70,7 +70,7 @@ const extractAdvancesFromSales = (salesArray) => {
     return list;
 };
 
-export default function DashboardView({ rates, triggerHaptic, onNavigate, theme, toggleTheme, isActive }) {
+export default function DashboardView({ rates, refreshRates, triggerHaptic, onNavigate, theme, toggleTheme, isActive }) {
     const { notifyCierrePendiente, requestPermission } = useNotifications();
     const isAdmin = true;
     const isCajero = useAuthStore(s => s.requireLogin && s.usuarioActivo?.rol === 'CAJERO');
@@ -913,7 +913,7 @@ export default function DashboardView({ rates, triggerHaptic, onNavigate, theme,
                         rates={rates}
                         loading={false}
                         isOffline={!isOnline}
-                        onRefresh={() => refreshData()}
+                        onRefresh={() => refreshRates ? refreshRates(false) : refreshData()}
                         toggleTheme={toggleTheme}
                         theme={theme}
                         addLog={console.log}
