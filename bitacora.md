@@ -1085,3 +1085,12 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `reportDevicesToDirectory()` ahora actualiza `last_seen` del equipo actual a NOW en `account_devices` antes de reportar (best-effort, no bloquea).
 - El payload enviado a la Estación usa el timestamp fresco para el equipo actual.
 - La Estación mostrará la última conexión real en vez de "nunca".
+
+## 2026-10-02 ~18:00 — Cambio de sede desde el login (SEDE-LOCKSCREEN)
+**Pedido de Luigi:** el cambio de sede debe hacerse desde la pantalla de login ("¿Quién está operando?"), no desde dentro de la app. Debe requerir el PIN del dueño.
+**Cambios (`src/components/security/LockScreen.jsx`):**
+- Nuevo selector de sede (píldoras con icono Store) encima de la grilla de usuarios, visible solo si hay más de 1 negocio.
+- La sede activa se muestra destacada en teal con check.
+- Al tocar otra sede: se abre el modal de PIN del dueño ("Dueño (cambio de sede)").
+- PIN correcto → `activarNegocio(id)` (recarga la app en la nueva sede).
+- Texto aclaratorio: "Cambiar de sede requiere el PIN del dueño".

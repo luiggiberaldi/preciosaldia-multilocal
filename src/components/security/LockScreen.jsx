@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Download, CheckCircle2, X, Crown } from 'lucide-react';
+import { Download, CheckCircle2, X, Crown, Store } from 'lucide-react';
 import { useAuthStore } from '../../hooks/store/useAuthStore';
+import { useNegociosStore } from '../../hooks/store/useNegociosStore';
 import UserCard from './UserCard';
 import LoginPinModal from './LoginPinModal';
 import EmergencyPinResetModal from './EmergencyPinResetModal';
@@ -10,9 +11,13 @@ const DUENO_PSEUDO_USER = { id: 'dueno', nombre: 'Dueño' };
 
 export default function LockScreen({ installPrompt, onInstall, showIOSButton, onShowIOSInstall, onOpenRemotion }) {
   const { usuarios, login, loginDirect, requireCajeroPin, requireAdminPin, resetPinEmergency, loginAsDueno } = useAuthStore();
+  const { negocios, negocioActivoId, activarNegocio } = useNegociosStore();
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDuenoPin, setShowDuenoPin] = useState(false);
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+  // SEDE-LOCKSCREEN: cambio de sede desde el login (requiere PIN del dueño)
+  const [pendingNegocioId, setPendingNegocioId] = useState(null);
+  const [showNegocioPin, setShowNegocioPin] = useState(false);
   const [logoClickCount, setLogoClickCount] = useState(0);
   const clickTimeoutRef = useRef(null);
   const [showWelcome, setShowWelcome] = useState(() => {
@@ -69,6 +74,26 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
     const result = await loginAsDueno(pin);
     if (result?.success) {
       setShowDuenoPin(false);
+    }
+    return result;
+  };
+
+  // SEDE-LOCKSCREEN: solicitar cambio de sede (pide PIN del dueño)
+  const handleNegocioClick = (negocioId) => {
+    if (negocioId === negocioActivoId) return;
+    setPendingNegocioId(negocioId);
+    setShowNegocioPin(true);
+  };
+
+  const handleNegocioPinSubmit = async (pin) => {
+    const result = await loginAsDueno(pin);
+    if (result?.success) {
+      setShowNegocioPin(false);
+      const targetId = pendingNegocioId;
+      setPendingNegocioId(null);
+      if (targetId) {
+        activarNegocio(targetId);
+      }
     }
     return result;
   };
@@ -148,6 +173,39 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
           </h1>
         </div>
 
+        {/* SEDE-LOCKSCREEN: selector de sede (requiere PIN del dueño para cambiar) */}
+        {(negocios || []).length > 1 && (
+          <div className="w-full max-w-[420px] mx-auto mb-8">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400 text-center mb-3">
+              Sede
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {(negocios || []).map((n) => {
+                const isActive = n.id === negocioActivoId;
+                return (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => handleNegocioClick(n.id)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer ${
+                      isActive
+                        ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/25'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-teal-400'
+                    }`}
+                  >
+                    <Store size={14} />
+                    <span>{n.nombre}</span>
+                    {isActive && <CheckCircle2 size={14} />}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-slate-400 text-center mt-2">
+              Cambiar de sede requiere el PIN del dueño
+            </p>
+          </div>
+        )}
+
         {/* User Grid */}
         <div className="w-full grid grid-cols-2 md:flex md:flex-row md:flex-wrap md:justify-center gap-8 sm:gap-14 max-w-[320px] md:max-w-5xl mx-auto">
           {(usuarios || []).map(user => (
@@ -205,6 +263,14 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
         onClose={() => setShowDuenoPin(false)}
         user={DUENO_PSEUDO_USER}
         onSubmit={handleDuenoPinSubmit}
+      />
+
+      {/* SEDE-LOCKSCREEN: PIN del dueño para cambiar de sede */}
+      <LoginPinModal
+        isOpen={showNegocioPin}
+        onClose={() => { setShowNegocioPin(false); setPendingNegocioId(null); }}
+        user={{ id: 'dueno', nombre: 'Dueño (cambio de sede)' }}
+        onSubmit={handleNegocioPinSubmit}
       />
 
       {/* Emergency PIN Reset Modal */}
