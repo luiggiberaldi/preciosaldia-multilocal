@@ -132,23 +132,22 @@ export default function MonitorView({ rates: propRates, loading, isOffline, onRe
                 <button onClick={handleSecretDebug} className="active:scale-95 transition-transform outline-none">
                     <img src="./logo.png" alt="PreciosAlDía" className="h-20 w-auto object-contain drop-shadow-sm" />
                 </button>
-                <p className="text-slate-700 text-sm font-medium -mt-2 font-outfit">Actualizado donde vayas</p>
                 <div className="bg-white/80 px-4 py-1.5 rounded-full border border-slate-200 backdrop-blur-md shadow-sm mt-2">
                     <p className="text-[10px] font-bold text-slate-500 tracking-[0.25em] uppercase font-outfit">MONITOR EN TIEMPO REAL</p>
                 </div>
             </div>
 
             {/* PRECIO GIGANTE */}
-            <div className="flex flex-col items-center justify-center -mt-8 relative z-10">
-                <div className="flex items-baseline font-dm-mono select-none">
-                    <span className="text-4xl sm:text-5xl text-slate-400 font-bold self-start mt-2 mr-3">$</span>
-                    <h1 className="text-[16vw] sm:text-[9rem] font-bold leading-none tracking-tighter text-slate-900">
+            <div className="flex flex-col items-center justify-center -mt-8 relative z-10 w-full px-4">
+                <div className="flex items-baseline justify-center font-dm-mono select-none max-w-full overflow-hidden">
+                    <span className="text-3xl sm:text-5xl text-slate-400 font-bold self-start mt-1 sm:mt-2 mr-2 shrink-0">$</span>
+                    <h1 className="text-[14vw] sm:text-[9rem] font-bold leading-none tracking-tighter text-slate-900 whitespace-nowrap">
                         {integers}
                     </h1>
-                    <span className="text-5xl sm:text-7xl font-bold text-emerald-500 leading-none">
+                    <span className="text-4xl sm:text-7xl font-bold text-emerald-500 leading-none shrink-0">
                         ,{decimals}
                     </span>
-                    <span className="text-2xl sm:text-3xl font-bold text-slate-400 ml-4">Bs</span>
+                    <span className="text-xl sm:text-3xl font-bold text-slate-400 ml-2 sm:ml-4 shrink-0">Bs</span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-500 font-dm-mono tracking-widest mt-4 uppercase">Valor del Dólar BCV Oficial</p>
             </div>
