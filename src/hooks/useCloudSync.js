@@ -1077,10 +1077,26 @@ export function useCloudSync(deviceId) {
         window.addEventListener('online', forcePushLocalData);
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
+        // AUTO-SYNC PERIÓDICO (2026-10-01): sincronización completa (pull+push)
+        // cada 5 minutos en background. El usuario no debe pulsar ningún botón.
+        const periodicSync = setInterval(async () => {
+            if (isSyncingFromCloud || !isCloudSyncActive) return;
+            if (document.visibilityState !== 'visible') return;
+            try {
+                const res = await syncNow();
+                if (res.ok && (res.pulled > 0 || res.pushed > 0)) {
+                    console.log(`[AutoSync] Periódico: ${res.message}`);
+                }
+            } catch (e) {
+                // Silencioso: el próximo ciclo reintenta
+            }
+        }, 5 * 60 * 1000);
+
         return () => {
             isCloudSyncActive = false;
             window.removeEventListener('online', forcePushLocalData);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
+            clearInterval(periodicSync);
 
             // HOOK-012: limpiar suscripción en cleanup para evitar leaks.
             if (globalSubscription) {

@@ -6,6 +6,7 @@ import CloudGate from './components/security/CloudGate.jsx'
 import { ToastProvider } from './components/Toast.jsx'
 import { SecurityProvider } from './hooks/useSecurity.jsx'
 import { supabaseCloud, hasCustomerProject } from './config/supabaseCloud.js'
+import { syncNow } from './hooks/useCloudSync.js'
 import { registerSW } from 'virtual:pwa-register'
 import { bootNegocios } from './utils/bootNegocios'
 import './index.css'
@@ -191,7 +192,18 @@ function AppRouter() {
   }
 
   if (!cloudReady) {
-    return <CloudGate onReady={() => setCloudReady(true)} />;
+    return <CloudGate onReady={() => {
+        setCloudReady(true);
+        // AUTO-SYNC (2026-10-01): al vincularse un equipo con el código,
+        // sincroniza de inmediato sin esperar al botón manual.
+        setTimeout(() => {
+            syncNow().then((res) => {
+                console.log('[AutoSync] Post-vinculación:', res.message);
+            }).catch((e) => {
+                console.warn('[AutoSync] Fallo post-vinculación:', e);
+            });
+        }, 2000);
+    }} />;
   }
 
   return <App />;
