@@ -70,8 +70,10 @@ export function UpdateBanner() {
 
     if (!showBanner) return null;
 
+    // FIX (2026-10-02): z-index mayor que el LockScreen (z-[250]) para que
+    // el botón "Actualizar ahora" no quede tapado por "Instalar App".
     return (
-        <div className="fixed top-0 inset-x-0 z-[100] bg-emerald-600 text-white px-4 py-2 flex items-center justify-between text-sm font-medium shadow-md">
+        <div className="fixed top-0 inset-x-0 z-[300] bg-emerald-600 text-white px-4 py-2 flex items-center justify-between text-sm font-medium shadow-md">
             <div className="flex items-center gap-2">
                 <span className="text-base">🚀</span>
                 <span>Nueva versión disponible de Precios Al Día</span>

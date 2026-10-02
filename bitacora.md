@@ -1094,3 +1094,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Al tocar otra sede: se abre el modal de PIN del dueño ("Dueño (cambio de sede)").
 - PIN correcto → `activarNegocio(id)` (recarga la app en la nueva sede).
 - Texto aclaratorio: "Cambiar de sede requiere el PIN del dueño".
+
+## 2026-10-02 ~18:05 — Fix: banner "Actualizar ahora" tapado por "Instalar App"
+**Reportado por:** Luigi + pruebas de navegador (2 intentos de clic fallidos).
+**Causa:** el `LockScreen` tiene `z-[250]` y el `UpdateBanner` tenía `z-[100]`. Toda la pantalla de login (incluido el botón "Instalar App" en `top-4 right-4`) quedaba POR ENCIMA del banner, tapando el botón "Actualizar ahora".
+**Fix (`src/components/UpdateBanner.jsx`):** z-index del banner cambiado de `z-[100]` a `z-[300]`, por encima del LockScreen.
