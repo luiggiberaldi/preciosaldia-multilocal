@@ -322,16 +322,34 @@ export function isAccountLinkedLocally() {
 /**
  * Reporta los dispositivos vinculados al directorio (Estación).
  * La Estación muestra la lista y permite desvincular.
+ * FIX (2026-10-02): actualiza last_seen en account_devices antes de reportar,
+ * para que la Estación muestre la última conexión real en vez de "nunca".
  */
 export async function reportDevicesToDirectory() {
   try {
     const project = getCustomerProject();
     if (!project?.code) return;
+    const deviceId = getLocalDeviceId();
+    // Actualizar last_seen del equipo actual (best-effort, no bloquea)
+    if (deviceId && supabaseCloud) {
+      const { session } = await getOwnerSession().catch(() => ({}));
+      if (session?.user?.id) {
+        await supabaseCloud
+          .from('account_devices')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('user_id', session.user.id)
+          .eq('device_id', deviceId)
+          .then(() => {}, () => {});
+      }
+    }
     const devices = await getMyDevices().catch(() => []);
     const payload = (devices || []).map(d => ({
       id: d.device_id || d.id,
+      // Si es el equipo actual, usar el timestamp fresco
+      last_seen: (d.device_id === deviceId || d.id === deviceId)
+        ? new Date().toISOString()
+        : (d.last_seen || null),
       alias: d.alias || null,
-      last_seen: d.last_seen || null,
     }));
     // Llamar al RPC del directorio via fetch directo
     const dirUrl = import.meta.env.VITE_DIRECTORY_URL;

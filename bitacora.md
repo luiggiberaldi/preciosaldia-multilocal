@@ -1077,3 +1077,11 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Fix 3 — Importar negocio con ID específico (FAILOVER-003, P3 MEDIO):**
 - `useNegociosStore.js`: nueva función `importarNegocioConId(id, datos)` para recuperar negocios desde la nube con su ID original.
 - Valida formato `neg-*` y evita duplicados. Marca `importadoDeNube: true`.
+
+## 2026-10-02 ~17:55 — Fix: "Última conexión: nunca" en la Estación
+**Reportado por:** Luigi (screenshot de la Estación mostrando "nunca").
+**Causa:** el campo `account_devices.last_seen` nunca se actualizaba después del registro inicial del dispositivo. `reportDevicesToDirectory()` leía el valor viejo (null) y lo enviaba a la Estación, que mostraba "nunca".
+**Fix (`src/services/cloudAccount.js`):**
+- `reportDevicesToDirectory()` ahora actualiza `last_seen` del equipo actual a NOW en `account_devices` antes de reportar (best-effort, no bloquea).
+- El payload enviado a la Estación usa el timestamp fresco para el equipo actual.
+- La Estación mostrará la última conexión real en vez de "nunca".
