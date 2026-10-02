@@ -9,6 +9,7 @@ import {
     UserPlus, Trash2, KeyRound, Shield, ShoppingCart,
     Crown, X, Check, Eye, EyeOff, AlertTriangle, Edit2, Lock, Unlock
 } from 'lucide-react';
+import MasterPinSetupModal from '../security/MasterPinSetupModal';
 
 const ROLE_CONFIG = {
     // Fase B: ADMIN = administrador del negocio (renombrado de "supervisor";
@@ -202,6 +203,7 @@ export default function UsersManager({ triggerHaptic }) {
     const [emergencyStep, setEmergencyStep] = useState(1);
     const [masterPinCheck, setMasterPinCheck] = useState('');
     const [isDuenoSession] = useState(() => getDuenoSession() !== null);
+    const [showMasterPinChange, setShowMasterPinChange] = useState(false);
 
     const isWeakPin = (pin) => {
         if (!pin || pin.length < 6) return false;
@@ -411,6 +413,37 @@ export default function UsersManager({ triggerHaptic }) {
                         className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-[11px] rounded-xl transition-all border border-amber-500/20"
                     >
                         Configurar
+                    </button>
+                </div>
+            </div>
+            )}
+
+            {/* ─── Cambiar PIN del Dueño ────────────────────── */}
+            {/* Solo visible con sesión de dueño. Permite cambiar el PIN maestro. */}
+            {isDuenoSession && (
+            <div className="bg-teal-500/5 dark:bg-teal-500/10 border border-teal-500/20 rounded-2xl p-4 my-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl">
+                            <Crown size={20} />
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                PIN del Dueño
+                            </h4>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                Cambia tu PIN maestro de acceso
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setShowMasterPinChange(true);
+                            triggerHaptic?.();
+                        }}
+                        className="px-3 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-700 dark:text-teal-300 font-bold text-[11px] rounded-xl transition-all border border-teal-500/20"
+                    >
+                        Cambiar PIN
                     </button>
                 </div>
             </div>
@@ -907,6 +940,15 @@ export default function UsersManager({ triggerHaptic }) {
                     </div>
                 </div>
             )}
+
+            {/* Modal para cambiar PIN del dueño */}
+            <MasterPinSetupModal
+                isOpen={showMasterPinChange}
+                onDone={() => {
+                    setShowMasterPinChange(false);
+                    showToast('PIN del dueño actualizado', 'success');
+                }}
+            />
         </div>
     );
 }

@@ -31,9 +31,15 @@ export const ROL_ADMINISTRADOR = 'ADMIN';
 export const ROL_CAJERO = 'CAJERO';
 
 /** Tabs de la app (ids usados en App.jsx). */
-export const TABS_DUENO_ADMIN = Object.freeze([
+export const TABS_DUENO = Object.freeze([
     'inicio', 'ventas', 'catalogo', 'clientes', 'reportes', 'ajustes', 'supervision',
 ]);
+export const TABS_ADMIN = Object.freeze([
+    'inicio', 'ventas', 'catalogo', 'clientes', 'reportes', 'ajustes',
+    // NOTA (2026-10-02): supervisión es SOLO del dueño, el admin no la ve.
+]);
+/** @deprecated usar TABS_ADMIN */
+export const TABS_DUENO_ADMIN = TABS_DUENO;
 export const TABS_CAJERO = Object.freeze(['inicio', 'ventas', 'catalogo', 'clientes']);
 
 export function getRol(session) {
@@ -94,8 +100,9 @@ export function canManageUser(managerSession, targetUser) {
  * Sin `requireLogin` no hay sesión: acceso total (comportamiento legacy).
  */
 export function visibleTabIds({ requireLogin, usuarioActivo } = {}) {
-    if (!requireLogin) return [...TABS_DUENO_ADMIN];
-    if (isOwner(usuarioActivo) || isAdministrador(usuarioActivo)) return [...TABS_DUENO_ADMIN];
+    if (!requireLogin) return [...TABS_DUENO];
+    if (isOwner(usuarioActivo)) return [...TABS_DUENO];
+    if (isAdministrador(usuarioActivo)) return [...TABS_ADMIN];
     if (isCashier(usuarioActivo)) return [...TABS_CAJERO];
     return [];
 }

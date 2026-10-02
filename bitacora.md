@@ -1112,3 +1112,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Fallback a `localStorage` directo (`pda-negocios-registry`) si el store aún no hidrató.
 - Tanto `negocios` como `negocioActivoId` tienen fallback.
 **Versión:** 2.0.1 (package.json, LockScreen, SettingsView).
+
+## 2026-10-02 ~18:35 — Roles: supervisión solo dueño + cambio PIN dueño
+**Pedido de:** Luigi.
+**Cambios:**
+1. **Supervisión solo para el dueño** (`src/utils/roles.js`): creado `TABS_DUENO` (con supervisión) y `TABS_ADMIN` (sin supervisión). El admin ya no ve el tab Supervisión.
+2. **Cambiar PIN del dueño** (`src/components/Settings/UsersManager.jsx`): nueva sección "PIN del Dueño" visible solo con sesión de dueño. Reutiliza `MasterPinSetupModal` para definir el nuevo PIN maestro. Antes NO había forma de cambiarlo (solo se creaba al inicio).
+3. **Dueño omnipotente:** verificado — `hasAdminAccess`, `canManageBusinesses`, `canCreateRole`, `canManageUser` ya le dan todos los permisos.
