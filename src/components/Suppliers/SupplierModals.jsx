@@ -235,7 +235,13 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
 
                     {/* Foto de la factura (solo local, no se sincroniza) */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Foto de Factura <span className="normal-case font-medium">(opcional, solo en este equipo)</span></label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Foto de Factura <span className="normal-case font-medium">(opcional)</span></label>
+                        <div className="flex items-start gap-2 mb-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-xl">
+                            <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <p className="text-[10px] leading-relaxed text-blue-800 dark:text-blue-200">
+                                La foto se guarda <strong>solo en este equipo</strong> y no se sincroniza a la nube.
+                            </p>
+                        </div>
                         <input
                             ref={fileRef}
                             type="file"

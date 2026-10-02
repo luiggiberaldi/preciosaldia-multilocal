@@ -1191,3 +1191,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Causa:** al agregar el selector USD/Bs se borraron accidentalmente las declaraciones de `invoiceNumber` y `dueDate`.
 **Fix:** restauradas las declaraciones.
 **Versión:** 2.0.9.
+
+## 2026-10-02 ~19:48 — v2.1.0: aviso visible "foto solo en este equipo"
+**Pedido de:** Luigi.
+**Cambio:** caja azul informativa en el modal Cargar Factura dejando claro que la foto se guarda solo en el equipo y no se sincroniza a la nube.
+**Versión:** 2.1.0.
