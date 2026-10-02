@@ -79,6 +79,16 @@ function useSecurityState() {
     // HOOK-040: checkLicense memoizado para evitar recreate en cada render.
     // SEC-001/SEC-007: Solo aceptar tokens con firma RSA válida.
     const checkLicense = useCallback(async (currentDeviceId) => {
+        // Si hay código Pro activo (CloudGate), la licencia es válida sin más validación.
+        try {
+            const { getCustomerProject } = await import('../config/supabaseCloud.js');
+            const proj = getCustomerProject();
+            if (proj?.code) {
+                setIsPremium(true);
+                setLoading(false);
+                return;
+            }
+        } catch {}
         // SEC-001/SEC-007: Solo aceptar tokens con firma RSA válida.
         // Si el token almacenado es legacy (XOR, sin '.') se elimina y se cae
         // al flujo de validación contra el servidor.

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { KeyRound, ShieldAlert, ShieldCheck, Hash, Copy, Check } from 'lucide-react';
 import { SectionCard } from '../../SettingsShared';
+import { getCustomerProject } from '../../../config/supabaseCloud.js';
 
 export default function SettingsTabLicencia({ deviceId, triggerHaptic }) {
     const [idCopied, setIdCopied] = useState(false);
@@ -12,12 +13,20 @@ export default function SettingsTabLicencia({ deviceId, triggerHaptic }) {
             if (raw) {
                 try {
                     setLicense(JSON.parse(raw));
+                    return;
                 } catch (e) {
                     console.error(e);
                 }
-            } else {
-                setLicense(null);
             }
+            // Si hay código Pro activo, la licencia es válida aunque no esté en el caché viejo
+            try {
+                const proj = getCustomerProject();
+                if (proj?.code) {
+                    setLicense({ isActive: true, type: 'permanent', code: proj.code, productId: 'pro' });
+                    return;
+                }
+            } catch {}
+            setLicense(null);
         };
 
         loadLicense();
