@@ -425,6 +425,86 @@ export const queueCloudSync = (key, value) => {
 };
 
 /**
+ * SYNC-MANUAL (2026-10-01): sincronización completa bajo demanda.
+ * Hace pull (baja lo nuevo de la nube) + push (sube lo local) y devuelve
+ * un resultado claro para mostrar en la UI. Lo usa el botón "Sincronizar"
+ * y el auto-sync al vincular un equipo.
+ *
+ * @returns {Promise<{ok: boolean, pulled: number, pushed: number, message: string}>}
+ */
+export const syncNow = async () => {
+    if (!supabaseCloud) {
+        return { ok: false, pulled: 0, pushed: 0, message: 'Sin conexión a la nube' };
+    }
+    const activeDeviceId = _currentDeviceId || localStorage.getItem('pda_device_id');
+    if (!activeDeviceId) {
+        return { ok: false, pulled: 0, pushed: 0, message: 'Equipo no identificado' };
+    }
+    if (!isCloudSyncActive) {
+        return { ok: false, pulled: 0, pushed: 0, message: 'Sincronización no activa (revisa tu sesión)' };
+    }
+
+    let pulled = 0;
+    let pushed = 0;
+    try {
+        // ── PULL: bajar documentos nuevos de la nube ──
+        const accountCtx = getAccountSyncContext();
+        if (accountCtx?.userId) {
+            const wmKey = `cloud_pull_watermark_${accountCtx.userId}`;
+            const watermark = localStorage.getItem(wmKey);
+            let pullQuery = supabaseCloud
+                .from('sync_documents')
+                .select('collection, doc_id, data, updated_at, device_id')
+                .in('device_id', accountCtx.deviceIds)
+                .in('collection', ['store', 'local'])
+                .order('updated_at', { ascending: true })
+                .limit(2000);
+            if (watermark) pullQuery = pullQuery.gt('updated_at', watermark);
+
+            const { data: docs, error: docsError } = await pullQuery;
+            if (docsError) throw docsError;
+
+            for (const doc of docs || []) {
+                if (!isDocForActiveBusiness(doc.doc_id)) continue;
+                try {
+                    const applied = await _applyFromCloud(doc.doc_id, doc.collection, doc.data, doc.device_id);
+                    if (applied) pulled++;
+                } catch (e) {
+                    console.warn(`[syncNow] Error aplicando ${doc.doc_id}:`, e);
+                }
+            }
+            const maxTs = (docs || []).reduce(
+                (m, d) => (d.updated_at && d.updated_at > m ? d.updated_at : m),
+                watermark || ''
+            );
+            if (maxTs) {
+                try { localStorage.setItem(wmKey, maxTs); } catch { /* noop */ }
+            }
+        }
+
+        // ── PUSH: subir cambios locales ──
+        const criticalKeys = ['bodega_sales_v1', 'bodega_products_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1', 'bodega_accounts_v2'];
+        for (const key of criticalKeys) {
+            const val = await appForage.getItem(key);
+            if (val !== null) {
+                const res = await pushCloudSync(key, val);
+                if (res?.ok && !res?.skipped) pushed++;
+            }
+        }
+
+        localStorage.setItem('cloud_sync_ts', new Date().toISOString());
+        const parts = [];
+        if (pulled > 0) parts.push(`${pulled} actualizados`);
+        if (pushed > 0) parts.push(`${pushed} subidos`);
+        const detail = parts.length > 0 ? ` (${parts.join(', ')})` : ' (todo al día)';
+        return { ok: true, pulled, pushed, message: `Sincronizado correctamente${detail}` };
+    } catch (e) {
+        console.error('[syncNow] Error:', e);
+        return { ok: false, pulled, pushed, message: `No se pudo sincronizar: ${e?.message || 'error de red'}` };
+    }
+};
+
+/**
  * Empuja de forma forzada TODOS los datos del punto de venta a la nube Supabase.
  * Se invoca al iniciar la app o al vincular el dispositivo.
  */

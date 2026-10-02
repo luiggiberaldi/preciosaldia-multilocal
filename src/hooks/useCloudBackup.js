@@ -10,6 +10,7 @@ import { buildCloudBackupsRow, buildSyncDocumentRow } from '../config/cloudSchem
 import { ensureDeviceSessionRegistered } from '../utils/deviceIdentity';
 import { ensureSupervisorSession } from '../services/supervisorAuth';
 import { relayUploadBackup, relayFetchBackup } from '../utils/backupRelay';
+import { syncNow as syncDocumentsNow } from './useCloudSync';
 import {
     collectLocalBackupPayload,
     validateBackupJson,
@@ -184,6 +185,9 @@ export function useCloudBackup({
     };
 
     // ─── HANDLER: Sync cloud (initial connect) ────────────────────────────────
+    // SYNC-UNIFICADO (2026-10-01): el botón ahora sincroniza DOCUMENTOS
+    // (productos, ventas, clientes) + backup. Antes solo hacía backup, por eso
+    // "no pasaba nada" al pulsar: los productos nunca se bajaban de la nube.
     const handleSyncCloud = async () => {
         // LICENCIA-CLOUD: la nube es exclusiva de licencias permanentes activas.
         if (!isLicensedCloud) {
@@ -197,6 +201,17 @@ export function useCloudBackup({
 
         try {
             setImportStatus('loading');
+            setStatusMessage('Sincronizando con la nube...');
+
+            // PASO 1: sincronizar documentos (productos, ventas, etc.)
+            const docSync = await syncDocumentsNow();
+            if (!docSync.ok) {
+                setImportStatus('error');
+                setStatusMessage(docSync.message);
+                showToast(docSync.message, 'error');
+                return;
+            }
+
             setStatusMessage('Consultando backup en la nube...');
 
             // RLS-IDENTITY: las políticas own-row (001_device_own_row_rls.sql)
@@ -274,7 +289,9 @@ export function useCloudBackup({
             showToast('Datos sincronizados con la nube', 'success');
             auditLog('NUBE', 'SYNC_INICIAL', 'Datos locales subidos a la nube');
             triggerHaptic?.();
-            setImportStatus(null);
+            setImportStatus('success');
+            setStatusMessage(docSync.message);
+            showToast(docSync.message, 'success');
 
         } catch (err) {
             console.error('[CloudBackup] Error:', err);
