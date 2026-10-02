@@ -202,6 +202,7 @@ export default function UsersManager({ triggerHaptic }) {
     // paso 2 = definir la clave.
     const [emergencyStep, setEmergencyStep] = useState(1);
     const [masterPinCheck, setMasterPinCheck] = useState('');
+    const [showMasterPinCheckText, setShowMasterPinCheckText] = useState(false);
     const [isDuenoSession] = useState(() => getDuenoSession() !== null);
     const [showMasterPinChange, setShowMasterPinChange] = useState(false);
 
@@ -406,6 +407,7 @@ export default function UsersManager({ triggerHaptic }) {
                             setEmergencyKeyConfirm(existing);
                             setShowEmergencyKeyText(false);
                             setMasterPinCheck('');
+                            setShowMasterPinCheckText(false);
                             setEmergencyStep(1);
                             setShowEmergencyConfigModal(true);
                             triggerHaptic?.();
@@ -806,16 +808,25 @@ export default function UsersManager({ triggerHaptic }) {
                             <div className="mb-5 space-y-3">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5 ml-1">PIN maestro del dueño</label>
-                                    <input
-                                        autoFocus
-                                        type="password"
-                                        inputMode="numeric"
-                                        maxLength={32}
-                                        value={masterPinCheck}
-                                        onChange={e => setMasterPinCheck(e.target.value.replace(/\D/g, ''))}
-                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-amber-500/30 outline-none text-slate-800 dark:text-white transition-all text-center tracking-[0.4em]"
-                                        placeholder="••••••"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            autoFocus
+                                            type={showMasterPinCheckText ? "text" : "password"}
+                                            inputMode="numeric"
+                                            maxLength={32}
+                                            value={masterPinCheck}
+                                            onChange={e => setMasterPinCheck(e.target.value.replace(/\D/g, ''))}
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl pl-4 pr-11 py-3 text-sm font-bold focus:ring-2 focus:ring-amber-500/30 outline-none text-slate-800 dark:text-white transition-all text-center tracking-[0.4em]"
+                                            placeholder="••••••"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowMasterPinCheckText(!showMasterPinCheckText)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                        >
+                                            {showMasterPinCheckText ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={async () => {
@@ -842,6 +853,18 @@ export default function UsersManager({ triggerHaptic }) {
                             </div>
                         ) : (
                         <>
+                        {/* Explicación primera vez: si no había clave configurada */}
+                        {!localStorage.getItem('pda_emergency_pin') && (
+                            <div className="mb-4 flex gap-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-2xl px-3.5 py-3">
+                                <AlertTriangle size={16} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                                <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-200">
+                                    <strong>¿Para qué sirve?</strong> Si olvidas tu PIN maestro, esta clave te permite
+                                    restablecerlo: pulsa <strong>7 veces el logo</strong> en la pantalla de login
+                                    e ingrésala. <strong className="underline">Guárdala en un lugar seguro</strong> —
+                                    si la pierdes, no hay forma de recuperar el acceso de dueño.
+                                </p>
+                            </div>
+                        )}
                         <div className="mb-5 space-y-3">
                             <div>
                                 <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5 ml-1">Nueva Clave Secreta</label>

@@ -1123,3 +1123,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 ## 2026-10-02 ~18:40 — Ojo para ver el PIN maestro
 **Pedido de:** Luigi.
 **Cambio (`src/components/security/MasterPinSetupModal.jsx`):** botón de ojo (Eye/EyeOff de lucide) junto al label "Tu PIN maestro" que alterna entre mostrar/ocultar los dígitos de ambos campos (PIN y confirmación).
+
+## 2026-10-02 ~18:45 — Clave de emergencia: ojo + explicación primera vez
+**Pedido de:** Luigi.
+**Cambios (`src/components/Settings/UsersManager.jsx`):**
+1. Ojo (mostrar/ocultar) en el campo "PIN maestro del dueño" del paso 1 de verificación.
+2. Primera vez (sin clave configurada): caja explicativa ámbar que dice para qué sirve (7 toques al logo en login para restablecer el PIN maestro) y advierte que debe guardarse en lugar seguro porque sin ella no hay recuperación.
+3. La confirmación de la clave ya existía en el paso 2.
