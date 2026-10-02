@@ -34,6 +34,8 @@
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
     max-width: 100%;
+    /* Suprime el highlight gris del tap en móviles (el círculo feo al tocar) */
+    -webkit-tap-highlight-color: transparent;
   }
 
   [data-theme='dark'] html,
