@@ -1,7 +1,39 @@
-import React, { useState } from 'react';
-import { X, Truck, Save, Pencil, FileText, CreditCard, Clock, Phone, Trash2, ArrowUpRight, CheckCircle2, Download } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Truck, Save, Pencil, FileText, CreditCard, Clock, Phone, Trash2, ArrowUpRight, CheckCircle2, Download, Camera, ImageIcon } from 'lucide-react';
 import { formatUsd, formatBs, formatCop } from '../../utils/calculatorUtils';
 import CustomSelect from '../CustomSelect';
+import { compressImage, getInvoicePhotoUrl } from '../../utils/invoicePhotos';
+
+/** Miniatura de la foto de una factura (solo local). */
+function InvoicePhotoThumb({ invoiceId }) {
+    const [url, setUrl] = useState(null);
+    const [showFull, setShowFull] = useState(false);
+    useEffect(() => {
+        let alive = true;
+        getInvoicePhotoUrl(invoiceId).then(u => { if (alive) setUrl(u); }).catch(() => {});
+        return () => { alive = false; if (url) URL.revokeObjectURL(url); };
+    }, [invoiceId]);
+    if (!url) return null;
+    return (
+        <>
+            <button
+                type="button"
+                onClick={() => setShowFull(true)}
+                className="shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 hover:ring-2 hover:ring-teal-500/50 transition-all"
+            >
+                <img src={url} alt="Factura" className="w-full h-full object-cover" />
+            </button>
+            {showFull && (
+                <div className="fixed inset-0 z-[80] bg-black/90 flex items-center justify-center p-4" onClick={() => setShowFull(false)}>
+                    <img src={url} alt="Factura" className="max-w-full max-h-full rounded-xl" />
+                    <button className="absolute top-4 right-4 p-2 bg-white/20 text-white rounded-full" onClick={() => setShowFull(false)}>
+                        <X size={20} />
+                    </button>
+                </div>
+            )}
+        </>
+    );
+}
 
 export function AddSupplierModal({ onClose, onSave, editingSupplier = null }) {
     const [name, setName] = useState(editingSupplier?.name || '');
@@ -67,6 +99,24 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
     const [invoiceNumber, setInvoiceNumber] = useState('');
     const [amountUsd, setAmountUsd] = useState('');
     const [dueDate, setDueDate] = useState('');
+    const [photoBlob, setPhotoBlob] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
+    const fileRef = useRef(null);
+
+    const handlePhotoSelect = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const compressed = await compressImage(file);
+            setPhotoBlob(compressed);
+            setPhotoPreview(URL.createObjectURL(compressed));
+        } catch {
+            // Si falla la compresión, usar original
+            setPhotoBlob(file);
+            setPhotoPreview(URL.createObjectURL(file));
+        }
+        e.target.value = '';
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -82,7 +132,9 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
             amountBs: parseFloat(amountUsd) * bcvRate,
             status: 'PENDIENTE',
             amountPaidUsd: 0,
-            type: 'INVOICE'
+            type: 'INVOICE',
+            hasPhoto: !!photoBlob, // flag local, la foto va a IndexedDB
+            _photoBlob: photoBlob, // temporal, se guarda en IndexedDB en el handler
         };
         onSave(invoiceData);
     };
@@ -114,6 +166,39 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
                     <div>
                         <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Fecha Vencimiento (Opcional)</label>
                         <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full form-input border rounded-xl px-3 py-2 text-sm font-bold dark:bg-slate-950 text-slate-700 dark:text-white" />
+                    </div>
+
+                    {/* Foto de la factura (solo local, no se sincroniza) */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Foto de Factura <span className="normal-case font-medium">(opcional, solo en este equipo)</span></label>
+                        <input
+                            ref={fileRef}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handlePhotoSelect}
+                            className="hidden"
+                        />
+                        {photoPreview ? (
+                            <div className="relative">
+                                <img src={photoPreview} alt="Factura" className="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-slate-700" />
+                                <button
+                                    type="button"
+                                    onClick={() => { setPhotoBlob(null); setPhotoPreview(null); }}
+                                    className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => fileRef.current?.click()}
+                                className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 text-xs font-bold flex items-center justify-center gap-2 hover:border-teal-500 hover:text-teal-600 transition-colors"
+                            >
+                                <Camera size={16} /> Tomar foto o adjuntar
+                            </button>
+                        )}
                     </div>
 
                     <button type="submit" disabled={!invoiceNumber || !amountUsd || parseFloat(amountUsd) <= 0} className="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-bold rounded-xl active:scale-95 transition-all text-sm flex justify-center items-center gap-2 mt-4">
@@ -357,6 +442,7 @@ export function SupplierDetailsSheet({ supplier, isOpen, isAdmin, onClose, onAdd
                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isInvoice ? 'bg-red-100/50 text-red-500' : 'bg-emerald-100/50 text-emerald-500'}`}>
                                                 {isInvoice ? <FileText size={14} /> : <ArrowUpRight size={14} />}
                                             </div>
+                                            {isInvoice && record.hasPhoto && <InvoicePhotoThumb invoiceId={record.id} />}
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                                                     {isInvoice ? `Factura #${record.invoiceNumber}` : `Abono/Pago`}

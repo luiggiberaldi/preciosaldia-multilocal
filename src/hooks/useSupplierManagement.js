@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { storageService } from '../utils/storageService';
 import { showToast } from '../components/Toast';
+import { saveInvoicePhoto } from '../utils/invoicePhotos';
 
 export function useSupplierManagement({ bcvRate, tasaCop, copEnabled, triggerHaptic, auditLog }) {
     const [suppliers, setSuppliers] = useState([]);
@@ -62,7 +63,16 @@ export function useSupplierManagement({ bcvRate, tasaCop, copEnabled, triggerHap
 
     const handleAddInvoice = async (invoiceData) => {
         triggerHaptic && triggerHaptic();
-        const updatedInvoices = [...invoices, invoiceData];
+        // Foto solo-local: guardar en IndexedDB separado (no se sincroniza)
+        const { _photoBlob, ...cleanData } = invoiceData;
+        if (_photoBlob) {
+            try {
+                await saveInvoicePhoto(cleanData.id, _photoBlob);
+            } catch (e) {
+                console.warn('[Suppliers] No se pudo guardar la foto:', e);
+            }
+        }
+        const updatedInvoices = [...invoices, cleanData];
         await saveInvoices(updatedInvoices);
 
         // Actualizar deuda del proveedor

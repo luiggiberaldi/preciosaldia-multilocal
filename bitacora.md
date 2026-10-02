@@ -1159,3 +1159,12 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 2. Mejoras al modal Cambiar PIN (`UsersManager.jsx`): contador de pasos correcto cuando admin/dueño cambia PIN ajeno ("Paso 1 de 2" en vez de "Paso 2 de 3") + banner "Cambiando el PIN de X como dueño/administrador".
 3. `autoComplete="off"` en todos los campos de PIN (sin sugerencias del navegador).
 **Versión:** 2.0.4.
+
+## 2026-10-02 ~19:20 — v2.0.5: foto de factura solo-local en proveedores
+**Pedido de:** Luigi.
+**Cambios:**
+1. Nuevo `src/utils/invoicePhotos.js`: fotos en IndexedDB separado (`pda-invoice-photos`), NUNCA se sincroniza a la nube. Con compresión a 1200px.
+2. `AddInvoiceModal`: botón "Tomar foto o adjuntar" con preview y opción de quitar.
+3. `handleAddInvoice`: guarda la foto en IndexedDB, la factura lleva solo el flag `hasPhoto`.
+4. `SupplierDetailsSheet`: miniatura en cada factura con foto; al tocarla se ve en grande.
+**Versión:** 2.0.5.
