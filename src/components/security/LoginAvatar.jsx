@@ -3,11 +3,14 @@ import React from 'react';
 const AVATAR_COLORS = {
   ADMIN: { bg: 'from-brand to-brand-dark', text: 'text-white' },
   CAJERO: { bg: 'from-emerald-500 to-teal-500', text: 'text-white' },
+  DUENO: { bg: 'from-amber-400 to-yellow-600', text: 'text-white' },
 };
 
 export default function LoginAvatar({ user, size = 'lg' }) {
   const initial = (user?.nombre || 'U').charAt(0).toUpperCase();
-  const colors = AVATAR_COLORS[user?.rol] || AVATAR_COLORS.CAJERO;
+  // El dueño se identifica por id 'dueno' (no tiene rol en la lista de usuarios)
+  const rolKey = user?.id === 'dueno' ? 'DUENO' : user?.rol;
+  const colors = AVATAR_COLORS[rolKey] || AVATAR_COLORS.CAJERO;
   const sizeClasses = size === 'lg' ? 'w-28 h-28 text-4xl' : 'w-10 h-10 text-base';
 
   return (
