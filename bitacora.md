@@ -1180,3 +1180,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Pedido de:** Luigi.
 **Cambio (`src/components/Suppliers/SupplierModals.jsx`):** el modal Cargar Factura ahora tiene selector USD/Bs. Al escribir en USD muestra el equivalente en Bs (tasa BCV) y viceversa. El monto se guarda normalizado en ambas monedas.
 **Versión:** 2.0.7.
+
+## 2026-10-02 ~19:38 — v2.0.8: "Supervisión" → "Control"
+**Pedido de:** Luigi (el nombre se recortaba en el nav).
+**Cambio:** label del tab y título de la vista cambiados a "Control".
+**Versión:** 2.0.8.

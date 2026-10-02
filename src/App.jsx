@@ -396,7 +396,7 @@ export default function App() {
     { id: 'clientes', label: 'Clientes', icon: Users },
     { id: 'reportes', label: 'Reportes', icon: BarChart3, adminOnly: true },
     { id: 'ajustes', label: 'Ajustes', icon: Settings, adminOnly: true },
-    { id: 'supervision', label: 'Supervisión', icon: Building2 },
+    { id: 'supervision', label: 'Control', icon: Building2 },
   ];
   const TABS = ALL_TABS.filter(tab =>
     allowedTabIds.has(tab.id)

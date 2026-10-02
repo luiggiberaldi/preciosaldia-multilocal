@@ -354,7 +354,7 @@ export default function SupervisionView({ triggerHaptic, isActive }) {
                     </div>
                     <div>
                         <h2 className="text-lg font-black text-slate-800 dark:text-white leading-tight">
-                            Supervisión
+                            Control
                         </h2>
                         <p className="text-[11px] text-slate-400 font-semibold">
                             {owner
