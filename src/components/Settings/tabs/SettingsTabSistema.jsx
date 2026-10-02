@@ -8,6 +8,7 @@ import { showToast } from '../../Toast';
 import AuditLogViewer from '../AuditLogViewer';
 import QRCode from 'qrcode';
 import CloudAccountSection from '../../CloudAccountSection';
+import { countBackupRecords } from '../../../utils/backupRestoreService';
 
 export default function SettingsTabSistema({
     theme, toggleTheme,
@@ -164,7 +165,7 @@ export default function SettingsTabSistema({
                             <div className="bg-white dark:bg-slate-800 rounded-lg p-2 border border-slate-200 dark:border-slate-700">
                                 <p className="font-bold text-slate-700 dark:text-slate-300">📱 Este equipo</p>
                                 <p className="text-slate-500 dark:text-slate-400">
-                                    {dataConflictPending.localBackup?.summary?.recordCount ?? '?'} registros
+                                    {(() => { try { return countBackupRecords(dataConflictPending.localBackup); } catch { return '?'; } })()} registros
                                 </p>
                                 <p className="text-slate-400 dark:text-slate-500 text-[10px]">
                                     {dataConflictPending.localBackup?.timestamp
@@ -175,7 +176,7 @@ export default function SettingsTabSistema({
                             <div className="bg-white dark:bg-slate-800 rounded-lg p-2 border border-slate-200 dark:border-slate-700">
                                 <p className="font-bold text-slate-700 dark:text-slate-300">☁️ Nube</p>
                                 <p className="text-slate-500 dark:text-slate-400">
-                                    {dataConflictPending.cloudBackup?.summary?.recordCount ?? '?'} registros
+                                    {dataConflictPending.cloudBackup?.summary?.recordCount ?? (() => { try { return countBackupRecords(dataConflictPending.cloudBackup); } catch { return '?'; } })()} registros
                                 </p>
                                 <p className="text-slate-400 dark:text-slate-500 text-[10px]">
                                     {dataConflictPending.cloudBackup?.timestamp
