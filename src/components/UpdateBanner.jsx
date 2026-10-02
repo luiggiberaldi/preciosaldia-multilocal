@@ -29,56 +29,27 @@ export function UpdateBanner() {
         if (isUpdating) return;
         setIsUpdating(true);
 
-        // FIX (2026-10-02): timeout de seguridad — si la actualización tarda
-        // más de 5s, forzar recarga para no dejar el botón colgado en
-        // "Actualizando...".
-        const forceReloadTimeout = setTimeout(() => {
-            console.warn('[UpdateBanner] Timeout de actualización, forzando recarga');
-            window.location.reload();
-        }, 5000);
-
+        // FIX (2026-10-02): recarga directa y agresiva. La actualización
+        // "elegante" del SW se colgaba en algunos navegadores. Un reload
+        // simple es más confiable: el navegador descarga la nueva versión.
         try {
-            // 1. Si vite-plugin-pwa nos proveyó la función de update oficial:
-            if (typeof window.__pdaUpdateSW === 'function') {
-                await window.__pdaUpdateSW(true);
-                clearTimeout(forceReloadTimeout);
-                return;
-            }
-
-            // 2. Fallback estándar para Service Worker nativo:
+            // Intentar activar el SW en espera (best-effort, con timeout corto)
             if ('serviceWorker' in navigator) {
-                const reg = await navigator.serviceWorker.getRegistration();
-                if (reg && reg.waiting) {
-                    let refreshing = false;
-                    navigator.serviceWorker.addEventListener('controllerchange', () => {
-                        if (!refreshing) {
-                            refreshing = true;
-                            clearTimeout(forceReloadTimeout);
-                            window.location.reload();
-                        }
-                    });
-
+                const reg = await Promise.race([
+                    navigator.serviceWorker.getRegistration(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+                ]).catch(() => null);
+                if (reg?.waiting) {
                     reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-
-                    // Respaldo de seguridad por si controllerchange tarda
-                    setTimeout(() => {
-                        if (!refreshing) {
-                            refreshing = true;
-                            clearTimeout(forceReloadTimeout);
-                            window.location.reload();
-                        }
-                    }, 1200);
-                    return;
+                    // Dar 1s al SW para activarse, luego recargar de todas formas
+                    await new Promise(r => setTimeout(r, 1000));
                 }
             }
-
-            clearTimeout(forceReloadTimeout);
-            window.location.reload();
-        } catch (err) {
-            console.error('[UpdateBanner] Error al aplicar actualización:', err);
-            clearTimeout(forceReloadTimeout);
-            window.location.reload();
+        } catch {
+            // Ignorar errores, igual recargamos
         }
+        // Recarga forzada (bypass caché HTML)
+        window.location.reload();
     };
 
     if (!showBanner) return null;
