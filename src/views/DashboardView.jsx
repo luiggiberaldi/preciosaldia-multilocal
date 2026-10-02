@@ -70,7 +70,7 @@ const extractAdvancesFromSales = (salesArray) => {
     return list;
 };
 
-export default function DashboardView({ rates, refreshRates, triggerHaptic, onNavigate, theme, toggleTheme, isActive }) {
+export default function DashboardView({ rates, refreshRates, ratesLoading, triggerHaptic, onNavigate, theme, toggleTheme, isActive }) {
     const { notifyCierrePendiente, requestPermission } = useNotifications();
     const isAdmin = true;
     const isCajero = useAuthStore(s => s.requireLogin && s.usuarioActivo?.rol === 'CAJERO');
@@ -911,7 +911,7 @@ export default function DashboardView({ rates, refreshRates, triggerHaptic, onNa
                 <div className="fixed inset-0 z-[150] bg-[#080E1C] flex flex-col">
                     <MonitorView
                         rates={rates}
-                        loading={false}
+                        loading={ratesLoading || false}
                         isOffline={!isOnline}
                         onRefresh={() => refreshRates ? refreshRates(false) : refreshData()}
                         toggleTheme={toggleTheme}

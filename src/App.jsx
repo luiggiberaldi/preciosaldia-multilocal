@@ -249,7 +249,7 @@ export default function App() {
 
   const lastClickTimeRef = useRef(0);
 
-  const { rates, rateDiscrepancyWarning, updateData: refreshRates } = useRates();
+  const { rates, rateDiscrepancyWarning, updateData: refreshRates, loading: ratesLoading } = useRates();
 
   // Purge old audit log entries on startup
   useEffect(() => { purgeOldEntries(); }, []);
@@ -557,7 +557,7 @@ export default function App() {
 
         <div className={`flex-1 flex flex-col ${activeTab === 'inicio' ? '' : 'hidden'}`}>
           <ErrorBoundary>
-            <DashboardView rates={rates} refreshRates={refreshRates} triggerHaptic={triggerHaptic} onNavigate={(tab) => { if (tab === 'ajustes') { if (hasAdminAccess(usuarioActivo) || !requireLogin) setActiveTab('ajustes'); } else { setActiveTab(tab); } }} theme={theme} toggleTheme={toggleTheme} isActive={activeTab === 'inicio'} />
+            <DashboardView rates={rates} refreshRates={refreshRates} ratesLoading={ratesLoading} triggerHaptic={triggerHaptic} onNavigate={(tab) => { if (tab === 'ajustes') { if (hasAdminAccess(usuarioActivo) || !requireLogin) setActiveTab('ajustes'); } else { setActiveTab(tab); } }} theme={theme} toggleTheme={toggleTheme} isActive={activeTab === 'inicio'} />
           </ErrorBoundary>
         </div>
 
