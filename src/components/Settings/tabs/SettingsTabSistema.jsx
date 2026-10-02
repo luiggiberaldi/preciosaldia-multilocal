@@ -97,6 +97,8 @@ export default function SettingsTabSistema({
                         onClick={() => {
                             if (!isLicensedCloud) {
                                 showToast('La sincronización con la nube requiere licencia completa', 'error');
+                            } else if (handleSyncCloud) {
+                                handleSyncCloud();
                             }
                         }}
                         disabled={!isLicensedCloud}
