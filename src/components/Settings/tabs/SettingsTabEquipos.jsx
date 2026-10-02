@@ -12,9 +12,9 @@ import {
     revokeDevice,
     getLocalDeviceId,
     MAX_DEVICES_PER_ACCOUNT,
-} from '../../services/cloudAccount.js';
-import { getCustomerProject } from '../../config/supabaseCloud.js';
-import { showToast } from '../Toast';
+} from '../../../services/cloudAccount.js';
+import { getCustomerProject } from '../../../config/supabaseCloud.js';
+import { showToast } from '../../Toast';
 
 function shortId(id) {
     if (!id) return '—';
