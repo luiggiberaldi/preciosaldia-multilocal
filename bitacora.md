@@ -1137,3 +1137,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - El dueño ahora aparece en la lista de usuarios elegibles para restablecimiento.
 - Al elegir al dueño: checkbox de confirmación explícita (caja roja) + registro en auditoría (`pin_dueno_restablecido_emergencia`).
 - Ojos para ver/ocultar en: clave de emergencia (paso 1) y nuevo PIN + confirmación (paso 2).
+
+## 2026-10-02 ~18:55 — v2.0.2: avatar admin en azul
+**Pedido de:** Luigi.
+**Cambio (`src/components/security/LoginAvatar.jsx`):** el admin ahora usa degradado azul (`from-blue-500 to-indigo-600`) para distinguirse del cajero (verde). Colores finales: dueño dorado, admin azul, cajero verde.
+**Versión:** 2.0.2.

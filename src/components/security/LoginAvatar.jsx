@@ -1,7 +1,7 @@
 import React from 'react';
 
 const AVATAR_COLORS = {
-  ADMIN: { bg: 'from-brand to-brand-dark', text: 'text-white' },
+  ADMIN: { bg: 'from-blue-500 to-indigo-600', text: 'text-white' },
   CAJERO: { bg: 'from-emerald-500 to-teal-500', text: 'text-white' },
   DUENO: { bg: 'from-amber-400 to-yellow-600', text: 'text-white' },
 };
