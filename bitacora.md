@@ -1168,3 +1168,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 3. `handleAddInvoice`: guarda la foto en IndexedDB, la factura lleva solo el flag `hasPhoto`.
 4. `SupplierDetailsSheet`: miniatura en cada factura con foto; al tocarla se ve en grande.
 **Versión:** 2.0.5.
+
+## 2026-10-02 ~19:25 — v2.0.6: vencimiento en días + alertas en proveedores
+**Pedido de:** Luigi.
+**Cambios (`src/components/Suppliers/SupplierModals.jsx`):**
+1. Botones rápidos de plazo: 7, 15, 30, 45, 60 días (calculan la fecha automáticamente). El date picker sigue disponible.
+2. Badges de vencimiento en el historial: rojo "Vencida hace Xd" / "Vence hoy", ámbar "Vence en Xd" (≤7 días).
+**Versión:** 2.0.6.

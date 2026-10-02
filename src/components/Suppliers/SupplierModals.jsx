@@ -103,6 +103,13 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
     const [photoPreview, setPhotoPreview] = useState(null);
     const fileRef = useRef(null);
 
+    // Plazo en días: calcula la fecha de vencimiento
+    const setDueInDays = (days) => {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        setDueDate(d.toISOString().slice(0, 10));
+    };
+
     const handlePhotoSelect = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -165,7 +172,24 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Fecha Vencimiento (Opcional)</label>
+                        <div className="flex gap-1.5 mb-2">
+                            {[7, 15, 30, 45, 60].map(days => (
+                                <button
+                                    key={days}
+                                    type="button"
+                                    onClick={() => setDueInDays(days)}
+                                    className="flex-1 py-1.5 px-1 text-[10px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-500 hover:text-teal-600 transition-colors"
+                                >
+                                    {days}d
+                                </button>
+                            ))}
+                        </div>
                         <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full form-input border rounded-xl px-3 py-2 text-sm font-bold dark:bg-slate-950 text-slate-700 dark:text-white" />
+                        {dueDate && (
+                            <p className="text-[10px] text-slate-500 mt-1">
+                                Vence el {new Date(dueDate + 'T12:00:00').toLocaleDateString('es-VE')}
+                            </p>
+                        )}
                     </div>
 
                     {/* Foto de la factura (solo local, no se sincroniza) */}
@@ -437,6 +461,22 @@ export function SupplierDetailsSheet({ supplier, isOpen, isAdmin, onClose, onAdd
                                 {historyData.map(record => {
                                     const isInvoice = record.type === 'INVOICE';
                                     const dateStr = new Date(record.date || record.timestamp).toLocaleDateString('es-VE');
+                                    // Estado de vencimiento
+                                    let dueBadge = null;
+                                    if (isInvoice && record.dueDate && record.status !== 'PAGADA') {
+                                        const today = new Date();
+                                        today.setHours(0, 0, 0, 0);
+                                        const due = new Date(record.dueDate + 'T12:00:00');
+                                        due.setHours(0, 0, 0, 0);
+                                        const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+                                        if (diffDays < 0) {
+                                            dueBadge = <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">Vencida hace {-diffDays}d</span>;
+                                        } else if (diffDays === 0) {
+                                            dueBadge = <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">Vence hoy</span>;
+                                        } else if (diffDays <= 7) {
+                                            dueBadge = <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">Vence en {diffDays}d</span>;
+                                        }
+                                    }
                                     return (
                                         <div key={record.id} className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-950 rounded-xl">
                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isInvoice ? 'bg-red-100/50 text-red-500' : 'bg-emerald-100/50 text-emerald-500'}`}>
@@ -447,7 +487,8 @@ export function SupplierDetailsSheet({ supplier, isOpen, isAdmin, onClose, onAdd
                                                 <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                                                     {isInvoice ? `Factura #${record.invoiceNumber}` : `Abono/Pago`}
                                                 </p>
-                                                <p className="text-[10px] text-slate-400">{dateStr} {isInvoice && record.dueDate && `• Venc: ${new Date(record.dueDate).toLocaleDateString('es-VE')}`}</p>
+                                                <p className="text-[10px] text-slate-400">{dateStr} {isInvoice && record.dueDate && `• Venc: ${new Date(record.dueDate + 'T12:00:00').toLocaleDateString('es-VE')}`}</p>
+                                                {dueBadge && <div className="mt-1">{dueBadge}</div>}
                                             </div>
                                             <div className="text-right">
                                                 <p className={`text-sm font-black ${isInvoice ? 'text-red-500' : 'text-emerald-500'}`}>
