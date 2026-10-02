@@ -13,7 +13,7 @@ import {
     getLocalDeviceId,
     MAX_DEVICES_PER_ACCOUNT,
 } from '../../../services/cloudAccount.js';
-import { getCustomerProject } from '../../../config/supabaseCloud.js';
+import { getCustomerProject, clearCustomerProject } from '../../../config/supabaseCloud.js';
 import { showToast } from '../../Toast';
 
 function shortId(id) {
@@ -70,10 +70,20 @@ export default function SettingsTabEquipos() {
             {project?.code && (
                 <div className="flex items-center gap-3 p-3 bg-brand/5 border border-brand/20 rounded-2xl">
                     <KeyRound className="w-5 h-5 text-brand shrink-0" />
-                    <div>
+                    <div className="flex-1">
                         <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Código de licencia</p>
                         <p className="font-mono font-black text-brand text-lg">{project.code}</p>
                     </div>
+                    <button
+                        onClick={async () => {
+                            if (!window.confirm('¿Cambiar el código de licencia? Se cerrará la sesión de este equipo.')) return;
+                            await clearCustomerProject();
+                            window.location.reload();
+                        }}
+                        className="px-3 py-2 text-xs font-bold text-brand border border-brand/30 rounded-xl hover:bg-brand/10"
+                    >
+                        Cambiar código
+                    </button>
                 </div>
             )}
 
