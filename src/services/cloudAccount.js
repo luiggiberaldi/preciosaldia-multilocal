@@ -90,7 +90,7 @@ export async function signUpOwner(email, password) {
     }
 }
 
-export async function signInOwner(email, password) {
+export async function signInOwner(email, password, deviceAlias = null) {
     if (!supabaseCloud?.auth) return { ok: false, error: 'Supabase no disponible' };
     try {
         const { data, error } = await supabaseCloud.auth.signInWithPassword({
@@ -98,7 +98,7 @@ export async function signInOwner(email, password) {
             password: String(password || ''),
         });
         if (error) return { ok: false, error: error.message };
-        const reg = await registerCurrentDevice();
+        const reg = await registerCurrentDevice(deviceAlias);
         if (reg.limitReached) {
             // Credenciales válidas pero la cuenta está llena: no dejar una
             // sesión a medias en un equipo que no puede sincronizar.

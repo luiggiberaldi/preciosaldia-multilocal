@@ -4,7 +4,7 @@ import { useReveal } from '../hooks/useReveal';
 import {
     ArrowLeft, Store, Printer, Coins, Package, CreditCard, Database,
     Palette, Fingerprint, Upload, Download, Share2, Check, X,
-    AlertTriangle, Copy, Sun, Moon, ChevronRight, Trash2, Users, FileText, Lock, Key
+    AlertTriangle, Copy, Sun, Moon, ChevronRight, Trash2, Users, FileText, Lock, Key, Smartphone
 } from 'lucide-react';
 import { showToast } from '../components/Toast';
 import PaymentMethodsManager from '../components/Settings/PaymentMethodsManager';
@@ -19,6 +19,7 @@ import SettingsTabVentas from '../components/Settings/tabs/SettingsTabVentas';
 import SettingsTabUsuarios from '../components/Settings/tabs/SettingsTabUsuarios';
 import SettingsTabSistema from '../components/Settings/tabs/SettingsTabSistema';
 import SettingsTabLicencia from '../components/Settings/tabs/SettingsTabLicencia';
+import SettingsTabEquipos from '../components/Settings/tabs/SettingsTabEquipos';
 import { useCloudBackup } from '../hooks/useCloudBackup';
 import { useDataImportExport } from '../hooks/useDataImportExport';
 import { useAuthStore } from '../hooks/store/useAuthStore';
@@ -33,6 +34,7 @@ const TABS = [
     // { id: 'cuentas', label: 'Cuentas', icon: Coins }, // Ocultado por solicitud del usuario
     { id: 'usuarios', label: 'Usuarios', icon: Users },
     { id: 'licencia', label: 'Licencia', icon: Key },
+    { id: 'equipos', label: 'Equipos', icon: Smartphone },
     { id: 'sistema', label: 'Sistema', icon: Database },
 ];
 
@@ -381,6 +383,11 @@ export default function SettingsView({ onClose, theme, toggleTheme, triggerHapti
                                 deviceId={deviceId}
                                 triggerHaptic={triggerHaptic}
                             />
+                        )}
+
+                        {/* ═══ TAB: EQUIPOS ═══ */}
+                        {activeTab === 'equipos' && (
+                            <SettingsTabEquipos />
                         )}
 
                         {/* ═══ TAB: CUENTAS ═══ */}

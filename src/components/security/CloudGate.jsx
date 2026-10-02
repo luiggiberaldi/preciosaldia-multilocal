@@ -139,6 +139,7 @@ export default function CloudGate({ onReady }) {
     const [code, setCode] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [deviceName, setDeviceName] = useState('');
     const [devices, setDevices] = useState([]);
     const [offline] = useState(
         typeof navigator !== 'undefined' && navigator.onLine === false
@@ -188,7 +189,7 @@ export default function CloudGate({ onReady }) {
     const handleLogin = useCallback(async () => {
         setBusy(true);
         setError('');
-        const res = await signInOwner(email, password);
+        const res = await signInOwner(email, password, deviceName.trim() || null);
         setBusy(false);
         if (res.ok) {
             setState('ready');
@@ -216,7 +217,7 @@ export default function CloudGate({ onReady }) {
             return;
         }
         setError(res.error || 'No se pudo iniciar sesión.');
-    }, [email, password, onReady]);
+    }, [email, password, deviceName, onReady]);
 
     const handleRevoke = useCallback(async (deviceId) => {
         setBusy(true);
@@ -329,6 +330,17 @@ export default function CloudGate({ onReady }) {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                        />
+                    </div>
+                    <div className="relative">
+                        <input
+                            className={inputBase}
+                            type="text"
+                            placeholder="Nombre de este equipo (ej: Caja 1)"
+                            value={deviceName}
+                            onChange={(e) => setDeviceName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                            autoCapitalize="words"
                         />
                     </div>
                 </div>
