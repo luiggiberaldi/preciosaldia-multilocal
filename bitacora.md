@@ -1175,3 +1175,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 1. Botones rápidos de plazo: 7, 15, 30, 45, 60 días (calculan la fecha automáticamente). El date picker sigue disponible.
 2. Badges de vencimiento en el historial: rojo "Vencida hace Xd" / "Vence hoy", ámbar "Vence en Xd" (≤7 días).
 **Versión:** 2.0.6.
+
+## 2026-10-02 ~19:35 — v2.0.7: factura con moneda USD/Bs bidireccional
+**Pedido de:** Luigi.
+**Cambio (`src/components/Suppliers/SupplierModals.jsx`):** el modal Cargar Factura ahora tiene selector USD/Bs. Al escribir en USD muestra el equivalente en Bs (tasa BCV) y viceversa. El monto se guarda normalizado en ambas monedas.
+**Versión:** 2.0.7.

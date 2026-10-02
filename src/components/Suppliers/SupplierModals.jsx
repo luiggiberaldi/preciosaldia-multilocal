@@ -96,9 +96,17 @@ export function AddSupplierModal({ onClose, onSave, editingSupplier = null }) {
 }
 
 export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClose, onSave }) {
-    const [invoiceNumber, setInvoiceNumber] = useState('');
-    const [amountUsd, setAmountUsd] = useState('');
-    const [dueDate, setDueDate] = useState('');
+    // Moneda de entrada: USD o BS (conversión bidireccional a tasa BCV)
+    const [currencyMode, setCurrencyMode] = useState('USD');
+    const [amountInput, setAmountInput] = useState('');
+
+    // Monto normalizado a USD para guardar
+    const amountUsdValue = currencyMode === 'USD'
+        ? parseFloat(amountInput) || 0
+        : (parseFloat(amountInput) || 0) / (bcvRate || 1);
+    const amountBsValue = currencyMode === 'BS'
+        ? parseFloat(amountInput) || 0
+        : (parseFloat(amountInput) || 0) * (bcvRate || 0);
     const [photoBlob, setPhotoBlob] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
     const fileRef = useRef(null);
@@ -127,7 +135,7 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!invoiceNumber || !amountUsd || parseFloat(amountUsd) <= 0) return;
+        if (!invoiceNumber || amountUsdValue <= 0) return;
         
         const invoiceData = {
             id: crypto.randomUUID(),
@@ -135,8 +143,8 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
             invoiceNumber: invoiceNumber.trim(),
             date: new Date().toISOString(),
             dueDate: dueDate || null,
-            amountUsd: parseFloat(amountUsd),
-            amountBs: parseFloat(amountUsd) * bcvRate,
+            amountUsd: amountUsdValue,
+            amountBs: amountBsValue,
             status: 'PENDIENTE',
             amountPaidUsd: 0,
             type: 'INVOICE',
@@ -163,12 +171,43 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
                         <input type="text" required value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className="w-full form-input border rounded-xl px-3 py-2 text-sm font-bold dark:bg-slate-950" autoFocus />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Monto Total a Pagar (USD) *</label>
-                        <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-slate-400">USD</span>
-                            <input type="number" required min="0.01" step="0.01" value={amountUsd} onChange={e => setAmountUsd(e.target.value)} className="w-full form-input border rounded-xl px-3 py-2 pl-12 text-lg font-black dark:bg-slate-950" />
+                        <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Monto Total a Pagar *</label>
+                        {/* Selector de moneda */}
+                        <div className="flex gap-1.5 mb-2">
+                            {['USD', 'BS'].map(cur => (
+                                <button
+                                    key={cur}
+                                    type="button"
+                                    onClick={() => { setCurrencyMode(cur); setAmountInput(''); }}
+                                    className={`flex-1 py-1.5 text-[11px] font-black rounded-lg border transition-colors ${
+                                        currencyMode === cur
+                                            ? 'bg-teal-600 border-teal-600 text-white'
+                                            : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-teal-400'
+                                    }`}
+                                >
+                                    {cur === 'USD' ? '$ Dólares' : 'Bs Bolívares'}
+                                </button>
+                            ))}
                         </div>
-                        {amountUsd && bcvRate > 0 && <p className="text-[10px] text-slate-500 mt-1 text-right">Equivale a {formatBs(parseFloat(amountUsd) * bcvRate)} Bs</p>}
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-slate-400 text-sm">
+                                {currencyMode === 'USD' ? 'USD' : 'Bs'}
+                            </span>
+                            <input
+                                type="number" required min="0.01" step="0.01"
+                                value={amountInput}
+                                onChange={e => setAmountInput(e.target.value)}
+                                autoComplete="off"
+                                className="w-full form-input border rounded-xl px-3 py-2 pl-12 text-lg font-black dark:bg-slate-950"
+                            />
+                        </div>
+                        {amountInput && parseFloat(amountInput) > 0 && bcvRate > 0 && (
+                            <p className="text-[11px] text-slate-500 mt-1.5 text-right font-semibold">
+                                {currencyMode === 'USD'
+                                    ? <>Equivale a <strong className="text-teal-600">{formatBs(amountBsValue)} Bs</strong> <span className="text-slate-400">(BCV {bcvRate})</span></>
+                                    : <>Equivale a <strong className="text-teal-600">${formatUsd(amountUsdValue)}</strong> <span className="text-slate-400">(BCV {bcvRate})</span></>}
+                            </p>
+                        )}
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Fecha Vencimiento (Opcional)</label>
@@ -225,7 +264,7 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
                         )}
                     </div>
 
-                    <button type="submit" disabled={!invoiceNumber || !amountUsd || parseFloat(amountUsd) <= 0} className="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-bold rounded-xl active:scale-95 transition-all text-sm flex justify-center items-center gap-2 mt-4">
+                    <button type="submit" disabled={!invoiceNumber || amountUsdValue <= 0} className="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-bold rounded-xl active:scale-95 transition-all text-sm flex justify-center items-center gap-2 mt-4">
                         Registrar Deuda
                     </button>
                 </form>
