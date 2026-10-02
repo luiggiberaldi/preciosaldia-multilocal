@@ -52,6 +52,7 @@ import {
 // ── SEC-005: Generación de PINs aleatorios en primer arranque ────────────────
 
 const SESSION_KEY = 'abasto-device-session';
+export { SESSION_KEY };
 const ADMIN_CRED_KEY = 'abasto-admin-cred'; // sessionStorage
 
 /**

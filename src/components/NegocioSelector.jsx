@@ -16,8 +16,9 @@ import { showToast } from './Toast';
 import ConfirmModal from './ConfirmModal';
 import NegocioModal from './NegocioModal';
 import { useNegociosStore } from '../hooks/store/useNegociosStore';
-import { useAuthStore } from '../hooks/store/useAuthStore';
-import { canManageBusinesses } from '../utils/roles';
+import { useAuthStore, SESSION_KEY } from '../hooks/store/useAuthStore';
+import { canManageBusinesses, isAdministrador, isOwner } from '../utils/roles';
+import { NEGOCIO_KEY_PREFIX } from '../utils/negocioContext';
 
 export default function NegocioSelector({ triggerHaptic }) {
     const negocios = useNegociosStore((s) => s.negocios);
@@ -50,6 +51,14 @@ export default function NegocioSelector({ triggerHaptic }) {
         }
         triggerHaptic && triggerHaptic();
         const target = negocios.find((n) => n.id === id);
+        // Si quien cambia es admin o dueño, conserva su sesión en la sede destino
+        // para no caer en la última sesión guardada (p. ej. un cajero).
+        if (usuarioActivo && (isAdministrador(usuarioActivo) || isOwner(usuarioActivo))) {
+            try {
+                const targetKey = `${NEGOCIO_KEY_PREFIX}${id}:${SESSION_KEY}`;
+                localStorage.setItem(targetKey, JSON.stringify(usuarioActivo));
+            } catch { /* noop */ }
+        }
         const res = activarNegocio(id);
         if (res?.ok) {
             showToast(`Cambiando a "${target?.nombre ?? ''}"…`, 'info');

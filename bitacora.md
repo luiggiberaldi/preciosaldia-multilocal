@@ -4,6 +4,19 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## 2026-10-01 — Admin conserva sesión al cambiar de sede (FIX-ADMIN-SWITCH)
+
+**Qué:** luigi reportó que al cambiar de sede desde el usuario admin, la app retornaba con estado de cajero.
+
+**Causa:** la sesión es por sede (`routeAuthKey`: cada negocio tiene su personal). Al cambiar de sede, la app cargaba la última sesión guardada de la sede destino — si un cajero la había usado, el admin caía a vista de cajero.
+
+**Fix** (`src/components/NegocioSelector.jsx`, `src/hooks/store/useAuthStore.js`):
+- `SESSION_KEY` ahora exportada.
+- En `handleSwitch`: si quien cambia es ADMIN o DUEÑO, su sesión se pre-guarda bajo la clave de la sede destino (`nb_<id>:abasto-device-session`) antes del reload. Así conserva su rol.
+- Los cajeros siguen con sesiones por sede (sin cambios).
+
+---
+
 ## 2026-10-01 — Cajero ve Inventario en solo-lectura (ROL-CAJERO)
 
 **Qué:** luigi pidió que a los cajeros les salga el inventario (antes solo veían Vender y Clientes). `ProductsView` ya traía soporte de solo-lectura para cajero (`isCajero`: sin onEdit/onDelete, `readOnly`, sin columna de costo, sin botones ± de stock, toolbar con acciones ocultas) — solo faltaba el permiso del tab.
