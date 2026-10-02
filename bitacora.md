@@ -1099,3 +1099,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Reportado por:** Luigi + pruebas de navegador (2 intentos de clic fallidos).
 **Causa:** el `LockScreen` tiene `z-[250]` y el `UpdateBanner` tenía `z-[100]`. Toda la pantalla de login (incluido el botón "Instalar App" en `top-4 right-4`) quedaba POR ENCIMA del banner, tapando el botón "Actualizar ahora".
 **Fix (`src/components/UpdateBanner.jsx`):** z-index del banner cambiado de `z-[100]` a `z-[300]`, por encima del LockScreen.
+
+## 2026-10-02 ~18:12 — Fix: botón "Actualizar ahora" se quedaba colgado
+**Reportado por:** Luigi (screenshot mostrando "Actualizando..." sin avanzar).
+**Causa:** `applyUpdate()` llamaba a `window.__pdaUpdateSW(true)` sin timeout. Si la función del PWA se colgaba, el botón quedaba en "Actualizando..." indefinidamente.
+**Fix:** timeout de seguridad de 5 segundos — si la actualización no completa, fuerza `window.location.reload()`.

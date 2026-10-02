@@ -29,10 +29,19 @@ export function UpdateBanner() {
         if (isUpdating) return;
         setIsUpdating(true);
 
+        // FIX (2026-10-02): timeout de seguridad — si la actualización tarda
+        // más de 5s, forzar recarga para no dejar el botón colgado en
+        // "Actualizando...".
+        const forceReloadTimeout = setTimeout(() => {
+            console.warn('[UpdateBanner] Timeout de actualización, forzando recarga');
+            window.location.reload();
+        }, 5000);
+
         try {
             // 1. Si vite-plugin-pwa nos proveyó la función de update oficial:
             if (typeof window.__pdaUpdateSW === 'function') {
                 await window.__pdaUpdateSW(true);
+                clearTimeout(forceReloadTimeout);
                 return;
             }
 
@@ -44,6 +53,7 @@ export function UpdateBanner() {
                     navigator.serviceWorker.addEventListener('controllerchange', () => {
                         if (!refreshing) {
                             refreshing = true;
+                            clearTimeout(forceReloadTimeout);
                             window.location.reload();
                         }
                     });
@@ -54,6 +64,7 @@ export function UpdateBanner() {
                     setTimeout(() => {
                         if (!refreshing) {
                             refreshing = true;
+                            clearTimeout(forceReloadTimeout);
                             window.location.reload();
                         }
                     }, 1200);
@@ -61,9 +72,11 @@ export function UpdateBanner() {
                 }
             }
 
+            clearTimeout(forceReloadTimeout);
             window.location.reload();
         } catch (err) {
             console.error('[UpdateBanner] Error al aplicar actualización:', err);
+            clearTimeout(forceReloadTimeout);
             window.location.reload();
         }
     };
