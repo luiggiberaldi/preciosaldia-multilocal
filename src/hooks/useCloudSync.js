@@ -464,15 +464,21 @@ export const syncNow = async () => {
                 .limit(2000);
             if (docsError) throw docsError;
 
+            console.log(`[syncNow] PULL: ${docs?.length || 0} documentos de la nube`);
             for (const doc of docs || []) {
-                if (!isDocForActiveBusiness(doc.doc_id)) continue;
+                if (!isDocForActiveBusiness(doc.doc_id)) {
+                    console.log(`[syncNow] SKIP (no es del negocio activo): ${doc.doc_id}`);
+                    continue;
+                }
                 try {
                     const applied = await _applyFromCloud(doc.doc_id, doc.collection, doc.data, doc.device_id);
+                    console.log(`[syncNow] ${doc.doc_id}: ${applied ? 'APLICADO' : 'descartado (no es más nuevo)'}`);
                     if (applied) pulled++;
                 } catch (e) {
                     console.warn(`[syncNow] Error aplicando ${doc.doc_id}:`, e);
                 }
             }
+            console.log(`[syncNow] PULL completo: ${pulled} aplicados`);
             const maxTs = (docs || []).reduce(
                 (m, d) => (d.updated_at && d.updated_at > m ? d.updated_at : m),
                 localStorage.getItem(wmKey) || ''
@@ -600,7 +606,9 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
 
         const metadataKey = getSyncMetadataKey(docId);
         const previousUpdatedAt = localStorage.getItem(metadataKey);
+        console.log(`[syncNow] ${docId}: remoto=${envelope.updatedAt} local=${previousUpdatedAt || 'nunca'}`);
         if (!isNewerSyncDocument(envelope.updatedAt, previousUpdatedAt)) {
+            console.log(`[syncNow] ${docId}: DESCARTADO (remoto no es más nuevo)`);
             // M-17 (2026-10-01): el LWW descartaba en silencio. Si el contenido
             // remoto difiere del confirmado y la clave no es append-only, se
             // registra el conflicto para avisar en UI.
@@ -701,6 +709,13 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
                 const hashKey = LAST_PUSH_HASH_PREFIX + docId;
                 localStorage.setItem(hashKey, quickHash(payload));
                 if (envelope.updatedAt) localStorage.setItem(metadataKey, envelope.updatedAt);
+                // Log: cuántos productos tienen foto después de aplicar
+                if (Array.isArray(payload)) {
+                    const conFoto = payload.filter(p => p?.image).length;
+                    console.log(`[syncNow] ${docId}: APLICADO (${payload.length} productos, ${conFoto} con foto)`);
+                } else {
+                    console.log(`[syncNow] ${docId}: APLICADO`);
+                }
                 return true;
             }
             // ── Catálogo de usuarios sin PINs (SEC-002) ─────────────────────
