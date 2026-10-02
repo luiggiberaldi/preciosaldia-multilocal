@@ -1052,3 +1052,15 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `ProductsToolbar.jsx`: nuevo botón "Vincular fotos" en el menú de herramientas (icono Image, color emerald).
 - `ProductsView.jsx`: handler `handleVincularFotos` que aplica el mapeo, guarda en storage y muestra toast con el conteo.
 **Uso:** Importar Excel de Bodega → Herramientas → Vincular fotos → las tarjetas muestran las imágenes.
+
+## 2026-10-02 ~09:40 — Fix QA: vuelto en recibo + feedback Actualizar Tasas
+**Reportado por:** pruebas deterministas Fase 3 y 5.
+**Fix 1 — Vuelto en recibo (ReceiptModal.jsx):**
+- El recibo en pantalla mostraba "Vuelto entregado: Bs 0,00" cuando el vuelto fue en dólares.
+- Causa: el código usaba `receiptCurrencyMode` (default 'bs') para decidir qué mostrar, ignorando los montos reales.
+- Fix: ahora muestra los montos reales — si hay vuelto en $ muestra `$X.XX`, si hay en Bs muestra `Bs X`, si hay ambos muestra ambos.
+**Fix 2 — Feedback Actualizar Tasas (useRates.js + DashboardView.jsx):**
+- El botón no mostraba confirmación visible al actualizar.
+- `updateData()` ahora retorna `{ok, bcv}` o `{ok:false, error}`.
+- `DashboardView` muestra toast: "Tasas actualizadas (BCV X)" en éxito, "Error al actualizar tasas" en fallo.
+- El estado "Actualizando..." con spinner ya existía (loading).

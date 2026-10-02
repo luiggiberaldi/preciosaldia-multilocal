@@ -341,10 +341,13 @@ export function useRates() {
                 setIsOffline(false);
             }
 
+            return { ok: true, bcv: newRates.bcv?.price };
+
         } catch (e) {
             console.error(e);
             log("Error actualización", 'error');
             setIsOffline(true);
+            return { ok: false, error: e.message };
         } finally {
             setLoading(false);
         }

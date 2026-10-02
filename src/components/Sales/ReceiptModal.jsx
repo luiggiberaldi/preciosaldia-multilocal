@@ -266,15 +266,11 @@ export default function ReceiptModal({ receipt, onClose, onShareWhatsApp, curren
                                     <div className="flex justify-between text-emerald-600 font-bold mt-2 pt-2 border-t border-slate-200">
                                         <span>Vuelto entregado:</span>
                                         <span>
-                                            {receiptCurrencyMode === 'usd'
+                                            {receipt.changeUsd > 0 && receipt.changeBs > 0
+                                                ? `$${receipt.changeUsd.toFixed(2)} / Bs ${formatBs(receipt.changeBs)}`
+                                                : receipt.changeUsd > 0
                                                 ? `$${receipt.changeUsd.toFixed(2)}`
-                                                : receiptCurrencyMode === 'bs'
-                                                ? `Bs ${formatBs(receipt.changeBs)}`
-                                                : receipt.copEnabled && receipt.tasaCop > 0
-                                                ? copPrimary
-                                                    ? `${formatCop(receipt.changeUsd * receipt.tasaCop)} COP / $${receipt.changeUsd.toFixed(2)} / ${formatBs(receipt.changeBs)} Bs`
-                                                    : `$${receipt.changeUsd.toFixed(2)} / ${formatCop(receipt.changeUsd * receipt.tasaCop)} COP / ${formatBs(receipt.changeBs)} Bs`
-                                                : `$${receipt.changeUsd.toFixed(2)} / ${formatBs(receipt.changeBs)}`
+                                                : `Bs ${formatBs(receipt.changeBs)}`
                                             }
                                         </span>
                                     </div>

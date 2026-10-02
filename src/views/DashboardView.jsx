@@ -913,7 +913,14 @@ export default function DashboardView({ rates, refreshRates, ratesLoading, trigg
                         rates={rates}
                         loading={ratesLoading || false}
                         isOffline={!isOnline}
-                        onRefresh={() => refreshRates ? refreshRates(false) : refreshData()}
+                        onRefresh={async () => {
+                            const result = refreshRates ? await refreshRates(false) : await refreshData();
+                            if (result?.ok) {
+                                showToast(`Tasas actualizadas (BCV ${result.bcv})`, 'success');
+                            } else if (result && !result.ok) {
+                                showToast('Error al actualizar tasas', 'error');
+                            }
+                        }}
                         toggleTheme={toggleTheme}
                         theme={theme}
                         addLog={console.log}
