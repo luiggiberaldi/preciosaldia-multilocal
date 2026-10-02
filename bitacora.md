@@ -1043,3 +1043,12 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Causa:** el `onClick` del botón solo mostraba toast si NO había licencia; si había licencia, no llamaba a nada. Recibía `handleSyncCloud` por props pero nunca lo invocaba.
 **Cambio:** `SettingsTabSistema.jsx` ahora llama a `handleSyncCloud()` cuando hay licencia.
 **Deploy:** producción Ready.
+
+## 2026-10-02 ~06:45 — Botón "Vincular fotos" (VINCULAR-FOTOS-001)
+**Pedido de Luigi:** ver las fotos de los productos en Bodega como evidencia.
+**Cambios:**
+- Nuevo `src/utils/vincularFotos.js`: vincula fotos por barcode usando el mapeo `public/barcode_to_photo.json` (1.498 códigos → filenames, generado desde `mapeo_fotos_bodega.json`). Las URLs apuntan al bucket `product-images` en Supabase Storage.
+- Nuevo `public/barcode_to_photo.json`: mapeo compacto barcode → filename.
+- `ProductsToolbar.jsx`: nuevo botón "Vincular fotos" en el menú de herramientas (icono Image, color emerald).
+- `ProductsView.jsx`: handler `handleVincularFotos` que aplica el mapeo, guarda en storage y muestra toast con el conteo.
+**Uso:** Importar Excel de Bodega → Herramientas → Vincular fotos → las tarjetas muestran las imágenes.

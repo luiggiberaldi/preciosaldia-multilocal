@@ -22,6 +22,7 @@ import CategoryManagerModal from '../components/Products/CategoryManagerModal';
 import BulkPriceAdjustModal from '../components/Products/BulkPriceAdjustModal';
 import StockBatchModal from '../components/Products/StockBatchModal';
 import ExcelImportModal from '../components/Products/ExcelImportModal';
+import { vincularFotos } from '../utils/vincularFotos';
 import { useNegociosStore } from '../hooks/store/useNegociosStore';
 import { useProductContext } from '../context/ProductContext';
 import SmartImage from '../components/SmartImage';
@@ -566,6 +567,30 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const negocioActivo = useNegociosStore((s) => s.getNegocioActivo());
     const sedeNombre = negocioActivo?.nombre || 'esta sede';
 
+    // VINCULAR-FOTOS-001: asocia fotos del catálogo por barcode
+    const handleVincularFotos = async () => {
+        try {
+            showToast('Vinculando fotos...', 'info');
+            const { actualizados, total } = await vincularFotos(products);
+            if (actualizados > 0) {
+                await storageService.setItem('bodega_products_v1', products);
+                setProducts([...products]);
+                auditLog('INVENTARIO', 'VINCULAR_FOTOS',
+                    `Vinculadas ${actualizados} fotos de ${total} productos en "${sedeNombre}"`);
+            }
+            showToast(
+                actualizados > 0
+                    ? `${actualizados} fotos vinculadas`
+                    : 'No se encontraron fotos para estos productos',
+                actualizados > 0 ? 'success' : 'info'
+            );
+            triggerHaptic && triggerHaptic();
+        } catch (e) {
+            console.error('[vincularFotos]', e);
+            showToast('Error al vincular fotos: ' + (e.message || 'desconocido'), 'error');
+        }
+    };
+
     const handleExcelImport = async (nuevos, modo) => {
         let importados = nuevos;
         let omitidosExistentes = 0;
@@ -674,6 +699,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                 setIsCategoryManagerOpen={setIsCategoryManagerOpen}
                 setIsStockBatchOpen={setIsStockBatchOpen}
                 setIsExcelImportOpen={setIsExcelImportOpen}
+                onVincularFotos={handleVincularFotos}
                 triggerHaptic={triggerHaptic}
                 onSelectAllToast={() => showToast('Todo el inventario seleccionado', 'success')}
             />
