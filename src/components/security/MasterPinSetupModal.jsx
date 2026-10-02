@@ -8,13 +8,13 @@
  * UI: todo redondeado, sin alert/confirm/prompt, iconos lucide.
  */
 import React, { useState } from 'react';
-import { Crown, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Crown, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { setMasterPin } from '../../utils/duenoAuth';
 import { PIN_POLICY } from '../../utils/securityConstants';
 
 const PIN_LENGTH = PIN_POLICY.MIN_LENGTH;
 
-function PinBoxes({ value, onChange, idPrefix }) {
+function PinBoxes({ value, onChange, idPrefix, visible }) {
     const digits = (value || '').padEnd(PIN_LENGTH, '').slice(0, PIN_LENGTH).split('');
 
     const handleChange = (index, digit) => {
@@ -39,7 +39,7 @@ function PinBoxes({ value, onChange, idPrefix }) {
                 <input
                     key={i}
                     id={`masterpin-${idPrefix}-${i}`}
-                    type="password"
+                    type={visible ? 'text' : 'password'}
                     inputMode="numeric"
                     maxLength={1}
                     value={digits[i]?.trim() || ''}
@@ -57,6 +57,7 @@ export default function MasterPinSetupModal({ isOpen, onDone }) {
     const [confirm, setConfirm] = useState('');
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
+    const [showPin, setShowPin] = useState(false);
 
     if (!isOpen) return null;
 
@@ -99,15 +100,25 @@ export default function MasterPinSetupModal({ isOpen, onDone }) {
                         negocios. No está atado a ninguna sede: guárdalo bien.
                     </p>
 
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
-                        Tu PIN maestro
-                    </p>
-                    <PinBoxes value={pin} onChange={setPin} idPrefix="new" />
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                        <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                            Tu PIN maestro
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => setShowPin(v => !v)}
+                            className="p-1 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                            aria-label={showPin ? 'Ocultar PIN' : 'Mostrar PIN'}
+                        >
+                            {showPin ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                    </div>
+                    <PinBoxes value={pin} onChange={setPin} idPrefix="new" visible={showPin} />
 
                     <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 mt-5">
                         Confírmalo
                     </p>
-                    <PinBoxes value={confirm} onChange={setConfirm} idPrefix="confirm" />
+                    <PinBoxes value={confirm} onChange={setConfirm} idPrefix="confirm" visible={showPin} />
 
                     {error && (
                         <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-4 py-2.5 rounded-2xl border border-rose-200 dark:border-rose-900/50">

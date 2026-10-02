@@ -1119,3 +1119,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 1. **Supervisión solo para el dueño** (`src/utils/roles.js`): creado `TABS_DUENO` (con supervisión) y `TABS_ADMIN` (sin supervisión). El admin ya no ve el tab Supervisión.
 2. **Cambiar PIN del dueño** (`src/components/Settings/UsersManager.jsx`): nueva sección "PIN del Dueño" visible solo con sesión de dueño. Reutiliza `MasterPinSetupModal` para definir el nuevo PIN maestro. Antes NO había forma de cambiarlo (solo se creaba al inicio).
 3. **Dueño omnipotente:** verificado — `hasAdminAccess`, `canManageBusinesses`, `canCreateRole`, `canManageUser` ya le dan todos los permisos.
+
+## 2026-10-02 ~18:40 — Ojo para ver el PIN maestro
+**Pedido de:** Luigi.
+**Cambio (`src/components/security/MasterPinSetupModal.jsx`):** botón de ojo (Eye/EyeOff de lucide) junto al label "Tu PIN maestro" que alterna entre mostrar/ocultar los dígitos de ambos campos (PIN y confirmación).
