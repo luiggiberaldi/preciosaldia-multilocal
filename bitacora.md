@@ -985,3 +985,47 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `handleSyncCloud` en `useCloudBackup.js` ahora llama `syncNow()` primero y muestra el resultado: "Sincronizado correctamente (X actualizados, Y subidos)" o el error específico.
 - **Causa raíz de las fotos:** mi vinculación SQL no actualizó el `updatedAt` interno del envelope; la app lo rechazaba por "no ser más nuevo" (LWW). Corregido vía SQL.
 **Deploy:** `vercel --prod` → `preciosaldia-multilocal-kgsr4exrn-luiggi2.vercel.app` ● Ready.
+
+## 2026-10-01 ~22:05 — Flujo código-primero (commit 74353520)
+**Pedido de Luigi:** el código debe mandar — el equipo que se active con el código queda asociado de inmediato; panel de equipos en Ajustes (reemplaza Licencia) para ver/desvincular; al registrar equipo pedir el nombre.
+**Cambios:**
+- `CloudGate.jsx`: nuevo campo "Nombre de este equipo" en el login; se pasa a `signInOwner` → `registerCurrentDevice(alias)`.
+- `cloudAccount.js`: `signInOwner(email, password, deviceAlias)` acepta alias.
+- Nuevo `SettingsTabEquipos.jsx`: lista equipos vinculados (nombre, ID corto), botón desvincular, contador X/6, muestra el código de licencia.
+- `SettingsView.jsx`: pestaña "Equipos" (reemplaza visualmente a "Licencia" en la navegación; la pestaña Licencia se mantiene por compatibilidad).
+**Tests:** 923 passed.
+**Deploy:** pusheado a main; `vercel --prod` en curso (bundle por verificar).
+
+### Botón "Cambiar código" (2026-10-01)
+- En Ajustes → Equipos, junto al código de licencia, botón "Cambiar código".
+- Limpia el Supabase guardado localmente y recarga → vuelve CloudGate para meter otro código.
+- Desplegado a producción.
+
+### Dispositivos Pro dinámicos (2026-10-01)
+- La app lee `max_devices` del directorio (ya no hardcodea 6).
+- RPC `register_account_device` acepta `p_max_devices`.
+- La app reporta sus dispositivos a la Estación vía `report_pro_devices`.
+- Si la Estación revoca un equipo, la app lo detecta en el sync y vuelve a CloudGate.
+- Desplegado a producción.
+
+### Fix licencia Pro en sesiones existentes (2026-10-02)
+**Problema:** el fix `ebbd789` solo marcaba `pda_license_cache` en `handleLogin`. Si la app entraba directo a `ready` (sesión/proyecto ya cacheados), la licencia seguía en "Sin Licencia" y bloqueaba Inventario/Vender/Sincronizar.
+**Cambios:**
+- `useSecurity.jsx`: `checkLicense` ahora primero revisa `getCustomerProject()`; si hay código Pro activo, `isPremium(true)` sin más validación.
+- `SettingsTabLicencia.jsx`: si hay proyecto Pro activo, muestra licencia activa aunque no esté en el caché viejo.
+**Commit:** `9bc8d3f`. **Deploy:** producción Ready.
+
+### Fix botón "Actualizar Tasas" (2026-10-02)
+**Problema:** en el Monitor, el botón "Actualizar Tasas" no hacía nada (pulsado 3 veces en prueba live, sin cambios ni mensajes).
+**Causa:** `onRefresh` llamaba a `refreshData()` de `useDashboardData`, que solo recarga ventas/clientes locales, nunca las tasas.
+**Cambios:**
+- `App.jsx`: expone `updateData` de `useRates()` como `refreshRates`.
+- `DashboardView.jsx`: recibe `refreshRates` y lo pasa a `MonitorView` como `onRefresh` (fallback a `refreshData` si no existe).
+**Commit:** `efc5ede`. **Deploy:** producción Ready.
+
+### Fix monitor: subtítulo duplicado y solapamiento (2026-10-02)
+**Problema (reportado por Luigi con captura):** "Actualizado donde vayas" aparecía duplicado; cifras y palabras podían chocar en pantallas angostas.
+**Cambios (`MonitorView.jsx`):**
+- Eliminado el `<p>` duplicado (el logo ya trae el texto).
+- Precio gigante: `text-[16vw]` → `text-[14vw]`, contenedor con `max-w-full overflow-hidden`, `shrink-0` en `$`/decimales/`Bs`, `whitespace-nowrap`.
+**Commit:** `5fe5c69`. **Deploy:** producción Ready.
