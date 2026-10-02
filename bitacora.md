@@ -977,3 +977,11 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Pendientes que siguen en pie (no se fingieron resueltos):** ALTO-6, M-8 y B-10 (importador Excel del tercero, diffs exactos en `~/workspace/your_files/fase-4-diffs-coordinacion-tercero-2026-10-01.md`); B-2 (sesión local manipulable — decisión HMAC/PIN); B-3 (RPC público sin rate-limit, requiere server-side).
 
 **Deploy a producción (2026-10-01, ~14:20):** luigi autorizó ("despliega"). El push a `main` no disparó deploy automático en Vercel (Git no conectado: `vercel git connect` pendiente). Deploy manual con `vercel --prod`: `✓ Ready in 3m`, target production, commit `de88a68c` (tag `fix-auditoria-postplan`). `https://preciosaldia-multilocal.vercel.app` → 200 OK.
+
+## 2026-10-01 ~21:40 — Sync unificado + fix fotos (commit 222e5db2, DESPLEGADO)
+**Problema:** El botón "Sincronizar con la Nube" solo sincronizaba la tabla `cloud_backups`, NUNCA los documentos (`sync_documents`) donde viven los productos. Por eso al pulsar "no pasaba nada" y las fotos no aparecían.
+**Fix:**
+- Nueva función `syncNow()` en `useCloudSync.js`: hace pull (baja documentos nuevos) + push (sube cambios) y devuelve `{ok, message}` claro.
+- `handleSyncCloud` en `useCloudBackup.js` ahora llama `syncNow()` primero y muestra el resultado: "Sincronizado correctamente (X actualizados, Y subidos)" o el error específico.
+- **Causa raíz de las fotos:** mi vinculación SQL no actualizó el `updatedAt` interno del envelope; la app lo rechazaba por "no ser más nuevo" (LWW). Corregido vía SQL.
+**Deploy:** `vercel --prod` → `preciosaldia-multilocal-kgsr4exrn-luiggi2.vercel.app` ● Ready.
