@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { ShieldAlert, KeyRound, CheckCircle2, AlertCircle, X, Lock } from 'lucide-react';
+import { ShieldAlert, KeyRound, CheckCircle2, AlertCircle, X, Lock, Crown, Eye, EyeOff } from 'lucide-react';
 import CustomSelect from '../CustomSelect';
 import { LOGIN_RATE_LIMIT } from '../../utils/securityConstants';
+import { setMasterPin } from '../../utils/duenoAuth';
+import { logEvent } from '../../services/auditService';
 
 /**
  * EmergencyPinResetModal Component
@@ -11,8 +13,10 @@ import { LOGIN_RATE_LIMIT } from '../../utils/securityConstants';
  * Fase 1 (CRÍTICO-1): se eliminó la clave de fábrica hardcodeada. Sin una clave
  * personalizada configurada, el flujo queda DESHABILITADO (no hay fallback).
  * Los intentos fallidos aplican rate-limit con backoff (LOGIN_RATE_LIMIT).
- * Fase 1 (CRÍTICO-5): el flujo nunca puede restablecer el PIN maestro ('dueno'
- * se excluye de la lista; el store también lo rechaza en defensa en profundidad).
+ *
+ * 2026-10-02: el dueño SÍ puede restablecer su PIN maestro con la clave de
+ * emergencia (decisión de Luigi). Requiere confirmación explícita adicional
+ * y se registra en auditoría.
  */
 const EMERGENCY_KEY_LS = 'pda_emergency_pin';
 const EMERGENCY_RL_LS = 'pda_emergency_rl';
@@ -28,16 +32,20 @@ function _writeRateLimit(rl) {
 }
 
 export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
-    // El PIN maestro nunca es elegible para restablecimiento por emergencia.
-    const eligibleUsers = (usuarios || []).filter(u => u.id !== 'dueno');
+    // 2026-10-02: el dueño ahora SÍ es elegible (con confirmación extra).
+    const eligibleUsers = usuarios || [];
     const [step, setStep] = useState(1);
     const [emergencyInput, setEmergencyInput] = useState('');
+    const [showEmergencyText, setShowEmergencyText] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState(eligibleUsers[0]?.id ?? 1);
     const [newPin, setNewPin] = useState('');
     const [confirmPin, setConfirmPin] = useState('');
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showNewPinText, setShowNewPinText] = useState(false);
+    // Confirmación extra cuando se elige restablecer el PIN del dueño
+    const [duenoConfirmed, setDuenoConfirmed] = useState(false);
 
     // Sin clave personalizada configurada por el dueño, el flujo no existe.
     const customMasterKey = (() => {
@@ -104,17 +112,40 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
             return;
         }
 
+        const isDueno = String(selectedUserId) === 'dueno';
+        if (isDueno && !duenoConfirmed) {
+            setError('Debes confirmar que entiendes que esto restablece el PIN maestro del dueño.');
+            return;
+        }
+
         setIsSubmitting(true);
         try {
-            // 'dueno' nunca llega aquí (filtrado de la lista + rechazo en el store).
-            const res = await onResetPin(Number(selectedUserId), newPin);
-            if (res?.ok) {
-                setSuccessMessage('¡PIN restablecido con éxito! Ya puedes iniciar sesión.');
-                setTimeout(() => {
-                    onClose();
-                }, 2000);
+            if (isDueno) {
+                // Restablecer PIN maestro del dueño
+                const res = await setMasterPin(newPin);
+                if (res?.ok) {
+                    try {
+                        await logEvent({
+                            tipo: 'seguridad',
+                            accion: 'pin_dueno_restablecido_emergencia',
+                            detalle: 'PIN maestro restablecido vía clave de emergencia',
+                        });
+                    } catch { /* auditoría best-effort */ }
+                    setSuccessMessage('¡PIN del dueño restablecido con éxito! Ya puedes iniciar sesión.');
+                    setTimeout(() => { onClose(); }, 2000);
+                } else {
+                    setError(res?.error || 'Error al restablecer el PIN del dueño.');
+                }
             } else {
-                setError(res?.error || 'Error al restablecer el PIN.');
+                const res = await onResetPin(Number(selectedUserId), newPin);
+                if (res?.ok) {
+                    setSuccessMessage('¡PIN restablecido con éxito! Ya puedes iniciar sesión.');
+                    setTimeout(() => {
+                        onClose();
+                    }, 2000);
+                } else {
+                    setError(res?.error || 'Error al restablecer el PIN.');
+                }
             }
         } catch (err) {
             setError('Ocurrió un error inesperado al actualizar el PIN.');
@@ -122,6 +153,8 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
             setIsSubmitting(false);
         }
     };
+
+    const isDuenoSelected = String(selectedUserId) === 'dueno';
 
     return (
         <div className="fixed inset-0 z-[300] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
@@ -195,13 +228,20 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                             <div className="relative">
                                 <KeyRound size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
-                                    type="password"
+                                    type={showEmergencyText ? "text" : "password"}
                                     value={emergencyInput}
                                     onChange={(e) => setEmergencyInput(e.target.value)}
                                     placeholder="••••••••"
                                     autoFocus
-                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                                    className="w-full pl-10 pr-11 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEmergencyText(!showEmergencyText)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                >
+                                    {showEmergencyText ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
                         </div>
 
@@ -238,7 +278,7 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                             </label>
                             <CustomSelect
                                 value={selectedUserId}
-                                onChange={(v) => setSelectedUserId(v)}
+                                onChange={(v) => { setSelectedUserId(v); setDuenoConfirmed(false); }}
                                 options={eligibleUsers.map(u => ({
                                     value: u.id,
                                     label: `${u.nombre}${u.rol ? ` (${u.rol})` : ''}`,
@@ -251,30 +291,65 @@ export function EmergencyPinResetModal({ onClose, usuarios = [], onResetPin }) {
                             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                 Nuevo PIN (6 dígitos)
                             </label>
-                            <input
-                                type="password"
-                                maxLength={6}
-                                value={newPin}
-                                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
-                                placeholder="000000"
-                                autoFocus
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white text-center tracking-[0.4em] font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showNewPinText ? "text" : "password"}
+                                    maxLength={6}
+                                    value={newPin}
+                                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                                    placeholder="000000"
+                                    autoFocus
+                                    className="w-full pl-4 pr-11 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white text-center tracking-[0.4em] font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewPinText(!showNewPinText)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                >
+                                    {showNewPinText ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         <div>
                             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                 Confirmar Nuevo PIN
                             </label>
-                            <input
-                                type="password"
-                                maxLength={6}
-                                value={confirmPin}
-                                onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-                                placeholder="000000"
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white text-center tracking-[0.4em] font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showNewPinText ? "text" : "password"}
+                                    maxLength={6}
+                                    value={confirmPin}
+                                    onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+                                    placeholder="000000"
+                                    className="w-full pl-4 pr-11 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white text-center tracking-[0.4em] font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewPinText(!showNewPinText)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                >
+                                    {showNewPinText ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Confirmación extra para el PIN del dueño */}
+                        {isDuenoSelected && (
+                            <label className="flex gap-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-3.5 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={duenoConfirmed}
+                                    onChange={(e) => setDuenoConfirmed(e.target.checked)}
+                                    className="mt-1 w-4 h-4 accent-rose-600 shrink-0"
+                                />
+                                <span className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-200">
+                                    <Crown size={13} className="inline -mt-0.5 mr-1" />
+                                    <strong>Entiendo que esto restablece el PIN maestro del dueño</strong> y otorga
+                                    acceso total a todos los negocios. Esta acción queda registrada en auditoría.
+                                </span>
+                            </label>
+                        )}
 
                         {error && (
                             <div className="flex items-center gap-2 text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-900/50">

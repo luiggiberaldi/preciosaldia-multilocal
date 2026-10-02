@@ -1130,3 +1130,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 1. Ojo (mostrar/ocultar) en el campo "PIN maestro del dueño" del paso 1 de verificación.
 2. Primera vez (sin clave configurada): caja explicativa ámbar que dice para qué sirve (7 toques al logo en login para restablecer el PIN maestro) y advierte que debe guardarse en lugar seguro porque sin ella no hay recuperación.
 3. La confirmación de la clave ya existía en el paso 2.
+
+## 2026-10-02 ~18:50 — Clave emergencia ahora restablece PIN del dueño
+**Decisión de:** Luigi.
+**Cambio (`src/components/security/EmergencyPinResetModal.jsx`):**
+- El dueño ahora aparece en la lista de usuarios elegibles para restablecimiento.
+- Al elegir al dueño: checkbox de confirmación explícita (caja roja) + registro en auditoría (`pin_dueno_restablecido_emergencia`).
+- Ojos para ver/ocultar en: clave de emergencia (paso 1) y nuevo PIN + confirmación (paso 2).
