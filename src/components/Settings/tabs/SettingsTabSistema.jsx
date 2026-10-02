@@ -157,7 +157,35 @@ export default function SettingsTabSistema({
                             <AlertTriangle size={14} /> Conflicto de datos detectado
                         </p>
                         <p className="text-[11px] text-amber-700 dark:text-amber-500/90 leading-relaxed">
-                            Hay datos tanto en este dispositivo como en la nube. Elige que version conservar:
+                            Hay datos tanto en este dispositivo como en la nube. Elige qué versión conservar:
+                        </p>
+                        {/* FAILOVER-002: mostrar resumen de ambos lados */}
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-2 border border-slate-200 dark:border-slate-700">
+                                <p className="font-bold text-slate-700 dark:text-slate-300">📱 Este equipo</p>
+                                <p className="text-slate-500 dark:text-slate-400">
+                                    {dataConflictPending.localBackup?.summary?.recordCount ?? '?'} registros
+                                </p>
+                                <p className="text-slate-400 dark:text-slate-500 text-[10px]">
+                                    {dataConflictPending.localBackup?.timestamp
+                                        ? new Date(dataConflictPending.localBackup.timestamp).toLocaleString('es-VE')
+                                        : ''}
+                                </p>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-2 border border-slate-200 dark:border-slate-700">
+                                <p className="font-bold text-slate-700 dark:text-slate-300">☁️ Nube</p>
+                                <p className="text-slate-500 dark:text-slate-400">
+                                    {dataConflictPending.cloudBackup?.summary?.recordCount ?? '?'} registros
+                                </p>
+                                <p className="text-slate-400 dark:text-slate-500 text-[10px]">
+                                    {dataConflictPending.cloudBackup?.timestamp
+                                        ? new Date(dataConflictPending.cloudBackup.timestamp).toLocaleString('es-VE')
+                                        : ''}
+                                </p>
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-amber-600 dark:text-amber-500/80 italic">
+                            Se guardará un respaldo automático de tus datos locales antes de aplicar tu elección.
                         </p>
                         <div className="flex gap-2">
                             <button

@@ -158,6 +158,34 @@ export function useCloudBackup({
     };
 
     // ─── HANDLER: Data conflict resolution ───────────────────────────────────
+    // FAILOVER-001: antes de aplicar cualquier elección, guarda un snapshot
+    // local para que los datos nunca se pierdan sin respaldo.
+    const guardarSnapshotPreConflicto = async (localBackup) => {
+        try {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const key = `snapshot_pre_conflicto_${timestamp}`;
+            // Guardar en localStorage (el backup ya está serializado)
+            const serialized = JSON.stringify(localBackup);
+            // Solo guardar si es menor a 5MB (límite localStorage)
+            if (serialized.length < 5 * 1024 * 1024) {
+                localStorage.setItem(key, serialized);
+                // Mantener solo los últimos 3 snapshots
+                const snapshots = Object.keys(localStorage)
+                    .filter(k => k.startsWith('snapshot_pre_conflicto_'))
+                    .sort();
+                while (snapshots.length > 3) {
+                    localStorage.removeItem(snapshots.shift());
+                }
+                console.log(`[CloudBackup] Snapshot pre-conflicto guardado: ${key}`);
+            } else {
+                console.warn('[CloudBackup] Snapshot muy grande, no se guardó en localStorage');
+            }
+        } catch (e) {
+            console.error('[CloudBackup] Error guardando snapshot:', e);
+            // No bloquear la resolución por fallo del snapshot
+        }
+    };
+
     const handleDataConflictChoice = async (choice) => {
         if (!dataConflictPending) return;
         const { cloudBackup, localBackup } = dataConflictPending;
@@ -165,15 +193,17 @@ export function useCloudBackup({
         setImportStatus('loading');
         setStatusMessage('Aplicando tu elección...');
         try {
+            // FAILOVER-001: respaldar datos locales ANTES de cualquier cambio
+            await guardarSnapshotPreConflicto(localBackup);
             if (choice === 'cloud') {
                 await applyCloudBackup(cloudBackup);
-                showToast('Datos de la nube restaurados. Reiniciando...', 'success');
+                showToast('Datos de la nube restaurados. Respaldo local guardado. Reiniciando...', 'success');
                 setTimeout(() => window.location.reload(), 1500);
             } else {
                 await uploadLocalBackup(localBackup);
                 showToast('Datos locales guardados en la nube', 'success');
             }
-            auditLog('NUBE', 'CONFLICTO_RESUELTO', `Conflicto datos resuelto: usuario eligió ${choice}`);
+            auditLog('NUBE', 'CONFLICTO_RESUELTO', `Conflicto datos resuelto: usuario eligió ${choice} (snapshot pre-conflicto guardado)`);
             setImportStatus(null);
         } catch (err) {
             console.error('[CloudBackup] Error al resolver conflicto:', err);

@@ -1064,3 +1064,16 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `updateData()` ahora retorna `{ok, bcv}` o `{ok:false, error}`.
 - `DashboardView` muestra toast: "Tasas actualizadas (BCV X)" en éxito, "Error al actualizar tasas" en fallo.
 - El estado "Actualizando..." con spinner ya existía (loading).
+
+## 2026-10-02 ~10:15 — Failovers: respaldo pre-conflicto + diálogo informativo + importar negocio
+**Plan:** PLAN-MAESTRO-FAILOVER.md
+**Fix 1 — Respaldo automático pre-conflicto (FAILOVER-001, P1 CRÍTICO):**
+- `useCloudBackup.js`: nueva función `guardarSnapshotPreConflicto()` que guarda el backup local en localStorage antes de aplicar cualquier resolución de conflicto.
+- Mantiene solo los últimos 3 snapshots. No bloquea la resolución si falla.
+- Toast actualizado: "Datos de la nube restaurados. Respaldo local guardado. Reiniciando..."
+**Fix 2 — Diálogo informativo (FAILOVER-002, P2 ALTO):**
+- `SettingsTabSistema.jsx`: el diálogo de conflicto ahora muestra conteo de registros y fecha de ambos lados (Este equipo vs Nube).
+- Agregada nota: "Se guardará un respaldo automático de tus datos locales antes de aplicar tu elección."
+**Fix 3 — Importar negocio con ID específico (FAILOVER-003, P3 MEDIO):**
+- `useNegociosStore.js`: nueva función `importarNegocioConId(id, datos)` para recuperar negocios desde la nube con su ID original.
+- Valida formato `neg-*` y evita duplicados. Marca `importadoDeNube: true`.

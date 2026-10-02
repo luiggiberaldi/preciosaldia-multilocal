@@ -100,6 +100,23 @@ export const useNegociosStore = create(
             },
 
             /**
+             * FAILOVER-003: Crea un negocio con un ID específico (para recuperar
+             * datos de la nube atados a un ID que no existe localmente).
+             * Solo usar para recuperación; el ID debe tener formato neg-*.
+             */
+            importarNegocioConId: (id, datos) => {
+                const clean = _sanitizeDatos(datos);
+                if (!clean.nombre) return { ok: false, error: 'El nombre del negocio es obligatorio' };
+                if (!id || !String(id).startsWith('neg-')) return { ok: false, error: 'ID de negocio inválido' };
+                const { negocios } = get();
+                if (negocios.some((n) => n.id === id)) return { ok: false, error: 'Ya existe un negocio con ese ID' };
+                const negocio = { ...clean, id: String(id), createdAt: new Date().toISOString(), importadoDeNube: true };
+                set((s) => ({ negocios: [...s.negocios, negocio] }));
+                try { logEvent('NEGOCIO', 'NEGOCIO_IMPORTADO', `Negocio "${negocio.nombre}" importado con ID ${id}`, null); } catch { /* noop */ }
+                return { ok: true, id: negocio.id };
+            },
+
+            /**
              * Actualiza los datos (fiscales) de un negocio. Si es el activo,
              * refresca el espejo fiscal para que los recibos lo reflejen.
              */
