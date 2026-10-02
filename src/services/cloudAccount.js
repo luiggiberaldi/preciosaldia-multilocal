@@ -14,7 +14,7 @@
  * @module services/cloudAccount
  */
 
-import { supabaseCloud } from '../config/supabaseCloud';
+import { supabaseCloud, getCustomerProject, clearCustomerProject } from '../config/supabaseCloud';
 import { ensureDeviceSessionRegistered } from '../utils/deviceIdentity';
 
 /** Vigencia del código de vinculación (flujo oculto de la UI por ahora). */
@@ -135,6 +135,13 @@ export async function registerCurrentDevice(alias) {
     if (!session) return { ok: false, error: 'Sin sesión de dueño' };
     const deviceId = getLocalDeviceId();
     if (!deviceId) return { ok: false, error: 'Dispositivo sin identidad' };
+    // Límite dinámico desde el directorio (default 6)
+    const project = getCustomerProject();
+    const maxDevices = project?.maxDevices ?? MAX_DEVICES_PER_ACCOUNT;
+    // Si este equipo fue revocado desde la Estación, no permitir re-vincular
+    if ((project?.revokedDeviceIds || []).includes(deviceId)) {
+        return { ok: false, error: 'Este equipo fue desvinculado. Contacta al administrador.' };
+    }
     try {
         // 1. Puente de identidad (también lo usa el RLS de 001/002).
         await ensureDeviceSessionRegistered(deviceId).catch(() => {});
@@ -142,13 +149,14 @@ export async function registerCurrentDevice(alias) {
         const { error } = await supabaseCloud.rpc('register_account_device', {
             p_device_id: deviceId,
             p_alias: alias || null,
+            p_max_devices: maxDevices,
         });
         if (error) {
             if (String(error.message || '').includes(LIMIT_REACHED_TOKEN)) {
                 return {
                     ok: false,
                     limitReached: true,
-                    error: `Límite de ${MAX_DEVICES_PER_ACCOUNT} equipos alcanzado`,
+                    error: `Límite de ${maxDevices} equipos alcanzado`,
                 };
             }
             return { ok: false, error: error.message };
@@ -309,4 +317,63 @@ export function isAccountLinkedLocally() {
     } catch {
         return false;
     }
+}
+
+/**
+ * Reporta los dispositivos vinculados al directorio (Estación).
+ * La Estación muestra la lista y permite desvincular.
+ */
+export async function reportDevicesToDirectory() {
+  try {
+    const project = getCustomerProject();
+    if (!project?.code) return;
+    const devices = await getMyDevices().catch(() => []);
+    const payload = (devices || []).map(d => ({
+      id: d.device_id || d.id,
+      alias: d.alias || null,
+      last_seen: d.last_seen || null,
+    }));
+    // Llamar al RPC del directorio via fetch directo
+    const dirUrl = import.meta.env.VITE_DIRECTORY_URL;
+    const dirKey = import.meta.env.VITE_DIRECTORY_ANON_KEY;
+    if (!dirUrl || !dirKey) return;
+    await fetch(`${dirUrl}/rest/v1/rpc/report_pro_devices`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': dirKey,
+        'Authorization': `Bearer ${dirKey}`,
+      },
+      body: JSON.stringify({ p_code: project.code, p_devices: payload }),
+    }).catch(() => {});
+  } catch {
+    /* no bloquea el sync */
+  }
+}
+
+/**
+ * Verifica si este equipo fue revocado desde la Estación.
+ * Si sí, cierra sesión y limpia el proyecto (vuelve a CloudGate).
+ * Retorna true si fue revocado.
+ */
+export async function checkDeviceRevocation() {
+  try {
+    const project = getCustomerProject();
+    if (!project?.code) return false;
+    const deviceId = getLocalDeviceId();
+    if (!deviceId) return false;
+    // Re-consultar el directorio para lista actualizada de revocados
+    const { lookupProjectByCode } = await import('./customerDirectory.js');
+    const res = await lookupProjectByCode(project.code);
+    if (!res.ok) return false;
+    const revoked = res.project.revokedDeviceIds || [];
+    if (revoked.includes(deviceId)) {
+      await clearCustomerProject();
+      try { localStorage.removeItem('pda_account_linked'); } catch {}
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }

@@ -27,7 +27,13 @@ export async function lookupProjectByCode(code) {
         }
         return {
             ok: true,
-            project: { url: row.supabase_url, key: row.supabase_anon_key, code: clean },
+            project: {
+                url: row.supabase_url,
+                key: row.supabase_anon_key,
+                code: clean,
+                maxDevices: row.max_devices ?? 6,
+                revokedDeviceIds: row.revoked_device_ids || [],
+            },
         };
     } catch (e) {
         const offline =

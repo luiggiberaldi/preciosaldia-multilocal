@@ -72,8 +72,8 @@ export function hasCustomerProject() {
 }
 
 /** Fija el proyecto del cliente (tras resolver el código) y lo recuerda. */
-export function setCustomerProject({ url, key, code }) {
-    _resolved = { url, key, code };
+export function setCustomerProject({ url, key, code, maxDevices, revokedDeviceIds }) {
+    _resolved = { url, key, code, maxDevices: maxDevices ?? 6, revokedDeviceIds: revokedDeviceIds || [] };
     try {
         localStorage.setItem(CACHE_KEY, JSON.stringify(_resolved));
     } catch {

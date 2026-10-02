@@ -493,6 +493,17 @@ export const syncNow = async () => {
         }
 
         localStorage.setItem('cloud_sync_ts', new Date().toISOString());
+        // Reportar dispositivos al directorio (no bloquea)
+        try {
+            const { reportDevicesToDirectory, checkDeviceRevocation } = await import('../services/cloudAccount.js');
+            // Si fue revocado, recargar para volver a CloudGate
+            const revoked = await checkDeviceRevocation();
+            if (revoked) {
+                window.location.reload();
+                return { ok: false, pulled, pushed, message: 'Equipo desvinculado' };
+            }
+            reportDevicesToDirectory().catch(() => {});
+        } catch {}
         const parts = [];
         if (pulled > 0) parts.push(`${pulled} actualizados`);
         if (pushed > 0) parts.push(`${pushed} subidos`);
