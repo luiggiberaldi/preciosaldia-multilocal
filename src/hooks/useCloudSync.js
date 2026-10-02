@@ -448,20 +448,20 @@ export const syncNow = async () => {
     let pushed = 0;
     try {
         // ── PULL: bajar documentos nuevos de la nube ──
+        // SYNC-MANUAL: ignora el watermark y trae todo lo del negocio activo.
+        // El watermark optimiza los pulls automáticos, pero un sync manual
+        // debe ser determinista: siempre trae lo último, sin depender del
+        // estado del watermark local.
         const accountCtx = getAccountSyncContext();
         if (accountCtx?.userId) {
             const wmKey = `cloud_pull_watermark_${accountCtx.userId}`;
-            const watermark = localStorage.getItem(wmKey);
-            let pullQuery = supabaseCloud
+            const { data: docs, error: docsError } = await supabaseCloud
                 .from('sync_documents')
                 .select('collection, doc_id, data, updated_at, device_id')
                 .in('device_id', accountCtx.deviceIds)
                 .in('collection', ['store', 'local'])
                 .order('updated_at', { ascending: true })
                 .limit(2000);
-            if (watermark) pullQuery = pullQuery.gt('updated_at', watermark);
-
-            const { data: docs, error: docsError } = await pullQuery;
             if (docsError) throw docsError;
 
             for (const doc of docs || []) {
@@ -475,7 +475,7 @@ export const syncNow = async () => {
             }
             const maxTs = (docs || []).reduce(
                 (m, d) => (d.updated_at && d.updated_at > m ? d.updated_at : m),
-                watermark || ''
+                localStorage.getItem(wmKey) || ''
             );
             if (maxTs) {
                 try { localStorage.setItem(wmKey, maxTs); } catch { /* noop */ }
