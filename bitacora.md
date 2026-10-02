@@ -1029,3 +1029,11 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Eliminado el `<p>` duplicado (el logo ya trae el texto).
 - Precio gigante: `text-[16vw]` → `text-[14vw]`, contenedor con `max-w-full overflow-hidden`, `shrink-0` en `$`/decimales/`Bs`, `whitespace-nowrap`.
 **Commit:** `5fe5c69`. **Deploy:** producción Ready.
+
+### Fix loading en botón Actualizar Tasas (2026-10-02)
+**Problema:** en la prueba live, el botón no mostraba "Actualizando..." al pulsarlo (volvía a estado normal en <1s).
+**Causa:** `DashboardView` pasaba `loading={false}` hardcodeado a `MonitorView`, ignorando el estado real de `useRates`.
+**Cambios:**
+- `App.jsx`: expone `loading` de `useRates()` como `ratesLoading`.
+- `DashboardView.jsx`: recibe `ratesLoading` y lo pasa a `MonitorView` como `loading`.
+**Nota:** la prueba live corría una versión cacheada del PWA (aviso "Nueva versión disponible" visible). Los fixes requieren actualizar la app.
