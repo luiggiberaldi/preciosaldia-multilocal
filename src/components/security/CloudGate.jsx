@@ -192,6 +192,18 @@ export default function CloudGate({ onReady }) {
         const res = await signInOwner(email, password, deviceName.trim() || null);
         setBusy(false);
         if (res.ok) {
+            // Marcar licencia Pro como activa (el código ya fue validado)
+            try {
+                const proj = getCustomerProject();
+                if (proj?.code) {
+                    localStorage.setItem('pda_license_cache', JSON.stringify({
+                        isActive: true,
+                        type: 'permanent',
+                        code: proj.code,
+                        productId: 'pro',
+                    }));
+                }
+            } catch {}
             setState('ready');
             onReady();
             return;
