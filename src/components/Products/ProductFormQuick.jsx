@@ -56,6 +56,13 @@ export default function ProductFormQuick({
     const [showSummary, setShowSummary] = useState(false);
     // Toggle para el factor: 'percent' (30%) o 'factor' (0.7)
     const [factorMode, setFactorMode] = useState('factor');
+    // Input local del factor para no romper la escritura con reformateos
+    const [factorInput, setFactorInput] = useState(null);
+
+    // Sincronizar el input local cuando cambia el modo o el factor desde fuera
+    const factorDisplayValue = factorInput !== null ? factorInput : (factorMode === 'percent'
+        ? (costFactor ? ((1 - parseFloat(costFactor)) * 100).toFixed(1).replace(/\.0$/, '') : '')
+        : (costFactor || ''));
     
     // Categorías en línea
     const { setCategories } = useProductContext();
@@ -390,14 +397,14 @@ export default function ProductFormQuick({
                             <div className="flex bg-slate-200 dark:bg-slate-700 rounded-lg p-0.5">
                                 <button
                                     type="button"
-                                    onClick={() => setFactorMode('percent')}
+                                    onClick={() => { setFactorMode('percent'); setFactorInput(null); }}
                                     className={`px-2 py-0.5 text-[10px] font-black rounded-md transition-colors ${factorMode === 'percent' ? 'bg-white dark:bg-slate-800 text-slate-700 dark:text-white shadow' : 'text-slate-500'}`}
                                 >
                                     %
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setFactorMode('factor')}
+                                    onClick={() => { setFactorMode('factor'); setFactorInput(null); }}
                                     className={`px-2 py-0.5 text-[10px] font-black rounded-md transition-colors ${factorMode === 'factor' ? 'bg-white dark:bg-slate-800 text-slate-700 dark:text-white shadow' : 'text-slate-500'}`}
                                 >
                                     0.7
@@ -408,18 +415,19 @@ export default function ProductFormQuick({
                             <input
                                 autoComplete="off"
                                 type="number" inputMode="decimal" step="any"
-                                value={factorMode === 'percent'
-                                    ? (costFactor ? ((1 - parseFloat(costFactor)) * 100).toFixed(1) : '')
-                                    : (costFactor || '')}
+                                value={factorDisplayValue}
                                 onChange={e => {
                                     const v = e.target.value;
+                                    setFactorInput(v); // mantener lo que escribe sin reformatear
+                                    if (v === '' || v === '.' || v === '-') return;
                                     if (factorMode === 'percent') {
-                                        const pct = parseFloat(v) || 0;
-                                        handleCostFactorChange((1 - pct / 100).toFixed(3));
+                                        const pct = parseFloat(v);
+                                        if (!isNaN(pct)) handleCostFactorChange((1 - pct / 100).toFixed(3));
                                     } else {
                                         handleCostFactorChange(v);
                                     }
                                 }}
+                                onBlur={() => setFactorInput(null)} // al salir, mostrar valor formateado
                                 placeholder={factorMode === 'percent' ? '30' : '0.7'}
                                 className="w-full bg-white dark:bg-slate-900 p-2.5 pr-10 rounded-xl font-bold text-slate-700 dark:text-white outline-none border border-slate-200/60 dark:border-slate-800/40 focus:ring-2 focus:ring-slate-500/40 transition-all text-xs"
                             />

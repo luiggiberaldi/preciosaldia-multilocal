@@ -1207,3 +1207,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 5. **Factor costo de tres vías**: Precio ↔ Costo ↔ Factor (default 0.6). Toggle %/factor (30% = 0.7). Se guarda por producto. Margen muestra Bs además de $.
 6. Advertencia si el nombre es solo números.
 **Versión:** 2.1.1.
+
+## 2026-10-02 ~20:20 — v2.1.2: fix campo factor no dejaba escribir
+**Reportado por:** Luigi.
+**Causa:** el `.toFixed(1)` reformateaba el valor mientras se escribía, rompiendo la entrada.
+**Fix:** estado local `factorInput` que conserva lo escrito sin reformatear; al salir del campo (blur) muestra el valor formateado.
+**Versión:** 2.1.2.
