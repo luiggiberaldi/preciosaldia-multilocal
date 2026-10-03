@@ -1418,3 +1418,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - "Compartir" en el recibo no daba ninguna señal visible en escritorio (ni hoja de compartir ni descarga detectada). `sharePayrollReceipt` ahora retorna 'share'|'download' y el modal muestra toast ("Recibo compartido" / "Recibo descargado (PDF)"). En móvil usa Web Share con archivos; en escritorio descarga el PDF.
 - E2E v2.1.29: botón "Recibo" visible en tarjetas liquidadas (TEST-RECIBO, TEST-SEMANAL), reimpresión con todos los valores correctos, impresión inicia sin errores JS.
 - Build OK.
+
+## v2.1.31 — 2026-10-03 — Consumos de nómina aceptan decimales en granel (C3)
+- El modal de consumo solo permitía cantidades enteras (+/-). Ahora los productos a granel (detectados con `isGranelProduct`, regla GRANEL-001) muestran un editor decimal táctil (hasta 3 decimales, acepta coma) en vez del stepper; al agregar un granel se abre el editor de una vez. Los productos por unidad conservan el stepper entero.
+- También se corrigió el guard de stock al agregar (`stock < 1` → `stock <= 0`) para granel con stock fraccional.
+- El backend `registerConsumo` ya aceptaba decimales (qty finito > 0); el stock se descuenta con 3 decimales vía `adjustStockForItems`.
+- Harness de la lógica granel: 12/12 PASS (parseo, coma decimal, redondeo a 3, rechazo de decimales en unidad, detección, labels).
+- Build OK.

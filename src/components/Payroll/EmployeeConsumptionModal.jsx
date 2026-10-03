@@ -18,6 +18,7 @@ import { Modal } from '../Modal';
 import { showToast } from '../Toast';
 import { formatUsd } from '../../utils/calculatorUtils';
 import { useProductContext } from '../../context/ProductContext';
+import { isGranelProduct, granelUnitLabel, parseCartQuantity, formatStockDisplay } from '../../utils/granel'; // GRANEL-001
 import * as payroll from '../../services/payrollService';
 
 /** Precio de venta del producto (misma regla que ProductContext). */
@@ -36,10 +37,12 @@ export default function EmployeeConsumptionModal({ employeeId: fixedEmployeeId, 
     const [employeeId, setEmployeeId] = useState(fixedEmployeeId || '');
     const [resumen, setResumen] = useState(null);
     const [query, setQuery] = useState('');
-    const [items, setItems] = useState([]); // {productId, nombre, qty, priceUsd, stock}
+    const [items, setItems] = useState([]); // {productId, nombre, qty, priceUsd, stock, isGranel, unitLabel}
     const [override, setOverride] = useState(false);
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [editingQtyId, setEditingQtyId] = useState(null); // GRANEL-001: edición decimal
+    const [tempQty, setTempQty] = useState('');
 
     useEffect(() => {
         (async () => {
@@ -72,15 +75,22 @@ export default function EmployeeConsumptionModal({ employeeId: fixedEmployeeId, 
         const price = precioVenta(p);
         if (price <= 0) { showToast('El producto no tiene precio de venta', 'warning'); return; }
         const stock = Number(p.stock ?? 0);
+        const granel = isGranelProduct(p);
+        const unitLabel = granel ? (granelUnitLabel(p) === 'UND' ? 'kg' : granelUnitLabel(p)) : 'un.';
         setItems((prev) => {
             const ex = prev.find((i) => String(i.productId) === String(p.id));
             if (ex) {
                 if (ex.qty + 1 > stock) { showToast('Sin stock suficiente', 'warning'); return prev; }
                 return prev.map((i) => String(i.productId) === String(p.id) ? { ...i, qty: i.qty + 1 } : i);
             }
-            if (stock < 1) { showToast('Sin stock suficiente', 'warning'); return prev; }
-            return [...prev, { productId: p.id, nombre: p.name, qty: 1, priceUsd: price, stock }];
+            if (stock <= 0) { showToast('Sin stock suficiente', 'warning'); return prev; }
+            return [...prev, { productId: p.id, nombre: p.name, qty: 1, priceUsd: price, stock, isGranel: granel, unitLabel }];
         });
+        // GRANEL-001: al agregar un producto a granel, abrir el editor decimal de una vez.
+        if (granel) {
+            setEditingQtyId(p.id);
+            setTempQty('1');
+        }
         setQuery('');
     };
 
@@ -93,6 +103,26 @@ export default function EmployeeConsumptionModal({ employeeId: fixedEmployeeId, 
                 return { ...i, qty: nq };
             })
             .filter((i) => i.qty > 0));
+    };
+
+    // GRANEL-001: editor decimal para productos a granel (hasta 3 decimales).
+    const submitQty = (item) => {
+        setEditingQtyId(null);
+        if (!tempQty || tempQty.trim() === '') { setTempQty(''); return; }
+        const parsed = parseCartQuantity(tempQty, true);
+        if (parsed === null || parsed <= 0) {
+            showToast('Cantidad inválida', 'warning');
+            setTempQty('');
+            return;
+        }
+        if (parsed > item.stock) {
+            showToast('Sin stock suficiente', 'warning');
+            setTempQty('');
+            return;
+        }
+        setItems((prev) => prev.map((i) =>
+            String(i.productId) === String(item.productId) ? { ...i, qty: parsed } : i));
+        setTempQty('');
     };
 
     const total = items.reduce((s, i) => s + i.qty * i.priceUsd, 0);
@@ -206,15 +236,40 @@ export default function EmployeeConsumptionModal({ employeeId: fixedEmployeeId, 
                                             <p className="text-[10px] font-semibold text-slate-400">${formatUsd(i.priceUsd)} c/u</p>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <button type="button" onClick={() => chQty(i.productId, -1)}
-                                                className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-200 active:scale-90 transition-all">
-                                                <Minus size={14} />
-                                            </button>
-                                            <span className="w-8 text-center text-sm font-black text-slate-800 dark:text-white">{i.qty}</span>
-                                            <button type="button" onClick={() => chQty(i.productId, 1)}
-                                                className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-200 active:scale-90 transition-all">
-                                                <Plus size={14} />
-                                            </button>
+                                            {i.isGranel ? (
+                                                editingQtyId === i.productId ? (
+                                                    <input
+                                                        autoFocus
+                                                        inputMode="decimal"
+                                                        className="w-20 text-center text-sm font-black text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-800 border border-brand/50 rounded-xl px-2 py-1.5 outline-none"
+                                                        value={tempQty}
+                                                        onChange={(e) => setTempQty(e.target.value)}
+                                                        onBlur={() => submitQty(i)}
+                                                        onKeyDown={(e) => { if (e.key === 'Enter') submitQty(i); if (e.key === 'Escape') { setEditingQtyId(null); setTempQty(''); } }}
+                                                    />
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setEditingQtyId(i.productId); setTempQty(formatStockDisplay(i.qty, true)); }}
+                                                        className="min-w-[4.5rem] text-center text-sm font-black text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl px-2 py-1.5 active:scale-95 transition-all"
+                                                        title="Tocar para editar cantidad"
+                                                    >
+                                                        {formatStockDisplay(i.qty, true)} <span className="text-[10px] font-bold text-slate-400">{i.unitLabel}</span>
+                                                    </button>
+                                                )
+                                            ) : (
+                                                <>
+                                                    <button type="button" onClick={() => chQty(i.productId, -1)}
+                                                        className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-200 active:scale-90 transition-all">
+                                                        <Minus size={14} />
+                                                    </button>
+                                                    <span className="w-8 text-center text-sm font-black text-slate-800 dark:text-white">{i.qty}</span>
+                                                    <button type="button" onClick={() => chQty(i.productId, 1)}
+                                                        className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-200 active:scale-90 transition-all">
+                                                        <Plus size={14} />
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                         <span className="w-20 text-right text-sm font-black text-slate-800 dark:text-white">${formatUsd(i.qty * i.priceUsd)}</span>
                                         <button type="button" onClick={() => setItems((prev) => prev.filter((x) => String(x.productId) !== String(i.productId)))}
