@@ -1290,3 +1290,14 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
   escribir costo → factor se deriva.
 - Test determinista: editar producto con precio=3.9 sin costo, escribir costo=1
   → factor 0.256. PASS.
+
+## v2.1.11 (2026-10-02) — Mejora visual vista lista + fix margen
+- Auditoría de Luigi a la vista lista: 2 errores + deficiencias.
+- FIX 1: margen ahora sobre venta ((precio-costo)/precio) en lista Y tarjeta;
+  antes usaban (precio-costo)/costo. Regla permanente de Luigi.
+- FIX 2: header de lista para cajero ahora renderiza span vacío en Margen
+  (antes faltaba la celda y se descuadraban las columnas).
+- Mejoras (mockup aprobado): semáforo de margen (verde ≥30%, ámbar 15-29%,
+  rojo <15%), botón "+ costo" en productos sin costo (abre el editor),
+  código de barras bajo el nombre, acciones visibles solo en hover (desktop).
+- Se quitó el código de diagnóstico del título (debug paso 5).

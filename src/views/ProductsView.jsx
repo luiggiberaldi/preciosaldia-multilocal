@@ -960,9 +960,9 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                     Precio {sortField === 'price' && <ArrowUpDown size={10} />}
                                 </button>
                                 <span>{!isCajero && 'Costo'}</span>
-                                {!isCajero && <button onClick={() => handleSort('margin')} className="flex items-center gap-1 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                {!isCajero ? <button onClick={() => handleSort('margin')} className="flex items-center gap-1 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                                     Margen {sortField === 'margin' && <ArrowUpDown size={10} />}
-                                </button>}
+                                </button> : <span />}
                                 <button onClick={() => handleSort('stock')} className="flex items-center gap-1 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                                     Stock {sortField === 'stock' && <ArrowUpDown size={10} />}
                                 </button>
@@ -974,10 +974,11 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                     const valBs = p.priceUsdt * effectiveRate;
                                     const isLowStock = (p.stock ?? 0) <= (p.lowStockAlert ?? 5);
                                     const effectiveCostUsd = p.costUsd || (p.costBs && effectiveRate > 0 ? p.costBs / effectiveRate : 0);
-                                    const margin = effectiveCostUsd > 0 && p.priceUsdt > 0 ? ((p.priceUsdt - effectiveCostUsd) / effectiveCostUsd * 100) : null;
+                                    // Margen SIEMPRE sobre venta (regla Luigi 2026-10-02): (precio-costo)/precio
+                                    const margin = effectiveCostUsd > 0 && p.priceUsdt > 0 ? ((p.priceUsdt - effectiveCostUsd) / p.priceUsdt * 100) : null;
                                     const catInfo = categories.find(c => c.id === p.category);
                                     return (
-                                        <div key={p.id} className={`grid grid-cols-[auto_1fr_auto] sm:grid-cols-[40px_1fr_100px_100px_70px_80px_110px] gap-2 px-4 py-3 items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${selectedIds.has(p.id) ? 'bg-brand/5 dark:bg-brand/10' : ''} ${isLowStock ? 'bg-amber-50/50 dark:bg-amber-900/5' : ''}`}>
+                                        <div key={p.id} className={`group grid grid-cols-[auto_1fr_auto] sm:grid-cols-[40px_1fr_100px_100px_70px_80px_110px] gap-2 px-4 py-3 items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${selectedIds.has(p.id) ? 'bg-brand/5 dark:bg-brand/10' : ''} ${isLowStock ? 'bg-amber-50/50 dark:bg-amber-900/5' : ''}`}>
                                             {/* Checkbox */}
                                             <div className="flex items-center justify-center px-1">
                                                 <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => handleToggleSelect(p.id)} className="w-5 h-5 sm:w-4 sm:h-4 rounded border-slate-300 text-brand focus:ring-brand cursor-pointer focus:ring-offset-0" />
@@ -999,6 +1000,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                                         {catInfo && catInfo.id !== 'todos' && (
                                                             <span className="text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{catInfo.label}</span>
                                                         )}
+                                                        {p.barcode && <span className="text-[9px] text-slate-300 dark:text-slate-600 font-mono">{p.barcode}</span>}
                                                         {isLowStock && <span className="text-[9px] font-bold text-amber-500 flex items-center gap-0.5"><AlertTriangle size={9} /> Bajo</span>}
                                                         {/* Mobile: show price inline */}
                                                         <span className="sm:hidden text-[11px] font-black text-emerald-600 dark:text-emerald-400">{copEnabled && copPrimary && tasaCop > 0 ? `${getCop(p, tasaCop).toLocaleString('es-CO')} COP` : `$${(getUsd(p, tasaCop) || 0).toFixed(2)}`}</span>
@@ -1043,11 +1045,11 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                                 )}
                                             </div>
                                             <div className="hidden sm:block">
-                                                {!isCajero ? <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{p.costUsd ? (copEnabled && copPrimary && tasaCop > 0 ? `${Math.round(p.costUsd * tasaCop).toLocaleString('es-CO')} COP` : `$${p.costUsd.toFixed(2)}`) : '-'}</p> : <span className="text-[10px] text-slate-300">-</span>}
+                                                {!isCajero ? (p.costUsd ? <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{copEnabled && copPrimary && tasaCop > 0 ? `${Math.round(p.costUsd * tasaCop).toLocaleString('es-CO')} COP` : `$${p.costUsd.toFixed(2)}`}</p> : <button onClick={() => handleEdit(p)} className="text-[11px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 px-2 py-1 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors">+ costo</button>) : <span className="text-[10px] text-slate-300">-</span>}
                                             </div>
                                             <div className="hidden sm:block">
                                                 {!isCajero ? (margin !== null ? (
-                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${margin >= 0 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'}`}>
+                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${margin >= 30 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' : margin >= 15 ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' : 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'}`}>
                                                         {margin >= 0 ? '+' : ''}{margin.toFixed(0)}%
                                                     </span>
                                                 ) : <span className="text-[10px] text-slate-300">-</span>) : <span className="text-[10px] text-slate-300">-</span>}
@@ -1057,7 +1059,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                                 <span className={`text-sm font-black min-w-[32px] text-center ${isLowStock ? 'text-amber-500' : 'text-surface-700 dark:text-surface-200'}`}>{formatStockDisplay(p.stock ?? 0, isGranelProduct(p))}</span>
                                                 {!isCajero && <button onClick={() => adjustStock(p.id, 1)} aria-label={`Sumar 1 unidad de ${p.name}`} className="w-9 h-9 rounded-lg bg-surface-50 dark:bg-surface-800 flex items-center justify-center text-surface-400 hover:text-emerald-500 transition-colors active:scale-90"><Plus size={14} aria-hidden="true" /></button>}
                                             </div>
-                                            <div className="hidden sm:flex items-center justify-end gap-1">
+                                            <div className="hidden sm:flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                                                 <button onClick={() => handlePrintSingle(p)} aria-label={`Imprimir etiqueta de ${p.name}`} className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-surface-300 hover:text-brand hover:bg-brand/10 transition-all" title="Imprimir Etiqueta"><Printer size={14} aria-hidden="true" /></button>
                                                 {!isCajero && <button onClick={() => handleEdit(p)} aria-label={`Editar ${p.name}`} className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-surface-300 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all"><Pencil size={14} aria-hidden="true" /></button>}
                                                 {!isCajero && <button onClick={() => handleDuplicate(p)} aria-label={`Duplicar ${p.name}`} className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-surface-300 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"><Copy size={14} aria-hidden="true" /></button>}

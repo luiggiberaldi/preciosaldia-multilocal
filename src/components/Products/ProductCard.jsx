@@ -48,7 +48,8 @@ export default function ProductCard({
     const valCop = getCop(p, tasaCop);
     const isLowStock = (p.stock ?? 0) <= (p.lowStockAlert ?? 5);
     const effectiveCostUsd = p.costUsd || (p.costBs && effectiveRate > 0 ? p.costBs / effectiveRate : 0);
-    const margin = effectiveCostUsd > 0 && effectiveUsd > 0 ? ((effectiveUsd - effectiveCostUsd) / effectiveCostUsd * 100) : null;
+    // Margen SIEMPRE sobre venta (regla Luigi 2026-10-02): (precio-costo)/precio
+    const margin = effectiveCostUsd > 0 && effectiveUsd > 0 ? ((effectiveUsd - effectiveCostUsd) / effectiveUsd * 100) : null;
     const catInfo = categories.find(c => c.id === p.category);
     const unitInfo = UNITS.find(u => u.id === p.unit);
     const efectivoPrecio = streetRate > 0 ? `$${smartCashRounding(valBs / streetRate)}` : null;
@@ -310,7 +311,7 @@ ${showSecondary ? `[PRECIO SECUNDARIO]
                         )}
                     </div>
                     {!readOnly && margin !== null && (
-                        <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${margin >= 0 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'}`}>
+                        <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${margin >= 30 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' : margin >= 15 ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' : 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'}`}>
                             {margin >= 0 ? '+' : ''}{margin.toFixed(0)}%
                         </span>
                     )}
