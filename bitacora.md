@@ -1335,3 +1335,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Protege el margen: nunca se pierde ni un céntimo por redondeo.
 - Label del toggle: "Redondear tasa hacia arriba".
 - Test determinista: 8/8 pass con la lógica real extraída del fuente.
+
+## v2.1.17 (2026-10-03) — search-image: 404 → 200 sin resultados
+- Reporte de Luigi: "Error al buscar foto automática del producto".
+- Causa: `api/search-image.js` devolvía 404 cuando no había coincidencias; el frontend trata todo non-OK como error duro.
+- Ahora devuelve 200 con `matches: []` y el frontend muestra el mensaje amable "No se encontró foto...".
+- Causa raíz del "no funciona": `product_images_catalog` tiene 0 filas (poblamiento pendiente).

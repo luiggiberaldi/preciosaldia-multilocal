@@ -76,7 +76,7 @@ export default async function handler(req, res) {
             }
         }
 
-        return res.status(404).json({ error: "No se encontraron imágenes en el catálogo para el producto especificado." });
+        return res.status(200).json({ success: true, matches: [] });
 
     } catch (error) {
         console.error("[CatalogSearch] Error:", error);
