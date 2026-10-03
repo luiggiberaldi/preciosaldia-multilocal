@@ -61,7 +61,7 @@ export default function ProductFormQuick({
 
     // Sincronizar el input local cuando cambia el modo o el factor desde fuera
     const factorDisplayValue = factorInput !== null ? factorInput : (factorMode === 'percent'
-        ? (costFactor ? ((1 - parseFloat(costFactor)) * 100).toFixed(1).replace(/\.0$/, '') : '')
+        ? (costFactor && parseFloat(costFactor) > 0 ? ((1 - parseFloat(costFactor)) * 100).toFixed(1).replace(/\.0$/, '') : '')
         : (costFactor || ''));
     
     // Categorías en línea

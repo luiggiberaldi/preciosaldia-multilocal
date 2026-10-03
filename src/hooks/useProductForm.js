@@ -23,7 +23,7 @@ const INITIAL_STATE = {
     priceBsUsdRef: '',
     costUsd: '',
     costBs: '',
-    costFactor: '0.6', // Factor costo: costo = precio × factor
+    costFactor: '0', // Factor en 0 para productos nuevos (regla Luigi 2026-10-02)
     stock: '',
     unit: 'unidad',
     unitsPerPackage: '',
@@ -110,7 +110,7 @@ export function useProductForm() {
             priceBsUsdRef: product.priceBsUsdRef != null ? product.priceBsUsdRef.toString() : '',
             costUsd: currentCostUsd > 0 ? currentCostUsd.toFixed(2) : '',
             costBs: currentCostBs > 0 ? currentCostBs.toFixed(2) : '',
-            costFactor: product.costFactor != null ? product.costFactor.toString() : (currentPriceUsd > 0 && currentCostUsd > 0 ? (currentCostUsd / currentPriceUsd).toFixed(3) : '0.6'),
+            costFactor: product.costFactor != null ? product.costFactor.toString() : (currentPriceUsd > 0 && currentCostUsd > 0 ? (currentCostUsd / currentPriceUsd).toFixed(3) : '0'),
             stock: product.stock ?? '',
             unit: product.unit || 'unidad',
             unitsPerPackage: product.unitsPerPackage || '',

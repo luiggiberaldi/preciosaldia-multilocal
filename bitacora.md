@@ -1250,3 +1250,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `scripts/poblar_catalogo_fotos.py` — parametrizado por proyecto (--supabase-url, --service-key); sube imágenes Lite a `product-images/catalog/`, registra fotos Pro existentes, upsert idempotente; --dry-run y --self-test verificados.
 - `docs/CATALOGO-FOTOS.md` — playbook para otras cuentas Supabase + nota multi-tenant (la función usa env vars estáticas: hoy apunta solo al cliente cero).
 **Bloqueado:** crear la tabla requiere DDL (dashboard de Supabase) y las subidas/inserts requieren service_role key. Pendiente de Luigi.
+
+## v2.1.7 (2026-10-02) — Factor en 0 para productos nuevos
+- Por pedido de Luigi: al crear un producto nuevo el factor arranca en 0 (antes 0.6),
+  para que no haya derivaciones espurias y el usuario ponga el factor explícitamente.
+- `useProductForm`: default inicial `costFactor: '0'` y fallback en `populateForm` a `'0'`.
+- `ProductFormQuick`: en modo % el factor 0 muestra vacío en vez de "100".
+- Reporte de Luigi: con costo+factor el precio no se calculaba; se re-verificará E2E en navegador.
