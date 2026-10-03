@@ -24,7 +24,8 @@ export function buildProductPayload(formData, effectiveRate) {
         unitPriceUsd,
         unitPriceCop,
         category,
-        lowStockAlert
+        lowStockAlert,
+        costFactor,
     } = formData;
 
     // B-11 (2026-10-01): \w es ASCII y dejaba "ñandú" como "ñandú" (la ñ no
@@ -109,6 +110,7 @@ export function buildProductPayload(formData, effectiveRate) {
         priceCop: finalPriceCop,
         costUsd: finalCostUsd,
         costBs: finalCostBs,
+        costFactor: costFactor ? parseFloat(costFactor) : null,
         stock: finalStock,
         unit: legacyUnit,
         packagingType: packagingType,

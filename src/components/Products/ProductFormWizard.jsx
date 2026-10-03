@@ -124,7 +124,7 @@ export default function ProductFormWizard({
                                     <span className="text-[10px] font-black text-slate-500">Subir foto local</span>
                                 </>
                             )}
-                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                            <input autoComplete="off" type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                             {image && <button onClick={(e) => { e.stopPropagation(); setImage(''); }} className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full"><X size={12} /></button>}
                         </div>
 
@@ -192,7 +192,7 @@ export default function ProductFormWizard({
                     {/* Name */}
                     <div className="relative">
                         <label className="text-xs font-bold text-slate-400 ml-1 mb-1 block uppercase">Nombre comercial</label>
-                        <input 
+                        <input autoComplete="off" 
                             value={name} 
                             onChange={e => setName(e.target.value)} 
                             autoFocus 
@@ -208,7 +208,7 @@ export default function ProductFormWizard({
                     <div>
                         <label className="text-xs font-bold text-slate-400 ml-1 mb-1 block uppercase">Código de barras (Opcional)</label>
                         <div className="relative">
-                            <input value={barcode} onChange={e => setBarcode(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }} placeholder="Ej: 7591111222233"
+                            <input autoComplete="off" value={barcode} onChange={e => setBarcode(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }} placeholder="Ej: 7591111222233"
                                 className="w-full bg-slate-50 dark:bg-slate-800 p-3.5 pl-10 rounded-xl font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50 text-sm" />
                             <Barcode size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         </div>
@@ -228,7 +228,7 @@ export default function ProductFormWizard({
                         </div>
                         {isAddingCategory ? (
                             <div className="flex gap-2 animate-in fade-in slide-in-from-top-1">
-                                <input 
+                                <input autoComplete="off" 
                                     autoFocus
                                     value={newCategoryName}
                                     onChange={e => setNewCategoryName(e.target.value)}
@@ -321,7 +321,7 @@ export default function ProductFormWizard({
                                 </label>
                                 <span className="text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">Opcional</span>
                             </div>
-                            <input
+                            <input autoComplete="off"
                                 type="number"
                                 inputMode="numeric"
                                 value={unitsPerPackage}
@@ -342,7 +342,7 @@ export default function ProductFormWizard({
                         <div className="bg-brand-light dark:bg-surface-800/10 p-4 rounded-xl border border-surface-200 dark:border-surface-800/30 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                             <div>
                                 <label className="text-xs font-bold text-brand-dark dark:text-brand ml-1 mb-1 block uppercase">¿Cuántas unidades trae el bulto?</label>
-                                <input type="number" inputMode="numeric" value={unitsPerPackage} onChange={e => setUnitsPerPackage(e.target.value)} placeholder="Ej: 24"
+                                <input autoComplete="off" type="number" inputMode="numeric" value={unitsPerPackage} onChange={e => setUnitsPerPackage(e.target.value)} placeholder="Ej: 24"
                                     className="w-full bg-white dark:bg-slate-800 p-3 rounded-xl font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-brand/50 text-sm" />
                             </div>
 
@@ -367,7 +367,7 @@ export default function ProductFormWizard({
                         <div className="grid grid-cols-3 gap-3 animate-in fade-in duration-200">
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 ml-1 mb-1 block uppercase truncate">Bultos / Cajas</label>
-                                <input 
+                                <input autoComplete="off" 
                                     type="number" 
                                     step="any"
                                     value={stockInLotes || ''} 
@@ -384,7 +384,7 @@ export default function ProductFormWizard({
                             </div>
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 ml-1 mb-1 block uppercase truncate">Equiv. Unidades</label>
-                                <input 
+                                <input autoComplete="off" 
                                     type="number" 
                                     value={stock || ''} 
                                     onChange={e => {
@@ -402,7 +402,7 @@ export default function ProductFormWizard({
                                 <label className="text-[10px] font-black text-amber-500 ml-1 mb-1 block uppercase flex items-center gap-1 truncate">
                                     <AlertTriangle size={10} /> Alerta (Uds)
                                 </label>
-                                <input 
+                                <input autoComplete="off" 
                                     type="number" 
                                     step="1"
                                     inputMode="numeric" 
@@ -420,7 +420,7 @@ export default function ProductFormWizard({
                         <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-200">
                             <div>
                                 <label className="text-xs font-bold text-slate-400 ml-1 mb-1 block uppercase">Stock Inicial{isGranel ? ` (${granelUnitLabel({ unit: granelUnit, packagingType })})` : ''}</label>
-                                <input 
+                                <input autoComplete="off" 
                                     type="number" 
                                     step={stockStep}
                                     inputMode={stockInputMode} 
@@ -455,7 +455,7 @@ export default function ProductFormWizard({
                                 <label className="text-xs font-bold text-amber-500 ml-1 mb-1 block uppercase flex items-center gap-1">
                                     <AlertTriangle size={10} /> Alerta stock
                                 </label>
-                                <input 
+                                <input autoComplete="off" 
                                     type="number" 
                                     step={stockStep}
                                     inputMode={stockInputMode} 
@@ -489,16 +489,16 @@ export default function ProductFormWizard({
                                     {copEnabled && copPrimary && tasaCop > 0 ? 'COP' : '$'}
                                 </span>
                                 {copEnabled && copPrimary && tasaCop > 0 ? (
-                                    <input type="number" inputMode="decimal" value={costCop} onChange={e => handleCostCopChange(e.target.value)} placeholder="4100"
+                                    <input autoComplete="off" type="number" inputMode="decimal" value={costCop} onChange={e => handleCostCopChange(e.target.value)} placeholder="4100"
                                         className="w-full bg-white dark:bg-slate-900 p-2.5 pl-11 rounded-xl font-bold text-slate-700 dark:text-white outline-none border border-slate-200/60 dark:border-slate-800/40 focus:ring-2 focus:ring-slate-500/40 transition-all text-xs" />
                                 ) : (
-                                    <input type="number" inputMode="decimal" value={costUsd} onChange={e => handleCostUsdChange(e.target.value)} placeholder="1.00"
+                                    <input autoComplete="off" type="number" inputMode="decimal" value={costUsd} onChange={e => handleCostUsdChange(e.target.value)} placeholder="1.00"
                                         className="w-full bg-white dark:bg-slate-900 p-2.5 pl-7 rounded-xl font-bold text-slate-700 dark:text-white outline-none border border-slate-200/60 dark:border-slate-800/40 focus:ring-2 focus:ring-slate-500/40 transition-all text-xs" />
                                 )}
                             </div>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">Bs</span>
-                                <input type="number" inputMode="decimal" value={costBs} onChange={e => handleCostBsChange(e.target.value)} placeholder="0.00"
+                                <input autoComplete="off" type="number" inputMode="decimal" value={costBs} onChange={e => handleCostBsChange(e.target.value)} placeholder="0.00"
                                     className="w-full bg-white dark:bg-slate-900 p-2.5 pl-8 rounded-xl font-bold text-slate-700 dark:text-white outline-none border border-slate-200/60 dark:border-slate-800/40 focus:ring-2 focus:ring-slate-500/40 transition-all text-xs" />
                             </div>
                         </div>
@@ -520,7 +520,7 @@ export default function ProductFormWizard({
                             <label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 ml-1 mb-1 block uppercase tracking-wider">
                                 Precio Venta (Pesos COP){priceSuffix}
                             </label>
-                            <input
+                            <input autoComplete="off"
                                 type="number"
                                 inputMode="decimal"
                                 placeholder="Ej: 15000"
@@ -542,7 +542,7 @@ export default function ProductFormWizard({
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-emerald-500">
                                     {copEnabled ? 'USD' : '$'}
                                 </span>
-                                <input type="number" inputMode="decimal" value={priceUsd} onChange={e => handlePriceUsdChange(e.target.value)} placeholder="1.50"
+                                <input autoComplete="off" type="number" inputMode="decimal" value={priceUsd} onChange={e => handlePriceUsdChange(e.target.value)} placeholder="1.50"
                                     className="w-full bg-white dark:bg-slate-900 p-2.5 pl-11 pr-10 rounded-xl font-black text-emerald-800 dark:text-emerald-400 outline-none border border-emerald-100 dark:border-emerald-800/30 focus:ring-2 focus:ring-emerald-500/40 transition-all text-xs" />
                                 {parseFloat(priceUsd) > 0 && (
                                     <CheckCircle size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 transition-all duration-300" />
@@ -550,7 +550,7 @@ export default function ProductFormWizard({
                             </div>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-brand-dark dark:text-brand">Bs</span>
-                                <input type="number" inputMode="decimal" value={priceBs} onChange={e => handlePriceBsChange(e.target.value)} placeholder="0.00"
+                                <input autoComplete="off" type="number" inputMode="decimal" value={priceBs} onChange={e => handlePriceBsChange(e.target.value)} placeholder="0.00"
                                     className="w-full bg-white dark:bg-slate-900 p-2.5 pl-8 pr-10 rounded-xl font-black text-surface-800 dark:text-brand outline-none border border-surface-200 dark:border-surface-800/30 focus:ring-2 focus:ring-brand/40 transition-all text-xs" />
                                 {parseFloat(priceBs) > 0 && (
                                     <CheckCircle size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand transition-all duration-300" />
@@ -591,7 +591,7 @@ export default function ProductFormWizard({
                                 <div className="space-y-2">
                                     <div>
                                         <label className="text-[8px] font-bold text-amber-600 ml-0.5 block">Pesos COP</label>
-                                        <input type="number" inputMode="decimal" value={unitPriceCop}
+                                        <input autoComplete="off" type="number" inputMode="decimal" value={unitPriceCop}
                                             onChange={e => {
                                                 const val = e.target.value;
                                                 setUnitPriceCop(val);
@@ -625,7 +625,7 @@ export default function ProductFormWizard({
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div>
                                         <label className="text-[8px] font-bold text-emerald-500 ml-0.5 block">USD ($)</label>
-                                        <input type="number" inputMode="decimal" value={unitPriceUsd}
+                                        <input autoComplete="off" type="number" inputMode="decimal" value={unitPriceUsd}
                                             onChange={e => setUnitPriceUsd(e.target.value)}
                                             placeholder={parsedPrice > 0 && parsedUnits > 0 ? (parsedPrice / parsedUnits).toFixed(2) : '0.00'}
                                             className="w-full bg-brand-light/50 dark:bg-slate-900 border border-surface-200 dark:border-surface-700/30 p-2 rounded-lg font-black text-brand-dark dark:text-brand outline-none text-xs" />

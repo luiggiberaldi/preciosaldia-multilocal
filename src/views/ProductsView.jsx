@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useReveal } from '../hooks/useReveal';
 import { storageService } from '../utils/storageService';
 import { showToast } from '../components/Toast';
-import { Package, Plus, Trash2, X, Store, Tag, Pencil, Banknote, Search, ChevronLeft, ChevronRight, AlertTriangle, Box, LayoutGrid, List, Minus, ArrowUpDown, Clock, Percent, Printer, CheckSquare } from 'lucide-react';
+import { Package, Plus, Trash2, X, Store, Tag, Pencil, Banknote, Search, ChevronLeft, ChevronRight, AlertTriangle, Box, LayoutGrid, List, Minus, ArrowUpDown, Clock, Percent, Printer, CheckSquare, Copy } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { findBarcodeCollision } from '../utils/barcodeNormalizer';
 import { ProductShareModal } from '../components/ProductShareModal';
@@ -248,6 +248,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         priceBsUsdRef, setPriceBsUsdRef,
         costUsd, setCostUsd,
         costBs, setCostBs,
+        costFactor, setCostFactor,
         stock, setStock,
         unit, setUnit,
         unitsPerPackage, setUnitsPerPackage,
@@ -338,6 +339,13 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         if (!val || parseFloat(val) <= 0) { setPriceBs(''); setPriceCop(''); return; }
         setPriceBs((parseFloat(val) * effectiveRate).toFixed(2));
         if (copEnabled && tasaCop > 0) setPriceCop(Math.round(parseFloat(val) * tasaCop).toString());
+        // Factor: precio → costo = precio × factor
+        const factor = parseFloat(costFactor) || 0;
+        if (factor > 0) {
+            const newCost = (parseFloat(val) * factor).toFixed(2);
+            setCostUsd(newCost);
+            setCostBs((parseFloat(newCost) * effectiveRate).toFixed(2));
+        }
     };
 
     const handlePriceBsChange = (val) => {
@@ -363,6 +371,24 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         if (!val || parseFloat(val) <= 0) { setCostBs(''); setCostCop(''); return; }
         setCostBs((parseFloat(val) * effectiveRate).toFixed(2));
         if (copEnabled && tasaCop > 0) setCostCop(Math.round(parseFloat(val) * tasaCop).toString());
+        // Factor: costo manual → factor = costo / precio
+        const price = parseFloat(priceUsd) || 0;
+        if (price > 0) {
+            setCostFactor((parseFloat(val) / price).toFixed(3));
+        }
+    };
+
+    // Factor: cambio de factor → costo = precio × factor
+    const handleCostFactorChange = (val) => {
+        setCostFactor(val);
+        const factor = parseFloat(val) || 0;
+        const price = parseFloat(priceUsd) || 0;
+        if (factor > 0 && price > 0) {
+            const newCost = (price * factor).toFixed(2);
+            setCostUsd(newCost);
+            setCostBs((parseFloat(newCost) * effectiveRate).toFixed(2));
+            if (copEnabled && tasaCop > 0) setCostCop(Math.round(parseFloat(newCost) * tasaCop).toString());
+        }
     };
 
     const handleCostBsChange = (val) => {
@@ -399,8 +425,13 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
             showToast('Precio en $0: se guardará sin precio de venta', 'warning');
         }
 
+        // 2026-10-02: advertir si el nombre es solo números (probable error)
+        if (/^\d+$/.test(name.trim())) {
+            showToast('El nombre es solo números: ¿es correcto?', 'warning');
+        }
+
         const productData = buildProductPayload({
-            name, barcode, priceUsd, priceBs, pricingMode, priceBsUsdRef, priceCop, costUsd, costBs, stock, stockInLotes,
+            name, barcode, priceUsd, priceBs, pricingMode, priceBsUsdRef, priceCop, costUsd, costBs, costFactor, stock, stockInLotes,
             packagingType, unitsPerPackage, granelUnit, sellByUnit, unitPriceUsd, unitPriceCop,
             category, lowStockAlert
         }, effectiveRate);
@@ -549,6 +580,16 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     };
 
     const handleDelete = (id) => { triggerHaptic && triggerHaptic(); setDeleteId(id); };
+
+    // Duplicar producto: abre el modal con los datos precargados (sin código de barras)
+    const handleDuplicate = async (product) => {
+        triggerHaptic && triggerHaptic();
+        await handleEdit(product);
+        setEditingId(null); // nuevo producto, no edición
+        setBarcode(''); // sin código para evitar duplicados
+        setName((product.name || '') + ' (copia)');
+        showToast('Modo duplicar: ajusta los datos y guarda', 'info');
+    };
     const confirmDelete = () => {
         if (deleteId) {
             const p = products.find(x => x.id === deleteId);
@@ -967,6 +1008,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                             <div className="hidden sm:flex items-center justify-end gap-1">
                                                 <button onClick={() => handlePrintSingle(p)} aria-label={`Imprimir etiqueta de ${p.name}`} className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-surface-300 hover:text-brand hover:bg-brand/10 transition-all" title="Imprimir Etiqueta"><Printer size={14} aria-hidden="true" /></button>
                                                 {!isCajero && <button onClick={() => handleEdit(p)} aria-label={`Editar ${p.name}`} className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-surface-300 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all"><Pencil size={14} aria-hidden="true" /></button>}
+                                                {!isCajero && <button onClick={() => handleDuplicate(p)} aria-label={`Duplicar ${p.name}`} className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-surface-300 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"><Copy size={14} aria-hidden="true" /></button>}
                                                 {!isCajero && <button onClick={() => handleDelete(p.id)} aria-label={`Eliminar ${p.name}`} className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-surface-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"><Trash2 size={14} aria-hidden="true" /></button>}
                                             </div>
                                         </div>
@@ -1012,6 +1054,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                 costUsd={costUsd} handleCostUsdChange={handleCostUsdChange}
                 costBs={costBs} handleCostBsChange={handleCostBsChange}
                 costCop={costCop} handleCostCopChange={handleCostCopChange}
+                costFactor={costFactor} handleCostFactorChange={handleCostFactorChange}
                 stock={stock} setStock={setStock}
                 lowStockAlert={lowStockAlert} setLowStockAlert={setLowStockAlert}
                 unitsPerPackage={unitsPerPackage} setUnitsPerPackage={setUnitsPerPackage}

@@ -23,6 +23,7 @@ const INITIAL_STATE = {
     priceBsUsdRef: '',
     costUsd: '',
     costBs: '',
+    costFactor: '0.6', // Factor costo: costo = precio × factor
     stock: '',
     unit: 'unidad',
     unitsPerPackage: '',
@@ -72,6 +73,7 @@ export function useProductForm() {
     const setPriceBsUsdRef = useCallback((v) => dispatch({ type: 'SET', field: 'priceBsUsdRef', value: v }), []);
     const setCostUsd = useCallback((v) => dispatch({ type: 'SET', field: 'costUsd', value: v }), []);
     const setCostBs = useCallback((v) => dispatch({ type: 'SET', field: 'costBs', value: v }), []);
+    const setCostFactor = useCallback((v) => dispatch({ type: 'SET', field: 'costFactor', value: v }), []);
     const setStock = useCallback((v) => dispatch({ type: 'SET', field: 'stock', value: v }), []);
     const setUnit = useCallback((v) => dispatch({ type: 'SET', field: 'unit', value: v }), []);
     const setUnitsPerPackage = useCallback((v) => dispatch({ type: 'SET', field: 'unitsPerPackage', value: v }), []);
@@ -108,6 +110,7 @@ export function useProductForm() {
             priceBsUsdRef: product.priceBsUsdRef != null ? product.priceBsUsdRef.toString() : '',
             costUsd: currentCostUsd > 0 ? currentCostUsd.toFixed(2) : '',
             costBs: currentCostBs > 0 ? currentCostBs.toFixed(2) : '',
+            costFactor: product.costFactor != null ? product.costFactor.toString() : (currentPriceUsd > 0 && currentCostUsd > 0 ? (currentCostUsd / currentPriceUsd).toFixed(3) : '0.6'),
             stock: product.stock ?? '',
             unit: product.unit || 'unidad',
             unitsPerPackage: product.unitsPerPackage || '',
@@ -155,6 +158,7 @@ export function useProductForm() {
         priceBsUsdRef: state.priceBsUsdRef, setPriceBsUsdRef,
         costUsd: state.costUsd, setCostUsd,
         costBs: state.costBs, setCostBs,
+        costFactor: state.costFactor, setCostFactor,
         stock: state.stock, setStock,
         unit: state.unit, setUnit,
         unitsPerPackage: state.unitsPerPackage, setUnitsPerPackage,

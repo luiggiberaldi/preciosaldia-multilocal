@@ -1196,3 +1196,14 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Pedido de:** Luigi.
 **Cambio:** caja azul informativa en el modal Cargar Factura dejando claro que la foto se guarda solo en el equipo y no se sincroniza a la nube.
 **Versión:** 2.1.0.
+
+## 2026-10-02 ~20:15 — v2.1.1: 6 mejoras al modal de producto
+**Pedido de:** Luigi (auditoría).
+**Cambios:**
+1. `autoComplete="off"` en todos los inputs del formulario (sin sugerencias).
+2. Código de barras con `inputMode="numeric"` (teclado numérico en móvil).
+3. Foto con `capture="environment"` (abre cámara trasera directo).
+4. Botón "Duplicar" en la lista (icono Copy): abre el modal precargado sin código de barras.
+5. **Factor costo de tres vías**: Precio ↔ Costo ↔ Factor (default 0.6). Toggle %/factor (30% = 0.7). Se guarda por producto. Margen muestra Bs además de $.
+6. Advertencia si el nombre es solo números.
+**Versión:** 2.1.1.
