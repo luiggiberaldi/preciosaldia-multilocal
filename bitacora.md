@@ -1401,3 +1401,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Harness determinista extendido (datos reales de la nube): 5/5 PASS — getResumen×3 (netos $85.00 / $114.68 / $200.00), liquidar TEST-SEMANAL (folio NOM-2026-W40-00E1AA, neto $85 / Bs 74,120, gasto GASTO_INTERNO 'personal' único, consumos marcados, período cerrado), doble liquidación bloqueada (PAYROLL_YA_LIQUIDADO).
 - Lección: los shorthands `{ periodoKey }` con nombres parecidos (periodoKey vs periodKey) son trampa; el linter no los caza si la variable no existe (ReferenceError en runtime). Todo flujo que la UI consuma debe tener caso en el harness.
 - Build OK.
+
+## v2.1.28 — 2026-10-03 — Fix: recibo de liquidación mostraba datos vacíos
+- Causa: en `doLiquidar` (NominaView.jsx) se hacía `const liq = await payroll.liquidar(...)` pero liquidar retorna `{ liquidacion }`; el wrapper se pasaba como doc al modal → folio/fecha/montos indefinidos ("Invalid Date", $0.00). Fix: `const { liquidacion: liq } = ...`.
+- El E2E v2.1.27 confirmó L1/L2/L4 PASS: 2 liquidaciones con folios NOM-2026-W40-3D68A7 y NOM-2026-10-3DFF78, egreso único categoría 'personal' cada una, doble liquidación bloqueada con mensaje correcto.
+- Pendiente de verificar en navegador: contenido del recibo (L5-L9), anchos 80/56mm (L10), descarga/compartir (L11) y reimpresión desde tarjeta (L12).
+- Build OK.

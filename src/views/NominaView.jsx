@@ -348,7 +348,7 @@ export default function NominaView({ rates, triggerHaptic, isActive }) {
         if (!confirmLiq) return;
         setLiqBusy(true);
         try {
-            const liq = await payroll.liquidar({ employeeId: confirmLiq, tasaBcv });
+            const { liquidacion: liq } = await payroll.liquidar({ employeeId: confirmLiq, tasaBcv });
             const emp = employees.find((e) => e.id === confirmLiq);
             const per = resumenes[confirmLiq]?.periodo || null;
             showToast('Período liquidado', 'success');
