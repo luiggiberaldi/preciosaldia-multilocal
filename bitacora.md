@@ -1376,3 +1376,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - El E2E reproduce un crash consistente de la pestaña Nómina (React minified #310) tras recarga, con datos de prueba (consumos + 1 anulación). El análisis estático no encontró hooks condicionales en NominaView ni en los modales.
 - Para diagnosticar sin acceso a consola en el navegador automatizado, el ErrorBoundary ahora captura `error.stack` + `componentStack` y los muestra en un bloque "Detalle técnico" colapsable.
 - Build OK. Pendiente: reproducir y leer el stack para localizar el componente culpable.
+
+## v2.1.24 — 2026-10-03 — Fix crash React #310 en pestaña Nómina (causa raíz)
+- Causa raíz: el `useMemo` de `consumosFiltrados` estaba DESPUÉS del early return `if (!owner)`. Si el componente montaba con `owner=false` (p. ej. pestaña restaurada desde localStorage antes de que la sesión termine de cargar) y luego re-renderizaba con `owner=true`, React lanzaba #310 ("more hooks than previous render"). El stack del E2E lo confirmó: el throw ocurría exactamente en ese useMemo.
+- Fix: mover el `useMemo` (todos los hooks) antes de cualquier early return, con comentario explicativo.
+- Lección: en componentes con early returns por rol, ningún hook puede ir después del return. El análisis estático inicial lo pasó por alto porque buscaba hooks condicionales, no hooks post-return.
+- Build OK.

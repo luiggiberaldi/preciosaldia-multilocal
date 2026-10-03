@@ -292,6 +292,15 @@ export default function NominaView({ rates, triggerHaptic, isActive }) {
 
     useEffect(() => { if (isActive && owner) cargar(); }, [isActive, owner, cargar]);
 
+    /* Todos los hooks ANTES de cualquier early return (reglas de hooks de React:
+       un hook después de un return condicional causa el error #310 si `owner`
+       cambia entre renders). */
+    const consumosFiltrados = useMemo(() => {
+        const list = [...(consumos || [])].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        if (filtroEmp === 'todos') return list;
+        return list.filter((c) => String(c.employeeId) === String(filtroEmp));
+    }, [consumos, filtroEmp]);
+
     /* ── Acceso restringido (re-validación; el nav ya filtra) ── */
     if (!owner) {
         return (
@@ -358,12 +367,6 @@ export default function NominaView({ rates, triggerHaptic, isActive }) {
             showToast(err?.message || 'No se pudo anular', 'error');
         } finally { setAnularBusy(false); }
     };
-
-    const consumosFiltrados = useMemo(() => {
-        const list = [...(consumos || [])].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        if (filtroEmp === 'todos') return list;
-        return list.filter((c) => String(c.employeeId) === String(filtroEmp));
-    }, [consumos, filtroEmp]);
 
     const activos = employees.filter((e) => e.activo !== false);
 
