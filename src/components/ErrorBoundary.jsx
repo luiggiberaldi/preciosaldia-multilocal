@@ -18,7 +18,7 @@ import { appForage } from '../utils/appForage';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, clearing: false, clearMsg: '' };
+    this.state = { hasError: false, error: null, compStack: '', errStack: '', clearing: false, clearMsg: '' };
   }
 
   static getDerivedStateFromError(error) {
@@ -27,6 +27,10 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('🔴 App Error:', error, errorInfo);
+    this.setState({
+      compStack: String(errorInfo?.componentStack || ''),
+      errStack: String(error?.stack || ''),
+    });
     const msg = error?.message || '';
     if (
       msg.includes('Failed to fetch dynamically imported module') ||
@@ -104,6 +108,14 @@ class ErrorBoundary extends React.Component {
             <p className="text-xs text-slate-400 dark:text-slate-500 mb-4 font-mono break-all">
               {errMsg}
             </p>
+            {(this.state.errStack || this.state.compStack) && (
+              <details className="mb-4 text-left bg-slate-100 dark:bg-slate-900 rounded-xl p-3 max-h-48 overflow-auto">
+                <summary className="text-[11px] font-bold text-slate-500 cursor-pointer">Detalle técnico</summary>
+                <pre className="text-[10px] font-mono text-slate-500 whitespace-pre-wrap break-all mt-2">
+                  {this.state.errStack}{this.state.compStack ? '\n' + this.state.compStack : ''}
+                </pre>
+              </details>
+            )}
             <button
               onClick={this._handleRetry}
               disabled={this.state.clearing}

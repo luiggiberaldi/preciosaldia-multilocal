@@ -1371,3 +1371,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Auditoría rápida de PayrollReceiptModal: OK (usa liquidacion.tasaBcvLiquidacion del objeto).
 - Nota E2E: el botón "Importar Backup" no abre el selector en el navegador automatizado — el código usa el patrón estándar (input file oculto + ref.click()), consistente con limitación del harness, no con bug de la app. La restauración E2E real queda pendiente en dispositivo físico.
 - Build OK.
+
+## v2.1.23 — 2026-10-03 — Diagnóstico: ErrorBoundary muestra stack técnico
+- El E2E reproduce un crash consistente de la pestaña Nómina (React minified #310) tras recarga, con datos de prueba (consumos + 1 anulación). El análisis estático no encontró hooks condicionales en NominaView ni en los modales.
+- Para diagnosticar sin acceso a consola en el navegador automatizado, el ErrorBoundary ahora captura `error.stack` + `componentStack` y los muestra en un bloque "Detalle técnico" colapsable.
+- Build OK. Pendiente: reproducir y leer el stack para localizar el componente culpable.
