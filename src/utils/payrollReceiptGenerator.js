@@ -256,8 +256,9 @@ export async function sharePayrollReceipt(args) {
     ) {
         try {
             await navigator.share({ title: 'Recibo de pago — Nómina', files: [file] });
-            return;
+            return 'share';
         } catch (_) { /* cae al fallback de descarga */ }
     }
     doc.save(filename);
+    return 'download';
 }

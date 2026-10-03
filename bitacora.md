@@ -1413,3 +1413,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Bug 2: "Imprimir" (y "Compartir") lanzaban "Cannot read properties of null (reading 'frecuencia')" cuando el período era null (liquidación sin consumos → sin doc de período). Causa: `buildDoc` usa defaults de destructuring que no aplican a null explícito. Fix: normalizar nulos a {} al inicio. Harness determinista del generador: 4/4 PASS (periodo null, completo, vacío, ancho 80mm).
 - Pendiente de verificar en navegador: botón Recibo visible, impresión, compartir/descarga.
 - Build OK.
+
+## v2.1.30 — 2026-10-03 — Feedback visible al compartir recibo
+- "Compartir" en el recibo no daba ninguna señal visible en escritorio (ni hoja de compartir ni descarga detectada). `sharePayrollReceipt` ahora retorna 'share'|'download' y el modal muestra toast ("Recibo compartido" / "Recibo descargado (PDF)"). En móvil usa Web Share con archivos; en escritorio descarga el PDF.
+- E2E v2.1.29: botón "Recibo" visible en tarjetas liquidadas (TEST-RECIBO, TEST-SEMANAL), reimpresión con todos los valores correctos, impresión inicia sin errores JS.
+- Build OK.

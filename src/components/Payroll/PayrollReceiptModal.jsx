@@ -54,7 +54,8 @@ export default function PayrollReceiptModal({ liquidacion, empleado, periodo, on
                 await printPayrollReceipt({ liquidacion, empleado, periodo });
                 showToast('Enviando a imprimir…', 'info');
             } else {
-                await sharePayrollReceipt({ liquidacion, empleado, periodo });
+                const shared = await sharePayrollReceipt({ liquidacion, empleado, periodo });
+                showToast(shared === 'download' ? 'Recibo descargado (PDF)' : 'Recibo compartido', 'success');
             }
         } catch (err) {
             showToast(err?.message || (kind === 'print' ? 'No se pudo imprimir' : 'No se pudo compartir'), 'error');
