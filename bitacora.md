@@ -1388,3 +1388,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Ahora el catch registra en consola y muestra un toast con el empleado afectado.
 - Los datos en la nube están íntegros (3 empleados, consumos APPLIED, período 2026-W40 ABIERTO con snapshot $100) — el problema es local al navegador de prueba o de timing.
 - Build OK.
+
+## v2.1.26 — 2026-10-03 — Fix crítico: getResumen lanzaba ReferenceError siempre
+- Causa raíz: en `getResumen` (payrollService.js:604) el `return` usaba el shorthand `periodoKey` pero la variable local se llama `periodKey` → `ReferenceError: periodoKey is not defined` en CADA llamada. El Resumen mostraba "Sin movimientos" y no había botón Liquidar; `liquidar()` también fallaba (llama a getResumen).
+- El E2E lo detectó (toasts "No se pudo cargar el resumen"); el harness determinista con datos reales de la nube lo reprodujo (0/3) y verificó el fix (3/3): TEST-SEMANAL neto $85.00 = $100 − $15 aplicados.
+- Fix: `periodoKey: periodKey`. Lección: los tests del módulo no cubrían getResumen; el harness queda en /tmp/harness (mover a .tests/ pendiente).
+- Build OK.

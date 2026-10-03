@@ -601,7 +601,7 @@ export async function getResumen(employeeId, tasaBcv = null) {
     return {
         empleado: emp,
         periodo: period,
-        periodoKey,
+        periodoKey: periodKey,
         salarioSnapshot: snap,
         salarioUsd,
         totalConsumosUsd,
