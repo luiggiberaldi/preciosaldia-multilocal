@@ -598,7 +598,14 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         }
 
         setIsModalOpen(true);
-        editOrderRef.current = ['costo']; // el costo cargado es el ancla; la 1ra edición define la 2da fuente
+        // El orden arranca con los campos que SÍ tienen valor cargado (el ancla).
+        // Si el producto se guardó sin costo, 'costo' no entra: escribirlo será la 1ra edición
+        // y el precio cargado la 2da fuente → el factor se deriva.
+        const initialOrder = [];
+        if (product.costUsd > 0) initialOrder.push('costo');
+        if ((product.priceUsdt || product.priceUsd) > 0) initialOrder.push('precio');
+        if (parseFloat(product.costFactor) > 0) initialOrder.push('factor');
+        editOrderRef.current = initialOrder.slice(-2);
 
         // Load product movements (Kardex Lite)
         try {

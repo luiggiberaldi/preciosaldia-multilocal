@@ -1278,3 +1278,15 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
   del orden en vez de llamar a derive. Generaliza el fix de v2.1.8 a los 3 campos.
 - Test determinista: vaciar precio + factor=0.5 → precio 10.00 PASS;
   costo=5 + precio=3.02 → factor 1.656 PASS.
+
+## v2.1.10 (2026-10-02) — Fix: orden inicial al editar respeta campos con valor
+- Bug reportado por Luigi: en producto YA CREADO (guardado solo con precio),
+  al agregar el costo el factor no se derivaba.
+- Causa: al abrir el modal de edición el orden arrancaba fijo en ['costo']
+  ("el costo cargado es el ancla"), pero si el producto no tenía costo, escribir
+  el costo era la 1ra edición real y no había 2da fuente.
+- Fix: el orden inicial se arma con los campos que SÍ tienen valor
+  (costo>0, precio>0, factor>0). Producto solo con precio → orden ['precio'];
+  escribir costo → factor se deriva.
+- Test determinista: editar producto con precio=3.9 sin costo, escribir costo=1
+  → factor 0.256. PASS.
