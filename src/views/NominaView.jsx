@@ -170,7 +170,7 @@ function ResumenCard({ resumen, liquidaciones, onConsumo, onLiquidar, onRecibo, 
     const { empleado, periodo, salarioUsd, consumidoUsd, pct, netoUsd, consumos, limitePct, liquidacion } = resumen;
     const sem = semaforo(pct || 0);
     const tone = SEM_TONE[sem];
-    const liq = liquidacion || liquidaciones.find((l) => l.employeeId === empleado.id && l.periodoKey === periodo?.key);
+    const liq = liquidacion || liquidaciones.find((l) => l.employeeId === empleado.id && l.periodoKey === periodo?.periodKey);
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 p-4 shadow-sm">

@@ -1407,3 +1407,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - El E2E v2.1.27 confirmó L1/L2/L4 PASS: 2 liquidaciones con folios NOM-2026-W40-3D68A7 y NOM-2026-10-3DFF78, egreso único categoría 'personal' cada una, doble liquidación bloqueada con mensaje correcto.
 - Pendiente de verificar en navegador: contenido del recibo (L5-L9), anchos 80/56mm (L10), descarga/compartir (L11) y reimpresión desde tarjeta (L12).
 - Build OK.
+
+## v2.1.29 — 2026-10-03 — Fix: reimpresión de recibo + crash en imprimir/compartir
+- Bug 1: el botón "Recibo" nunca aparecía en las tarjetas liquidadas — ResumenCard comparaba `l.periodoKey === periodo?.key` pero el doc de período trae `periodKey`, no `key`. Fix: `periodo?.periodKey`.
+- Bug 2: "Imprimir" (y "Compartir") lanzaban "Cannot read properties of null (reading 'frecuencia')" cuando el período era null (liquidación sin consumos → sin doc de período). Causa: `buildDoc` usa defaults de destructuring que no aplican a null explícito. Fix: normalizar nulos a {} al inicio. Harness determinista del generador: 4/4 PASS (periodo null, completo, vacío, ancho 80mm).
+- Pendiente de verificar en navegador: botón Recibo visible, impresión, compartir/descarga.
+- Build OK.

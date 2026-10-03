@@ -76,7 +76,12 @@ function safeFilename(folio) {
  * Construye el documento jsPDF del recibo. Uso interno.
  * @returns {{ doc, width, filename }}
  */
-function buildDoc({ negocio = {}, empleado = {}, periodo = {}, liquidacion = {}, consumoCount = 0, paperWidth } = {}) {
+function buildDoc({ negocio, empleado, periodo, liquidacion, consumoCount = 0, paperWidth } = {}) {
+    // Tolerante a nulos explícitos (los defaults del destructuring no aplican a null).
+    negocio = negocio || {};
+    empleado = empleado || {};
+    periodo = periodo || {};
+    liquidacion = liquidacion || {};
     const wide = resolvePaperWidth(paperWidth) === '80';
 
     const WIDTH = wide ? 80 : 56;
