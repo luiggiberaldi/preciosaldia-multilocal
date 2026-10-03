@@ -26,7 +26,7 @@ export default function ProductFormQuick({
     costUsd, handleCostUsdChange,
     costBs, handleCostBsChange,
     costCop, handleCostCopChange,
-    costFactor, handleCostFactorChange,
+    costFactor, handleCostFactorChange = () => {},
     stock, setStock,
     lowStockAlert, setLowStockAlert,
 

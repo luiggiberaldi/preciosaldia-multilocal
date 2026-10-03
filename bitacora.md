@@ -1219,3 +1219,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Causa:** el cambio de precio siempre recalculaba el costo (borrando el costo manual) y el cambio de factor siempre recalculaba el costo (impidiendo derivar el precio).
 **Fix:** los 2 últimos campos editados son la fuente y el tercero se calcula solo (costo+precio→factor, costo+factor→precio, precio+factor→costo). Bs/COP cuentan como edición del mismo campo lógico. Al abrir el form el costo queda como ancla. Además: margen ahora sobre venta ((precio−costo)/precio = 1−factor), consistente con 30% ↔ 0.7.
 **Versión:** 2.1.3.
+
+## 2026-10-02 ~20:40 — v2.1.4: fix factor no recalculaba (props no llegaban al form)
+**Reportado por:** prueba en navegador en vivo (pedida por Luigi).
+**Causa raíz:** `ProductFormModal` desestructuraba `costFactor`/`handleCostFactorChange` pero nunca los incluía en `commonProps`; el `ProductFormQuick` los recibía como `undefined`. Escribir en el factor lanzaba TypeError silencioso: aceptaba escritura pero no recalculaba nada y al perder foco se revertía. El bug existía desde v2.1.1.
+**Fix:** incluidos en `commonProps` + default `() => {}` en el Quick como red de seguridad.
+**Tests deterministas:** lógica 5/5 (función real extraída), cableado de props 11/11 (cadena ProductsView→Modal→Quick verificada estáticamente). Scripts en `.tests/` (no commiteados).
+**Versión:** 2.1.4.

@@ -193,6 +193,7 @@ export default function ProductFormModal({
         costUsd, handleCostUsdChange,
         costBs, handleCostBsChange,
         costCop, handleCostCopChange,
+        costFactor, handleCostFactorChange,
         stock, setStock,
         lowStockAlert, setLowStockAlert,
         unitsPerPackage, setUnitsPerPackage,
