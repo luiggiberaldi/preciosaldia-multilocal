@@ -226,12 +226,12 @@ export default function SalesHeader({
 
                                 {localRateMode !== 'manual' && (
                                     <div className="flex items-center justify-between pt-1">
-                                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Redondear tasa automática</span>
+                                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Redondear tasa a número entero</span>
                                         <button
                                             type="button"
                                             role="switch"
                                             aria-checked={localRedondear}
-                                            aria-label="Redondear tasa automática a 2 decimales"
+                                            aria-label="Redondear tasa automática a número entero"
                                             onClick={() => { triggerHaptic && triggerHaptic(); setLocalRedondear(!localRedondear); }}
                                             className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 cursor-pointer select-none shrink-0 active:scale-95 transition-transform"
                                         >

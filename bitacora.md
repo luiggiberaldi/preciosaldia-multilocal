@@ -1321,3 +1321,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `effectiveRate` redondea a 2 decimales solo cuando la tasa no es manual y el toggle está activo.
 - Toggle "Redondear tasa automática" en el panel de tasa del POS (SalesHeader), visible solo en modos no-manuales.
 - Test determinista: 8/8 pass con la lógica real extraída del fuente.
+
+## v2.1.15 (2026-10-03) — Redondeo de tasa a número entero
+- Corrección de Luigi: el redondeo debe ser a números enteros, no a 2 decimales.
+- El redondeo a 2 decimales era invisible (la UI ya muestra 2 decimales siempre).
+- `effectiveRate` ahora usa `Math.round(rate)` cuando el toggle está activo y la tasa no es manual.
+- Label del toggle: "Redondear tasa a número entero".
+- Test determinista: 9/9 pass con la lógica real extraída del fuente.
