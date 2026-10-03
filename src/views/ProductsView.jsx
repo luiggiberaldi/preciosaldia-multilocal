@@ -949,7 +949,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                         // v1.2.0: surface tokens + border-surface-300 (warm border) para la lista.
                         <div className="bg-surface dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 shadow-tone-sm overflow-hidden">
                             {/* Table Header — desktop */}
-                            <div className="hidden sm:grid sm:grid-cols-[40px_1fr_100px_100px_70px_80px_110px] gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <div className="hidden sm:grid sm:grid-cols-[40px_1fr_100px_100px_70px_90px_160px] gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                 <div className="flex items-center justify-center">
                                     <input type="checkbox" onChange={handleSelectAll} checked={selectedIds.size > 0 && selectedIds.size === paginatedProducts.length} className="w-4 h-4 rounded border-slate-300 text-brand focus:ring-brand cursor-pointer" />
                                 </div>
@@ -978,7 +978,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                     const margin = effectiveCostUsd > 0 && p.priceUsdt > 0 ? ((p.priceUsdt - effectiveCostUsd) / p.priceUsdt * 100) : null;
                                     const catInfo = categories.find(c => c.id === p.category);
                                     return (
-                                        <div key={p.id} className={`group grid grid-cols-[auto_1fr_auto] sm:grid-cols-[40px_1fr_100px_100px_70px_80px_110px] gap-2 px-4 py-3 items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${selectedIds.has(p.id) ? 'bg-brand/5 dark:bg-brand/10' : ''} ${isLowStock ? 'bg-amber-50/50 dark:bg-amber-900/5' : ''}`}>
+                                        <div key={p.id} className={`group grid grid-cols-[auto_1fr_auto] sm:grid-cols-[40px_1fr_100px_100px_70px_90px_160px] gap-2 px-4 py-3 items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${selectedIds.has(p.id) ? 'bg-brand/5 dark:bg-brand/10' : ''} ${isLowStock ? 'bg-amber-50/50 dark:bg-amber-900/5' : ''}`}>
                                             {/* Checkbox */}
                                             <div className="flex items-center justify-center px-1">
                                                 <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => handleToggleSelect(p.id)} className="w-5 h-5 sm:w-4 sm:h-4 rounded border-slate-300 text-brand focus:ring-brand cursor-pointer focus:ring-offset-0" />
@@ -1000,7 +1000,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                                         {catInfo && catInfo.id !== 'todos' && (
                                                             <span className="text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{catInfo.label}</span>
                                                         )}
-                                                        {p.barcode && <span className="text-[9px] text-slate-300 dark:text-slate-600 font-mono">{p.barcode}</span>}
+                                                        {p.barcode && <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono">{p.barcode}</span>}
                                                         {isLowStock && <span className="text-[9px] font-bold text-amber-500 flex items-center gap-0.5"><AlertTriangle size={9} /> Bajo</span>}
                                                         {/* Mobile: show price inline */}
                                                         <span className="sm:hidden text-[11px] font-black text-emerald-600 dark:text-emerald-400">{copEnabled && copPrimary && tasaCop > 0 ? `${getCop(p, tasaCop).toLocaleString('es-CO')} COP` : `$${(getUsd(p, tasaCop) || 0).toFixed(2)}`}</span>
@@ -1045,14 +1045,14 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                                                 )}
                                             </div>
                                             <div className="hidden sm:block">
-                                                {!isCajero ? (p.costUsd ? <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{copEnabled && copPrimary && tasaCop > 0 ? `${Math.round(p.costUsd * tasaCop).toLocaleString('es-CO')} COP` : `$${p.costUsd.toFixed(2)}`}</p> : <button onClick={() => handleEdit(p)} className="text-[11px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 px-2 py-1 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors">+ costo</button>) : <span className="text-[10px] text-slate-300">-</span>}
+                                                {!isCajero ? (p.costUsd ? <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{copEnabled && copPrimary && tasaCop > 0 ? `${Math.round(p.costUsd * tasaCop).toLocaleString('es-CO')} COP` : `$${p.costUsd.toFixed(2)}`}</p> : <button onClick={() => handleEdit(p)} className="text-[11px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 px-2 py-1 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors">+ costo</button>) : <span className="text-[10px] text-slate-400">-</span>}
                                             </div>
                                             <div className="hidden sm:block">
                                                 {!isCajero ? (margin !== null ? (
                                                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${margin >= 30 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' : margin >= 15 ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' : 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'}`}>
                                                         {margin >= 0 ? '+' : ''}{margin.toFixed(0)}%
                                                     </span>
-                                                ) : <span className="text-[10px] text-slate-300">-</span>) : <span className="text-[10px] text-slate-300">-</span>}
+                                                ) : <span className="text-[10px] text-slate-400">-</span>) : <span className="text-[10px] text-slate-400">-</span>}
                                             </div>
                                             <div className="hidden sm:flex items-center gap-1">
                                                 {!isCajero && <button onClick={() => adjustStock(p.id, -1)} aria-label={`Restar 1 unidad de ${p.name}`} className="w-9 h-9 rounded-lg bg-surface-50 dark:bg-surface-800 flex items-center justify-center text-surface-400 hover:text-red-500 transition-colors active:scale-90"><Minus size={14} aria-hidden="true" /></button>}

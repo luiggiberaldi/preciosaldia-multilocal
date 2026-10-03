@@ -1309,3 +1309,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
   al orden. El campo vaciado quedaba como "última edición" y bloqueaba la derivación.
 - Fix: el derive ahora solo corre en la rama else (valor válido), en los 2 handlers.
 - Test determinista: vaciar precio + factor=0.6 → precio 1.67. PASS.
+
+## v2.1.13 (2026-10-02) — Fix contraste y overlap en vista lista
+- Reporte de Luigi: problemas de contraste e icono de imprimir montado sobre otros datos.
+- Columna de acciones: 110px → 160px (4 botones de 36px necesitan ~156px).
+- Contraste: código de barras slate-300 → slate-400; guiones "-" slate-300 → slate-400.
