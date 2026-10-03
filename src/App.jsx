@@ -603,11 +603,13 @@ export default function App() {
             </div>
           )}
         </Suspense>
+        {/* Asistente Bot 2.0 oculto por ahora (2026-10-03, pedido de Luigi).
+            Para reactivar: descomentar el bloque siguiente.
         {activeTab === 'inicio' && (
           <Suspense fallback={null}>
             <AIAssistantWidget />
           </Suspense>
-        )}
+        )} */}
       </main>
 
         {/* Bottom Nav — dentro de CartProvider para acceder al contador del carrito */}

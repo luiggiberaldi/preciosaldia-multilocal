@@ -1341,3 +1341,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Causa: `api/search-image.js` devolvía 404 cuando no había coincidencias; el frontend trata todo non-OK como error duro.
 - Ahora devuelve 200 con `matches: []` y el frontend muestra el mensaje amable "No se encontró foto...".
 - Causa raíz del "no funciona": `product_images_catalog` tiene 0 filas (poblamiento pendiente).
+
+## v2.1.18 (2026-10-03) — ocultar Asistente Bot 2.0
+- Pedido de Luigi: ocultar el bot por ahora.
+- Se comentó el render de AIAssistantWidget en App.jsx (reversible: instrucciones en el comentario).
