@@ -1257,3 +1257,13 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `useProductForm`: default inicial `costFactor: '0'` y fallback en `populateForm` a `'0'`.
 - `ProductFormQuick`: en modo % el factor 0 muestra vacío en vez de "100".
 - Reporte de Luigi: con costo+factor el precio no se calculaba; se re-verificará E2E en navegador.
+
+## v2.1.8 (2026-10-02) — Fix: factor en 0 no contamina el orden de edición
+- Bug reportado por Luigi: con costo=5 y precio=3.02 el factor no se derivaba.
+- Causa: si se tocaba el campo del factor (dejarlo en 0/limpiarlo) entre escribir
+  costo y precio, 'factor' quedaba como última edición y el tercero a calcular era
+  costo/precio (con factor=0 fallaba el guard). El factor nunca se derivaba.
+- Fix: factor en 0/vacío = "no definido", no entra al orden de edición
+  (se filtra en handleCostFactorChange en vez de llamar a derive).
+- Test determinista: escenario exacto (costo=5, tocar factor=0, precio=3.02)
+  → factor deriva a 1.656. PASS.

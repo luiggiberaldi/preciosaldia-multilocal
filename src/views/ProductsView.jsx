@@ -414,7 +414,13 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const handleCostFactorChange = (val) => {
         setCostFactor(val);
         const factor = parseFloat(val) || 0;
-        deriveFromLastTwoEdits('factor', parseFloat(costUsd) || 0, parseFloat(priceUsd) || 0, factor);
+        if (factor > 0) {
+            deriveFromLastTwoEdits('factor', parseFloat(costUsd) || 0, parseFloat(priceUsd) || 0, factor);
+        } else {
+            // Factor en 0/vacío = "no definido": no contamina el orden de edición
+            // (si no, tocar el factor impedía que costo+precio lo derivaran)
+            editOrderRef.current = editOrderRef.current.filter(f => f !== 'factor');
+        }
     };
 
     const handleCostBsChange = (val) => {
