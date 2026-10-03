@@ -278,7 +278,13 @@ export default function NominaView({ rates, triggerHaptic, isActive }) {
             setEmployees(list);
             const res = {};
             for (const e of list) {
-                try { res[e.id] = await payroll.getResumen(e.id, tasaBcv); } catch { /* sin resumen */ }
+                try { res[e.id] = await payroll.getResumen(e.id, tasaBcv); }
+                catch (err) {
+                    // E2E 2026-10-03: no tragar el error en silencio; sin esto el
+                    // Resumen muestra "Sin movimientos" sin pista de la causa.
+                    console.error('[Nomina] getResumen falló para', e?.id, err);
+                    showToast(`No se pudo cargar el resumen de ${e?.nombre || 'empleado'}`, 'error');
+                }
             }
             setResumenes(res);
             setConsumos(await payroll.listConsumos().catch(() => []));

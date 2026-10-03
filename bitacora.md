@@ -1382,3 +1382,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Fix: mover el `useMemo` (todos los hooks) antes de cualquier early return, con comentario explicativo.
 - Lección: en componentes con early returns por rol, ningún hook puede ir después del return. El análisis estático inicial lo pasó por alto porque buscaba hooks condicionales, no hooks post-return.
 - Build OK.
+
+## v2.1.25 — 2026-10-03 — Diagnóstico: visibilizar error de getResumen
+- El E2E v2.1.24 mostró "Sin movimientos este período" en el Resumen aunque hay consumos aplicados; el `catch` silencioso de `cargar()` ocultaba la causa real.
+- Ahora el catch registra en consola y muestra un toast con el empleado afectado.
+- Los datos en la nube están íntegros (3 empleados, consumos APPLIED, período 2026-W40 ABIERTO con snapshot $100) — el problema es local al navegador de prueba o de timing.
+- Build OK.
