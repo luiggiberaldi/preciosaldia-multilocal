@@ -376,8 +376,8 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         else {
             setPriceBs((usd * effectiveRate).toFixed(2));
             if (copEnabled && tasaCop > 0) setPriceCop(Math.round(usd * tasaCop).toString());
+            deriveFromLastTwoEdits('precio', parseFloat(costUsd) || 0, usd, parseFloat(costFactor) || 0);
         }
-        deriveFromLastTwoEdits('precio', parseFloat(costUsd) || 0, usd, parseFloat(costFactor) || 0);
     };
 
     const handlePriceBsChange = (val) => {
@@ -411,8 +411,8 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         else {
             setCostBs((usd * effectiveRate).toFixed(2));
             if (copEnabled && tasaCop > 0) setCostCop(Math.round(usd * tasaCop).toString());
+            deriveFromLastTwoEdits('costo', usd, parseFloat(priceUsd) || 0, parseFloat(costFactor) || 0);
         }
-        deriveFromLastTwoEdits('costo', usd, parseFloat(priceUsd) || 0, parseFloat(costFactor) || 0);
     };
 
     // Factor: el cambio de factor deriva el precio desde el costo (costo + factor → precio)

@@ -1301,3 +1301,11 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
   rojo <15%), botón "+ costo" en productos sin costo (abre el editor),
   código de barras bajo el nombre, acciones visibles solo en hover (desktop).
 - Se quitó el código de diagnóstico del título (debug paso 5).
+
+## v2.1.12 (2026-10-02) — Fix real del paso 5 (derive fuera del if/else)
+- Causa raíz encontrada vía diagnóstico en título: en handlePriceUsdChange y
+  handleCostUsdChange el deriveFromLastTwoEdits estaba FUERA del if/else, así que
+  al vaciar un campo se ejecutaba removeFromOrder Y LUEGO el derive lo re-agregaba
+  al orden. El campo vaciado quedaba como "última edición" y bloqueaba la derivación.
+- Fix: el derive ahora solo corre en la rama else (valor válido), en los 2 handlers.
+- Test determinista: vaciar precio + factor=0.6 → precio 1.67. PASS.
