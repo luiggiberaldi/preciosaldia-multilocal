@@ -1213,3 +1213,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Causa:** el `.toFixed(1)` reformateaba el valor mientras se escribía, rompiendo la entrada.
 **Fix:** estado local `factorInput` que conserva lo escrito sin reformatear; al salir del campo (blur) muestra el valor formateado.
 **Versión:** 2.1.2.
+
+## 2026-10-02 ~20:25 — v2.1.3: lógica costo/precio/factor según regla de Luigi
+**Reportado por:** Luigi — "si agrego el costo y el precio se llena solo el factor; si agrego el costo y el factor se agrega el precio solo".
+**Causa:** el cambio de precio siempre recalculaba el costo (borrando el costo manual) y el cambio de factor siempre recalculaba el costo (impidiendo derivar el precio).
+**Fix:** los 2 últimos campos editados son la fuente y el tercero se calcula solo (costo+precio→factor, costo+factor→precio, precio+factor→costo). Bs/COP cuentan como edición del mismo campo lógico. Al abrir el form el costo queda como ancla. Además: margen ahora sobre venta ((precio−costo)/precio = 1−factor), consistente con 30% ↔ 0.7.
+**Versión:** 2.1.3.

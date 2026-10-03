@@ -334,78 +334,110 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const [unitPriceCop, setUnitPriceCop] = useState('');
     const [costCop, setCostCop] = useState('');
 
+    // ─── LÓGICA COSTO / PRECIO / FACTOR (regla de Luigi) ────
+    // Los 2 últimos campos editados son la fuente; el tercero se calcula solo:
+    //   costo + precio → factor = costo / precio
+    //   costo + factor → precio = costo / factor
+    //   precio + factor → costo = precio × factor
+    // (Bs y COP cuentan como edición del mismo campo lógico en USD.)
+    const editOrderRef = useRef([]);
+
+    const deriveFromLastTwoEdits = (editedField, costoVal, precioVal, factorVal) => {
+        const order = editOrderRef.current.filter(f => f !== editedField);
+        order.push(editedField);
+        editOrderRef.current = order.slice(-2);
+        const [a, b] = editOrderRef.current;
+        if (!a || !b) return; // aún no hay 2 fuentes
+        const third = ['costo', 'precio', 'factor'].find(f => f !== a && f !== b);
+        if (third === 'factor' && precioVal > 0 && costoVal > 0) {
+            setCostFactor((costoVal / precioVal).toFixed(3));
+        } else if (third === 'precio' && factorVal > 0 && costoVal > 0) {
+            const p = costoVal / factorVal;
+            setPriceUsd(p.toFixed(2));
+            setPriceBs((p * effectiveRate).toFixed(2));
+            if (copEnabled && tasaCop > 0) setPriceCop(Math.round(p * tasaCop).toString());
+        } else if (third === 'costo' && precioVal > 0 && factorVal > 0) {
+            const c = precioVal * factorVal;
+            setCostUsd(c.toFixed(2));
+            setCostBs((c * effectiveRate).toFixed(2));
+            if (copEnabled && tasaCop > 0) setCostCop(Math.round(c * tasaCop).toString());
+        }
+    };
+
     const handlePriceUsdChange = (val) => {
         setPriceUsd(val);
-        if (!val || parseFloat(val) <= 0) { setPriceBs(''); setPriceCop(''); return; }
-        setPriceBs((parseFloat(val) * effectiveRate).toFixed(2));
-        if (copEnabled && tasaCop > 0) setPriceCop(Math.round(parseFloat(val) * tasaCop).toString());
-        // Factor: precio → costo = precio × factor
-        const factor = parseFloat(costFactor) || 0;
-        if (factor > 0) {
-            const newCost = (parseFloat(val) * factor).toFixed(2);
-            setCostUsd(newCost);
-            setCostBs((parseFloat(newCost) * effectiveRate).toFixed(2));
+        const usd = parseFloat(val) || 0;
+        if (!val || usd <= 0) { setPriceBs(''); setPriceCop(''); }
+        else {
+            setPriceBs((usd * effectiveRate).toFixed(2));
+            if (copEnabled && tasaCop > 0) setPriceCop(Math.round(usd * tasaCop).toString());
         }
+        deriveFromLastTwoEdits('precio', parseFloat(costUsd) || 0, usd, parseFloat(costFactor) || 0);
     };
 
     const handlePriceBsChange = (val) => {
         setPriceBs(val);
-        if (!val || parseFloat(val) <= 0) { setPriceUsd(''); setPriceCop(''); return; }
-        const usd = parseFloat(val) / effectiveRate;
-        setPriceUsd(usd.toFixed(2));
-        if (copEnabled && tasaCop > 0) setPriceCop(Math.round(usd * tasaCop).toString());
+        const numVal = parseFloat(val) || 0;
+        if (!val || numVal <= 0) { setPriceUsd(''); setPriceCop(''); }
+        else {
+            const usd = numVal / effectiveRate;
+            setPriceUsd(usd.toFixed(2));
+            if (copEnabled && tasaCop > 0) setPriceCop(Math.round(usd * tasaCop).toString());
+            deriveFromLastTwoEdits('precio', parseFloat(costUsd) || 0, usd, parseFloat(costFactor) || 0);
+        }
     };
 
     const handlePriceCopChange = (val) => {
         setPriceCop(val);
-        if (!val || parseFloat(val) <= 0) { setPriceUsd(''); setPriceBs(''); return; }
+        const numVal = parseFloat(val) || 0;
+        if (!val || numVal <= 0) { setPriceUsd(''); setPriceBs(''); return; }
         if (tasaCop <= 0) return;
-        const usd = parseFloat(val) / tasaCop;
+        const usd = numVal / tasaCop;
         // Usar 4 decimales para que al reconvertir a COP dé el valor original
         setPriceUsd(usd.toFixed(4));
         setPriceBs((usd * effectiveRate).toFixed(2));
+        deriveFromLastTwoEdits('precio', parseFloat(costUsd) || 0, usd, parseFloat(costFactor) || 0);
     };
 
     const handleCostUsdChange = (val) => {
         setCostUsd(val);
-        if (!val || parseFloat(val) <= 0) { setCostBs(''); setCostCop(''); return; }
-        setCostBs((parseFloat(val) * effectiveRate).toFixed(2));
-        if (copEnabled && tasaCop > 0) setCostCop(Math.round(parseFloat(val) * tasaCop).toString());
-        // Factor: costo manual → factor = costo / precio
-        const price = parseFloat(priceUsd) || 0;
-        if (price > 0) {
-            setCostFactor((parseFloat(val) / price).toFixed(3));
+        const usd = parseFloat(val) || 0;
+        if (!val || usd <= 0) { setCostBs(''); setCostCop(''); }
+        else {
+            setCostBs((usd * effectiveRate).toFixed(2));
+            if (copEnabled && tasaCop > 0) setCostCop(Math.round(usd * tasaCop).toString());
         }
+        deriveFromLastTwoEdits('costo', usd, parseFloat(priceUsd) || 0, parseFloat(costFactor) || 0);
     };
 
-    // Factor: cambio de factor → costo = precio × factor
+    // Factor: el cambio de factor deriva el precio desde el costo (costo + factor → precio)
     const handleCostFactorChange = (val) => {
         setCostFactor(val);
         const factor = parseFloat(val) || 0;
-        const price = parseFloat(priceUsd) || 0;
-        if (factor > 0 && price > 0) {
-            const newCost = (price * factor).toFixed(2);
-            setCostUsd(newCost);
-            setCostBs((parseFloat(newCost) * effectiveRate).toFixed(2));
-            if (copEnabled && tasaCop > 0) setCostCop(Math.round(parseFloat(newCost) * tasaCop).toString());
-        }
+        deriveFromLastTwoEdits('factor', parseFloat(costUsd) || 0, parseFloat(priceUsd) || 0, factor);
     };
 
     const handleCostBsChange = (val) => {
         setCostBs(val);
-        if (!val || parseFloat(val) <= 0) { setCostUsd(''); setCostCop(''); return; }
-        const usd = parseFloat(val) / effectiveRate;
-        setCostUsd(usd.toFixed(2));
-        if (copEnabled && tasaCop > 0) setCostCop(Math.round(usd * tasaCop).toString());
+        const numVal = parseFloat(val) || 0;
+        if (!val || numVal <= 0) { setCostUsd(''); setCostCop(''); }
+        else {
+            const usd = numVal / effectiveRate;
+            setCostUsd(usd.toFixed(2));
+            if (copEnabled && tasaCop > 0) setCostCop(Math.round(usd * tasaCop).toString());
+            deriveFromLastTwoEdits('costo', usd, parseFloat(priceUsd) || 0, parseFloat(costFactor) || 0);
+        }
     };
 
     const handleCostCopChange = (val) => {
         setCostCop(val);
-        if (!val || parseFloat(val) <= 0) { setCostUsd(''); setCostBs(''); return; }
+        const numVal = parseFloat(val) || 0;
+        if (!val || numVal <= 0) { setCostUsd(''); setCostBs(''); return; }
         if (tasaCop <= 0) return;
-        const usd = parseFloat(val) / tasaCop;
+        const usd = numVal / tasaCop;
         setCostUsd(usd.toFixed(2));
         setCostBs((usd * effectiveRate).toFixed(2));
+        deriveFromLastTwoEdits('costo', usd, parseFloat(priceUsd) || 0, parseFloat(costFactor) || 0);
     };
 
     // ─── CRUD ───────────────────────────────────────────────
@@ -555,6 +587,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         }
 
         setIsModalOpen(true);
+        editOrderRef.current = ['costo']; // el costo cargado es el ancla; la 1ra edición define la 2da fuente
 
         // Load product movements (Kardex Lite)
         try {
@@ -658,6 +691,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
 
     const handleClose = () => {
         resetForm();
+        editOrderRef.current = ['costo']; // el costo es el ancla de los flujos de Luigi
         dupBarcodeAckRef.current = '';
         setDupBarcode(null);
         setPriceCop('');

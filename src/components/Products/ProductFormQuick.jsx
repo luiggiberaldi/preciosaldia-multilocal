@@ -89,8 +89,8 @@ export default function ProductFormQuick({
     const parsedPrice = parseFloat(priceUsd) || 0;
     const parsedCost = parseFloat(costUsd) || 0;
 
-    // Margin for the main product (lote or suelto or granel)
-    const mainMarginPct = parsedCost > 0 ? ((parsedPrice - parsedCost) / parsedCost * 100) : null;
+    // Margin for the main product (lote or suelto or granel) — margen SOBRE VENTA: (precio - costo) / precio = 1 - factor
+    const mainMarginPct = (parsedPrice > 0 && parsedCost > 0) ? ((parsedPrice - parsedCost) / parsedPrice * 100) : null;
     const mainMarginUsd = parsedPrice - parsedCost;
 
     // Unit margin for lote with sellByUnit
@@ -100,7 +100,7 @@ export default function ProductFormQuick({
             ? parseFloat(unitPriceUsd)
             : (parsedUnits > 0 ? parsedPrice / parsedUnits : 0);
     const unitCost = parsedUnits > 0 && parsedCost > 0 ? parsedCost / parsedUnits : 0;
-    const unitMarginPct = unitCost > 0 ? ((effectiveUnitPrice - unitCost) / unitCost * 100) : null;
+    const unitMarginPct = (unitCost > 0 && effectiveUnitPrice > 0) ? ((effectiveUnitPrice - unitCost) / effectiveUnitPrice * 100) : null;
     const unitMarginUsd = effectiveUnitPrice - unitCost;
 
     // Stock equivalence for lote
@@ -436,7 +436,7 @@ export default function ProductFormQuick({
                             </span>
                         </div>
                         <p className="text-[9px] text-slate-400 mt-1 ml-1">
-                            {factorMode === 'percent' ? 'Margen de ganancia en %' : 'Costo = Precio × factor'} • Auto-calcula el costo
+                            {factorMode === 'percent' ? 'Margen de ganancia en %' : 'Costo = Precio × factor'} • Los 2 últimos valores calculan el tercero
                         </p>
                     </div>
                 </div>
