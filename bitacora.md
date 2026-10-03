@@ -1241,3 +1241,12 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Repercusión:** nadie podrá seleccionar/copiar texto plano (nombres, precios, mensajes); para copiar hay botones de portapapeles o inputs. Comportamiento estándar de PWAs tipo app nativa.
 **Test determinista:** reglas presentes en el CSS compilado (body none, inputs text, .allow-select).
 **Versión:** 2.1.6.
+
+## 2026-10-02 ~21:20 — Catálogo de fotos: migración + script reutilizable (sin ejecutar aún)
+**Pedido por:** Luigi — poblar `product_images_catalog` con imágenes del Lite + fotos de Pro.
+**Hallazgos:** Lite tiene 1.282 imágenes (1.170 slugs únicos, 22MB) ya con formato slug en `preciosaldia2026/public/images/catalog`. Pro tiene 1.498 fotos en el bucket raíz con mapeo a nombre de producto (1.475 slugs únicos). Solo 1 colisión de slug (gana la foto del cliente).
+**Preparado (no desplegado, no ejecutado):**
+- `supabase/migrations/005_product_images_catalog.sql` — tabla + RLS lectura pública + índice GIN en tags.
+- `scripts/poblar_catalogo_fotos.py` — parametrizado por proyecto (--supabase-url, --service-key); sube imágenes Lite a `product-images/catalog/`, registra fotos Pro existentes, upsert idempotente; --dry-run y --self-test verificados.
+- `docs/CATALOGO-FOTOS.md` — playbook para otras cuentas Supabase + nota multi-tenant (la función usa env vars estáticas: hoy apunta solo al cliente cero).
+**Bloqueado:** crear la tabla requiere DDL (dashboard de Supabase) y las subidas/inserts requieren service_role key. Pendiente de Luigi.
