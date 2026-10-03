@@ -1233,3 +1233,11 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Fix:** `select-none` en la raíz de ProductCard (no se puede seleccionar texto en las tarjetas).
 **Test determinista:** `select-none` presente en el source y en el chunk compilado (ProductsView-*.js, en el class string de la tarjeta).
 **Versión:** 2.1.5.
+
+## 2026-10-02 ~20:55 — v2.1.6: sin selección de texto en toda la app
+**Reportado por:** Luigi — "quitalo de todo el sistema" (el subrayado fantasma también salía en Caja Cerrada y otras pantallas).
+**Causa:** el navegador conserva selecciones de texto al cambiar de ventana; es solo visual.
+**Fix:** `user-select: none` global en `body` (index.css); `input`/`textarea`/`contenteditable` mantienen selección; clase `.allow-select` como excepción puntual (fuera de `@layer base` porque el build la descartaba ahí dentro).
+**Repercusión:** nadie podrá seleccionar/copiar texto plano (nombres, precios, mensajes); para copiar hay botones de portapapeles o inputs. Comportamiento estándar de PWAs tipo app nativa.
+**Test determinista:** reglas presentes en el CSS compilado (body none, inputs text, .allow-select).
+**Versión:** 2.1.6.

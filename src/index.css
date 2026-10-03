@@ -36,6 +36,19 @@
     max-width: 100%;
     /* Suprime el highlight gris del tap en móviles (el círculo feo al tocar) */
     -webkit-tap-highlight-color: transparent;
+    /* Sin selección de texto en toda la app: evita el subrayado/resaltado
+       fantasma al cambiar de ventana. Los inputs/textarea siguen permitiendo
+       seleccionar (ver regla abajo) y los botones de copiar usan el portapapeles. */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Los campos de texto sí permiten seleccionar/copiar */
+  input,
+  textarea,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
   }
 
   [data-theme='dark'] html,
@@ -65,4 +78,11 @@
     background: var(--primary-soft);
     color: var(--primary);
   }
+}
+
+/* Excepción puntual (fuera de capas para que no la toque el build):
+   .allow-select permite seleccionar/copiar en zonas donde sí importa. */
+.allow-select {
+  -webkit-user-select: text;
+  user-select: text;
 }
