@@ -1364,3 +1364,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - NominaView: las cápsulas (Resumen/Empleados/Historial) quedaban pegadas al borde superior y se cortaban en el estado vacío → padding superior `pt-4` + respiro interno en la fila de pestañas.
 - Estado vacío "Sin empleados registrados" rediseñado: icono en contenedor brand, título, descripción y botón **"+ Crear empleado"** que salta a la pestaña Empleados y abre el formulario directo.
 - Sin cambios de lógica; build OK.
+
+## v2.1.22 — 2026-10-03 — Fix crítico: tasaBcv is not defined en consumo (hallazgo E2E)
+- El E2E en producción encontró que registrar CUALQUIER consumo fallaba con `tasaBcv is not defined`: EmployeeConsumptionModal usaba `tasaBcv` (en getResumen y registerConsumo) pero no lo declaraba en sus props, aunque NominaView sí se lo pasaba. Los tests deterministas no lo atraparon porque probaban el servicio, no el cableado del componente.
+- Fix: agregar `tasaBcv` a la desestructuración de props del modal + docstring.
+- Auditoría rápida de PayrollReceiptModal: OK (usa liquidacion.tasaBcvLiquidacion del objeto).
+- Nota E2E: el botón "Importar Backup" no abre el selector en el navegador automatizado — el código usa el patrón estándar (input file oculto + ref.click()), consistente con limitación del harness, no con bug de la app. La restauración E2E real queda pendiente en dispositivo físico.
+- Build OK.

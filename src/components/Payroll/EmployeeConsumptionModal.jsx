@@ -1,7 +1,7 @@
 /**
  * EmployeeConsumptionModal.jsx — Registrar consumo de empleado (v1).
  *
- * Props: { employeeId?, onClose, onDone }
+ * Props: { employeeId?, onClose, onDone, tasaBcv }
  * - Si no trae employeeId, muestra selector de empleados activos.
  * - Editor de items: buscar producto por nombre, cantidad, valida stock.
  * - Muestra total USD + % del sueldo que representa (proyectado con lo nuevo).
@@ -30,7 +30,7 @@ const norm = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u
 const inputCls = 'w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-brand/40 placeholder:text-slate-400 placeholder:font-semibold';
 const labelCls = 'text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5 block';
 
-export default function EmployeeConsumptionModal({ employeeId: fixedEmployeeId, onClose, onDone }) {
+export default function EmployeeConsumptionModal({ employeeId: fixedEmployeeId, onClose, onDone, tasaBcv }) {
     const { products } = useProductContext();
     const [employees, setEmployees] = useState([]);
     const [employeeId, setEmployeeId] = useState(fixedEmployeeId || '');
