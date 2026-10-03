@@ -1345,3 +1345,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 ## v2.1.18 (2026-10-03) — ocultar Asistente Bot 2.0
 - Pedido de Luigi: ocultar el bot por ahora.
 - Se comentó el render de AIAssistantWidget en App.jsx (reversible: instrucciones en el comentario).
+
+## v2.1.19 (2026-10-03) — Nómina v1
+- Zona de Nómina solo-dueño (tab en TABS_DUENO): empleados (sueldo USD/Bs, frecuencia semanal/quincenal/mensual), consumos, resúmenes, liquidación, anulaciones, recibo térmico 80/56mm (PDF).
+- Consumos como docs individuales en sync (registrados en SYNC_VALIDATORS + pushPayrollDoc); snapshot salarial por período; idempotencia; override de límite auditado.
+- Roles: registran dueño+admin; anula/liquida solo el dueño; cajero fuera de nómina.
+- Ticket guarda vendedorId/vendedorNombre. Helper adjustStockForItems. Opción 56mm en ajustes.
+- Tests deterministas: payroll.js 25/25 (harness propio) + 34/34 (módulo), recibo 10/10, contratos sync 10/10.

@@ -209,6 +209,9 @@ export async function processSaleTransaction({
         id: crypto.randomUUID(),
         tipo: tipoVenta,
         status: 'COMPLETADA',
+        // NÓMINA v1: quién vendió (snapshot; tickets viejos no lo traen = "sin asignar").
+        vendedorId: (() => { try { return useAuthStore.getState().usuarioActivo?.id ?? null; } catch { return null; } })(),
+        vendedorNombre: (() => { try { return useAuthStore.getState().usuarioActivo?.nombre ?? null; } catch { return null; } })(),
         items: cart.map(i => ({
             id: i.id,
             name: i.name,

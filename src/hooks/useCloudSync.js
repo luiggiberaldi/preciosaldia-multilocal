@@ -292,6 +292,47 @@ const pushSingleSalesDelta = async (salesArray, day, forceUnconditional = false)
     }
 };
 
+/**
+ * NÓMINA (v1): sube un documento individual de nómina
+ * (`bodega_payroll_consumo_<id>`, `bodega_payroll_periodo_<...>`, `bodega_payroll_liquidacion_<id>`).
+ * Upsert directo por (device_id, collection, doc_id) —las keys dinámicas no pasan
+ * por `pushCloudSync` (allowlist estática)—, mismo patrón que `pushSingleSalesDelta`.
+ * LWW limpio por doc_id: el doc es inmutable salvo anulación (updated_at nuevo).
+ */
+export const pushPayrollDoc = async (docKey, value) => {
+    if (!supabaseCloud || !isCloudSyncActive || !_currentDeviceId) {
+        return { ok: false, skipped: true, error: 'Sync no activo' };
+    }
+    const docId = toCloudDocId(docKey);
+    const hashKey = LAST_PUSH_HASH_PREFIX + docId;
+    const currentHash = quickHash(value);
+    if (localStorage.getItem(hashKey) === currentHash) {
+        return { ok: true, skipped: true, reason: 'Documento sin cambios' };
+    }
+    const updatedAt = new Date().toISOString();
+    const document = {
+        device_id: _currentDeviceId,
+        collection: 'store',
+        doc_id: docId,
+        data: buildSyncEnvelope(value, updatedAt),
+        updated_at: updatedAt,
+    };
+    try {
+        const response = await withSyncRetry(async () => {
+            const res = await supabaseCloud
+                .from('sync_documents')
+                .upsert(document, { onConflict: 'device_id,collection,doc_id' });
+            if (res.error) throw res.error;
+            return res;
+        });
+        localStorage.setItem(hashKey, currentHash);
+        return { ok: true, skipped: false, updatedAt, data: response.data ?? null };
+    } catch (error) {
+        console.warn('[CloudSync] No se pudo subir documento de nómina:', error?.message ?? error);
+        return { ok: false, skipped: false, error: error?.message || 'Error de sincronización' };
+    }
+};
+
 const pushSalesDelta = async (salesArray, forceUnconditional = false) => {
     const result = await pushSingleSalesDelta(salesArray, salesDayString(), forceUnconditional);
     // CRÍTICO-2(a) (2026-10-01): si el equipo estuvo offline días previos, sus

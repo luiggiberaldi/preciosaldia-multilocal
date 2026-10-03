@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, ShoppingCart, Keyboard, LogOut } from 'lucide-react';
+import { RefreshCw, ShoppingCart, Keyboard, LogOut, ClipboardList } from 'lucide-react';
 import Tooltip from '../Tooltip';
 import { pushLocalSync } from '../../hooks/useCloudSync';
 import { useAuthStore } from '../../hooks/store/useAuthStore';
+import { isAdministrador, isOwner } from '../../utils/roles';
+import EmployeeConsumptionModal from '../Payroll/EmployeeConsumptionModal';
 
 const formatBs = (n) => new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
@@ -87,6 +89,9 @@ export default function SalesHeader({
     };
 
     const { usuarioActivo, requireLogin, logout } = useAuthStore();
+    const [showConsumo, setShowConsumo] = useState(false);
+    const puedeConsumo = isAdministrador(usuarioActivo) || isOwner(usuarioActivo);
+    const tasaBcv = Number(rates?.bcv?.price) || 0;
 
     return (
         <div className={`shrink-0 ${showRateConfig ? 'mb-3 bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-sm border border-slate-100 dark:border-slate-800' : 'bg-transparent border-transparent shadow-none p-0'}`}>
@@ -111,6 +116,17 @@ export default function SalesHeader({
                             }
                             {!isAuto && <span className="text-[8px] bg-brand-light dark:bg-surface-800/30 text-brand-dark dark:text-brand px-1 rounded font-bold">MAN</span>}
                         </button>
+
+                        {puedeConsumo && (
+                            <button
+                                onClick={() => { triggerHaptic && triggerHaptic(); setShowConsumo(true); }}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 hover:bg-amber-100 transition-colors border border-amber-200/50 text-xs font-bold active:scale-95 shrink-0"
+                                title="Registrar consumo de empleado"
+                            >
+                                <ClipboardList size={14} />
+                                <span className="text-xs font-bold hidden sm:inline">Consumo</span>
+                            </button>
+                        )}
 
                         {requireLogin && usuarioActivo && (
                             <button
@@ -251,6 +267,13 @@ export default function SalesHeader({
                         </button>
                     </div>
                 </div>
+            )}
+            {showConsumo && (
+                <EmployeeConsumptionModal
+                    tasaBcv={tasaBcv}
+                    onClose={() => setShowConsumo(false)}
+                    onDone={() => setShowConsumo(false)}
+                />
             )}
         </div>
     );

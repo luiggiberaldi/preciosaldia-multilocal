@@ -32,7 +32,7 @@ export const ROL_CAJERO = 'CAJERO';
 
 /** Tabs de la app (ids usados en App.jsx). */
 export const TABS_DUENO = Object.freeze([
-    'inicio', 'ventas', 'catalogo', 'clientes', 'reportes', 'ajustes', 'supervision',
+    'inicio', 'ventas', 'catalogo', 'clientes', 'reportes', 'ajustes', 'supervision', 'nomina',
 ]);
 export const TABS_ADMIN = Object.freeze([
     'inicio', 'ventas', 'catalogo', 'clientes', 'reportes', 'ajustes',

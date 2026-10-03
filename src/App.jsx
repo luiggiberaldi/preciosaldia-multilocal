@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
-import { Home, ShoppingCart, Store, Users, Download, FlaskConical, Moon, Sun, BarChart3, WifiOff, X, Settings, Building2 } from 'lucide-react';
+import { Home, ShoppingCart, Store, Users, Download, FlaskConical, Moon, Sun, BarChart3, WifiOff, X, Settings, Building2, Wallet } from 'lucide-react';
 
 import DashboardView from './views/DashboardView';
 
@@ -12,6 +12,7 @@ const SettingsView = lazyWithRetry(() => import('./views/SettingsView'), 'Settin
 const CustomersView = lazyWithRetry(() => import('./views/CustomersView'), 'CustomersView');
 const ReportsView = lazyWithRetry(() => import('./views/ReportsView'), 'ReportsView');
 const SupervisionView = lazyWithRetry(() => import('./views/SupervisionView'), 'SupervisionView');
+const NominaView = lazyWithRetry(() => import('./views/NominaView'), 'NominaView');
 const TesterView = lazyWithRetry(() => import('./views/TesterView').then(m => ({ default: m.TesterView })), 'TesterView');
 const AIAssistantWidget = lazyWithRetry(() => import('./components/AIAssistantWidget'), 'AIAssistantWidget');
 
@@ -397,6 +398,7 @@ export default function App() {
     { id: 'reportes', label: 'Reportes', icon: BarChart3, adminOnly: true },
     { id: 'ajustes', label: 'Ajustes', icon: Settings, adminOnly: true },
     { id: 'supervision', label: 'Control', icon: Building2 },
+    { id: 'nomina', label: 'Nómina', icon: Wallet },
   ];
   const TABS = ALL_TABS.filter(tab =>
     allowedTabIds.has(tab.id)
@@ -599,6 +601,14 @@ export default function App() {
             <div data-view="supervision" className={`flex-1 flex flex-col ${activeTab === 'supervision' ? '' : 'hidden'}`}>
               <ErrorBoundary>
                 <SupervisionView rates={rates} triggerHaptic={triggerHaptic} isActive={activeTab === 'supervision'} />
+              </ErrorBoundary>
+            </div>
+          )}
+          {/* Nómina v1 — solo dueño (TABS_DUENO) */}
+          {(activeTab === 'nomina' || mountedViews.nomina) && (
+            <div data-view="nomina" className={`flex-1 flex flex-col ${activeTab === 'nomina' ? '' : 'hidden'}`}>
+              <ErrorBoundary>
+                <NominaView rates={rates} triggerHaptic={triggerHaptic} isActive={activeTab === 'nomina'} />
               </ErrorBoundary>
             </div>
           )}

@@ -38,6 +38,8 @@ const SYNC_VALIDATORS = Object.freeze({
     bodega_customers_v1: Array.isArray,
     bodega_customer_ledger_v1: Array.isArray,
     bodega_sales_v1: Array.isArray,
+    // NÓMINA (v1): catálogo de empleados por negocio (array, LWW; edición rara y solo dueño).
+    bodega_employees_v1: Array.isArray,
     bodega_payment_methods_v1: Array.isArray,
     bodega_accounts_v2: Array.isArray,
     // Catálogo de usuarios SIN PINs (SEC-002): `{ v: 1, users: [...], deleted: [...] }`.
@@ -76,7 +78,36 @@ export function isSupervisorSyncKey(docId) {
     // QUOTA-003: las keys de delta diario (`bodega_sales_delta_YYYY-MM-DD`)
     // son dinámicas; se aceptan por prefijo+formato, no por allowlist exacta.
     if (isSalesDeltaKey(docId)) return true;
+    // NÓMINA (v1): docs individuales dinámicos por consumo/período/liquidación.
+    if (isPayrollDocKey(docId)) return true;
     return typeof docId === 'string' && Object.prototype.hasOwnProperty.call(SYNC_VALIDATORS, docId);
+}
+
+/**
+ * NÓMINA (v1): ¿es esta key un documento individual de nómina?
+ * `bodega_payroll_consumo_<id>`, `bodega_payroll_periodo_<emp>_<key>`,
+ * `bodega_payroll_liquidacion_<id>`. Prefijos fijos + id no vacío.
+ */
+export function isPayrollDocKey(docId) {
+    if (typeof docId !== 'string') return false;
+    return (
+        /^bodega_payroll_consumo_[A-Za-z0-9_-]+$/.test(docId) ||
+        /^bodega_payroll_periodo_[A-Za-z0-9_-]+$/.test(docId) ||
+        /^bodega_payroll_liquidacion_[A-Za-z0-9_-]+$/.test(docId)
+    );
+}
+
+/**
+ * NÓMINA (v1): valida que el payload sea un objeto con `id` y que el `kind`
+ * coincida con el prefijo de la key. Validación de contrato, no de negocio.
+ */
+export function isValidPayrollDoc(docId, payload) {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+    if (typeof payload.id !== 'string' || payload.id.length === 0) return false;
+    if (docId.startsWith('bodega_payroll_consumo_')) return payload.kind === 'consumo';
+    if (docId.startsWith('bodega_payroll_periodo_')) return payload.kind === 'periodo';
+    if (docId.startsWith('bodega_payroll_liquidacion_')) return payload.kind === 'liquidacion';
+    return false;
 }
 
 export function validateSupervisorSyncDocument(docId, payload) {
@@ -91,6 +122,13 @@ export function validateSupervisorSyncDocument(docId, payload) {
     // QUOTA-003: el delta valida por su propio contrato (fecha + array).
     if (isSalesDeltaKey(docId)) {
         return isValidSalesDelta(payload)
+            ? { valid: true, error: null }
+            : { valid: false, error: `Schema inválido: ${docId}` };
+    }
+
+    // NÓMINA (v1): docs individuales; payload objeto con id y kind coherente.
+    if (isPayrollDocKey(docId)) {
+        return isValidPayrollDoc(docId, payload)
             ? { valid: true, error: null }
             : { valid: false, error: `Schema inválido: ${docId}` };
     }
