@@ -1352,3 +1352,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Roles: registran dueño+admin; anula/liquida solo el dueño; cajero fuera de nómina.
 - Ticket guarda vendedorId/vendedorNombre. Helper adjustStockForItems. Opción 56mm en ajustes.
 - Tests deterministas: payroll.js 25/25 (harness propio) + 34/34 (módulo), recibo 10/10, contratos sync 10/10.
+
+## v2.1.20 (2026-10-03) — backup incluye nómina
+- El backup/restore no cubría los datos de nómina: `bodega_employees_v1` no estaba en IDB_KEYS y los
+  docs dinámicos (`bodega_payroll_consumo_*`, `bodega_payroll_periodo_*`, `bodega_payroll_liquidacion_*`)
+  ni se exportaban, ni se limpiaban al restaurar, ni pasaban el allowlist.
+- Nuevo `DYNAMIC_IDB_PREFIXES` + `isDynamicBackupKey()` en backupKeys.js; export, limpieza y
+  allowlist de restore los contemplan. Tests: 7/7 PASS.

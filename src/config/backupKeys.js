@@ -24,6 +24,7 @@ export const IDB_KEYS = Object.freeze([
   'bodega_accounts_v2',
   'bodega_customer_ledger_v1',
   'bodega_customers_v1',
+  'bodega_employees_v1', // NÓMINA v1: catálogo de empleados
   'bodega_payment_methods_v1',
   'bodega_pending_cart_v1',
   'bodega_pending_holds_v1', // ALTO-9 (2026-10-01): ventas en espera — se perdían al restaurar
@@ -33,6 +34,22 @@ export const IDB_KEYS = Object.freeze([
   'bodega_suppliers_v1',
   'my_categories_v1',
 ]);
+
+/**
+ * NÓMINA v1: prefijos de keys DINÁMICAS (un doc por consumo/período/liquidación).
+ * No van en IDB_KEYS (estática); el backup las enumera por prefijo vía appForage.keys(),
+ * la limpieza de restore las borra y el allowlist de apply las acepta.
+ */
+export const DYNAMIC_IDB_PREFIXES = Object.freeze([
+  'bodega_payroll_consumo_',
+  'bodega_payroll_periodo_',
+  'bodega_payroll_liquidacion_',
+]);
+
+/** ¿Es esta key un documento dinámico de nómina cubierto por el backup? */
+export function isDynamicBackupKey(key) {
+  return typeof key === 'string' && DYNAMIC_IDB_PREFIXES.some((p) => key.startsWith(p));
+}
 
 /**
  * Claves persistentes en localStorage que componen un backup completo.

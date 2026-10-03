@@ -19,7 +19,7 @@
 
 import { storageService } from './storageService';
 import { appForage } from './appForage';
-import { IDB_KEYS, LS_KEYS, PROTECTED_KEYS } from '../config/backupKeys';
+import { IDB_KEYS, LS_KEYS, PROTECTED_KEYS, isDynamicBackupKey } from '../config/backupKeys';
 import { decompressString, isCompressionSupported } from './compression';
 import { runWithoutEco } from './syncFlags';
 
@@ -58,6 +58,16 @@ export async function collectLocalBackupPayload({ appName = 'TasasAlDia_Bodegas'
         const data = await storageService.getItem(key, null);
         if (data !== null) idbData[key] = data;
     }
+    // NÓMINA v1: keys dinámicas por prefijo (consumos/períodos/liquidaciones).
+    try {
+        const allKeys = await appForage.keys();
+        for (const key of allKeys) {
+            if (isDynamicBackupKey(key) && !(key in idbData)) {
+                const data = await appForage.getItem(key, null);
+                if (data !== null && data !== undefined) idbData[key] = data;
+            }
+        }
+    } catch { /* sin dinámicas */ }
     const lsData = {};
     for (const key of LS_KEYS) {
         const val = localStorage.getItem(key);
@@ -176,7 +186,8 @@ export async function applyBackupToStorage(backup, { writeMode = 'storageService
             for (const [key, value] of Object.entries(backup.data.idb)) {
                 // M-21 (2026-10-01): allowlist — un backup manipulado no puede
                 // envenenar claves fuera del catálogo canónico (p. ej. sesión o PINs).
-                if (!IDB_KEYS.includes(key)) continue;
+                // NÓMINA v1: se aceptan además las dinámicas por prefijo.
+                if (!IDB_KEYS.includes(key) && !isDynamicBackupKey(key)) continue;
                 await writeIdb(key, value);
                 applied.idbKeys.push(key);
             }
@@ -224,6 +235,15 @@ export async function clearAppKeysForRestore() {
         if (PROTECTED_KEYS.includes(key)) continue;
         try { await appForage.removeItem(key); removedIdb.push(key); } catch { /* noop */ } // FASE 1: solo el negocio activo
     }
+    // NÓMINA v1: borrar también los docs dinámicos del negocio activo.
+    try {
+        const allKeys = await appForage.keys();
+        for (const key of allKeys) {
+            if (isDynamicBackupKey(key)) {
+                try { await appForage.removeItem(key); removedIdb.push(key); } catch { /* noop */ }
+            }
+        }
+    } catch { /* noop */ }
     for (const key of LS_KEYS) {
         if (PROTECTED_KEYS.includes(key)) continue;
         localStorage.removeItem(key);

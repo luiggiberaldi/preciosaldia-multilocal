@@ -5,6 +5,8 @@ import { showToast } from '../components/Toast';
 import { IDB_KEYS, LS_KEYS, PROTECTED_KEYS } from '../config/backupKeys';
 import { validateBackupJson, applyBackupToStorage, clearAppKeysForRestore } from '../utils/backupRestoreService';
 import { isCloudSyncActiveNow } from './useCloudSync';
+import { isDynamicBackupKey } from '../config/backupKeys';
+import { appForage } from '../utils/appForage';
 
 /**
  * Hook that encapsulates JSON import/export and delete-all-data logic.
@@ -55,6 +57,16 @@ export function useDataImportExport({
                 const data = await storageService.getItem(key, null);
                 if (data !== null) idbData[key] = data;
             }
+            // NÓMINA v1: keys dinámicas por prefijo (consumos/períodos/liquidaciones).
+            try {
+                const allKeys = await appForage.keys();
+                for (const key of allKeys) {
+                    if (isDynamicBackupKey(key) && !(key in idbData)) {
+                        const data = await appForage.getItem(key, null);
+                        if (data !== null && data !== undefined) idbData[key] = data;
+                    }
+                }
+            } catch { /* sin dinámicas */ }
 
             const lsData = {};
             for (const key of LS_KEYS) {
