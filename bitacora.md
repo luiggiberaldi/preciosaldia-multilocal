@@ -1267,3 +1267,14 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
   (se filtra en handleCostFactorChange en vez de llamar a derive).
 - Test determinista: escenario exacto (costo=5, tocar factor=0, precio=3.02)
   → factor deriva a 1.656. PASS.
+
+## v2.1.9 (2026-10-02) — Fix: vaciar un campo lo saca del orden de edición
+- Bug (paso 5 de la prueba E2E v2.1.8): con costo=5 y factor=1.656, al vaciar el
+  precio y escribir factor=0.5 el precio no se derivaba a 10.00.
+- Causa: vaciar un campo lo dejaba como "última edición" en el orden, entonces al
+  escribir el siguiente campo el tercero a calcular era el equivocado y el guard
+  (valor > 0) lo bloqueaba.
+- Fix: helper removeFromOrder(); vaciar costo/precio/factor (0 o vacío) lo saca
+  del orden en vez de llamar a derive. Generaliza el fix de v2.1.8 a los 3 campos.
+- Test determinista: vaciar precio + factor=0.5 → precio 10.00 PASS;
+  costo=5 + precio=3.02 → factor 1.656 PASS.

@@ -364,10 +364,15 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         }
     };
 
+    // Un campo en 0/vacío = "no definido": no contamina el orden de edición
+    const removeFromOrder = (field) => {
+        editOrderRef.current = editOrderRef.current.filter(f => f !== field);
+    };
+
     const handlePriceUsdChange = (val) => {
         setPriceUsd(val);
         const usd = parseFloat(val) || 0;
-        if (!val || usd <= 0) { setPriceBs(''); setPriceCop(''); }
+        if (!val || usd <= 0) { setPriceBs(''); setPriceCop(''); removeFromOrder('precio'); }
         else {
             setPriceBs((usd * effectiveRate).toFixed(2));
             if (copEnabled && tasaCop > 0) setPriceCop(Math.round(usd * tasaCop).toString());
@@ -378,7 +383,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const handlePriceBsChange = (val) => {
         setPriceBs(val);
         const numVal = parseFloat(val) || 0;
-        if (!val || numVal <= 0) { setPriceUsd(''); setPriceCop(''); }
+        if (!val || numVal <= 0) { setPriceUsd(''); setPriceCop(''); removeFromOrder('precio'); }
         else {
             const usd = numVal / effectiveRate;
             setPriceUsd(usd.toFixed(2));
@@ -390,7 +395,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const handlePriceCopChange = (val) => {
         setPriceCop(val);
         const numVal = parseFloat(val) || 0;
-        if (!val || numVal <= 0) { setPriceUsd(''); setPriceBs(''); return; }
+        if (!val || numVal <= 0) { setPriceUsd(''); setPriceBs(''); removeFromOrder('precio'); return; }
         if (tasaCop <= 0) return;
         const usd = numVal / tasaCop;
         // Usar 4 decimales para que al reconvertir a COP dé el valor original
@@ -402,7 +407,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const handleCostUsdChange = (val) => {
         setCostUsd(val);
         const usd = parseFloat(val) || 0;
-        if (!val || usd <= 0) { setCostBs(''); setCostCop(''); }
+        if (!val || usd <= 0) { setCostBs(''); setCostCop(''); removeFromOrder('costo'); }
         else {
             setCostBs((usd * effectiveRate).toFixed(2));
             if (copEnabled && tasaCop > 0) setCostCop(Math.round(usd * tasaCop).toString());
@@ -419,14 +424,14 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         } else {
             // Factor en 0/vacío = "no definido": no contamina el orden de edición
             // (si no, tocar el factor impedía que costo+precio lo derivaran)
-            editOrderRef.current = editOrderRef.current.filter(f => f !== 'factor');
+            removeFromOrder('factor');
         }
     };
 
     const handleCostBsChange = (val) => {
         setCostBs(val);
         const numVal = parseFloat(val) || 0;
-        if (!val || numVal <= 0) { setCostUsd(''); setCostCop(''); }
+        if (!val || numVal <= 0) { setCostUsd(''); setCostCop(''); removeFromOrder('costo'); }
         else {
             const usd = numVal / effectiveRate;
             setCostUsd(usd.toFixed(2));
@@ -438,7 +443,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const handleCostCopChange = (val) => {
         setCostCop(val);
         const numVal = parseFloat(val) || 0;
-        if (!val || numVal <= 0) { setCostUsd(''); setCostBs(''); return; }
+        if (!val || numVal <= 0) { setCostUsd(''); setCostBs(''); removeFromOrder('costo'); return; }
         if (tasaCop <= 0) return;
         const usd = numVal / tasaCop;
         setCostUsd(usd.toFixed(2));
