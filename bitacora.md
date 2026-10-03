@@ -1328,3 +1328,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `effectiveRate` ahora usa `Math.round(rate)` cuando el toggle está activo y la tasa no es manual.
 - Label del toggle: "Redondear tasa a número entero".
 - Test determinista: 9/9 pass con la lógica real extraída del fuente.
+
+## v2.1.16 (2026-10-03) — Redondeo de tasa hacia arriba
+- Corrección de Luigi: el redondeo debe ser hacia arriba (ceil), no al más cercano.
+- `effectiveRate` ahora usa `Math.ceil(rate)`: 871.37 → 872, 871.01 → 872, 871.00 → 871.
+- Protege el margen: nunca se pierde ni un céntimo por redondeo.
+- Label del toggle: "Redondear tasa hacia arriba".
+- Test determinista: 8/8 pass con la lógica real extraída del fuente.

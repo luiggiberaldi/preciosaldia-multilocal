@@ -126,7 +126,7 @@ export function RateProvider({ children, rates = {}, rateDiscrepancyWarning = nu
     }, []);
 
     // ── CÁLCULO DE TASA EFECTIVA EN BS Y COP ──
-    // Si redondearTasaAuto está activo y la tasa NO es manual, se redondea a número entero.
+    // Si redondearTasaAuto está activo y la tasa NO es manual, se redondea HACIA ARRIBA al entero siguiente.
     const effectiveRate = useMemo(() => {
         let rate;
         if (rateMode === 'manual') {
@@ -140,7 +140,7 @@ export function RateProvider({ children, rates = {}, rateDiscrepancyWarning = nu
             rate = rates?.bcv?.price || 1;
         }
         if (rateMode !== 'manual' && redondearTasaAuto) {
-            return Math.round(rate);
+            return Math.ceil(rate);
         }
         return rate;
     }, [rateMode, customRate, rates, redondearTasaAuto]);
