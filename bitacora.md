@@ -1359,3 +1359,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
   ni se exportaban, ni se limpiaban al restaurar, ni pasaban el allowlist.
 - Nuevo `DYNAMIC_IDB_PREFIXES` + `isDynamicBackupKey()` en backupKeys.js; export, limpieza y
   allowlist de restore los contemplan. Tests: 7/7 PASS.
+
+## v2.1.21 — 2026-10-03 — UI estado vacío Nómina (feedback luigi)
+- NominaView: las cápsulas (Resumen/Empleados/Historial) quedaban pegadas al borde superior y se cortaban en el estado vacío → padding superior `pt-4` + respiro interno en la fila de pestañas.
+- Estado vacío "Sin empleados registrados" rediseñado: icono en contenedor brand, título, descripción y botón **"+ Crear empleado"** que salta a la pestaña Empleados y abre el formulario directo.
+- Sin cambios de lógica; build OK.

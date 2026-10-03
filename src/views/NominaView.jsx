@@ -374,9 +374,9 @@ export default function NominaView({ rates, triggerHaptic, isActive }) {
     ];
 
     return (
-        <div className="pb-8">
+        <div className="pt-4 pb-8 px-1">
             {/* Pestañas internas */}
-            <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">
+            <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 pt-1 px-1 -mx-1">
                 {TABS.map(({ id, label, icon: Icon }) => (
                     <button
                         key={id}
@@ -403,10 +403,18 @@ export default function NominaView({ rates, triggerHaptic, isActive }) {
                     {tab === 'resumen' && (
                         <div className="space-y-3">
                             {activos.length === 0 ? (
-                                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center">
-                                    <Users size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-                                    <p className="text-sm font-extrabold text-slate-500 dark:text-slate-400">Sin empleados registrados</p>
-                                    <p className="text-[11px] font-semibold text-slate-400 mt-1">Crea el primero en la pestaña Empleados.</p>
+                                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 p-8 sm:p-10 text-center">
+                                    <div className="w-14 h-14 mx-auto rounded-2xl bg-brand-light dark:bg-brand/10 flex items-center justify-center mb-3">
+                                        <Users size={26} className="text-brand" />
+                                    </div>
+                                    <p className="text-base font-black text-slate-700 dark:text-white">Sin empleados registrados</p>
+                                    <p className="text-xs font-semibold text-slate-400 mt-1 mb-4 max-w-[240px] mx-auto">Registra a tu equipo para llevar sus consumos y liquidar su nómina desde aquí.</p>
+                                    <button
+                                        onClick={() => { triggerHaptic && triggerHaptic(); setTab('empleados'); setShowEmpForm(true); }}
+                                        className="px-5 py-2.5 rounded-full bg-brand text-white text-xs font-black shadow-md shadow-brand/30 active:scale-95 transition-all"
+                                    >
+                                        + Crear empleado
+                                    </button>
                                 </div>
                             ) : activos.map((emp) => resumenes[emp.id] ? (
                                 <ResumenCard
