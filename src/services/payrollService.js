@@ -671,7 +671,7 @@ export async function liquidar({ employeeId, metodoPago, tasaBcv }) {
         id: liqId,
         employeeId: emp.id,
         employeeNombre: emp.nombre,
-        periodoKey,
+        periodoKey: periodKey,
         frecuencia: emp.frecuenciaPago,
         salarioOriginal: { monto: resumen.salarioSnapshot.monto, moneda: resumen.salarioSnapshot.moneda },
         salarioUsd: resumen.salarioUsd,
@@ -729,7 +729,7 @@ export async function liquidar({ employeeId, metodoPago, tasaBcv }) {
 
     await logEvent('NOMINA', 'LIQUIDACION_REGISTRADA',
         `Nómina liquidada: ${emp.nombre} (${periodKey}) — neto $${netoUsd.toFixed(2)} / Bs ${netoBs.toFixed(2)}. Folio ${folio}`,
-        session, { liquidacionId: liqId, folio, employeeId, periodoKey, netoUsd, netoBs });
+        session, { liquidacionId: liqId, folio, employeeId, periodoKey: periodKey, netoUsd, netoBs });
     return { liquidacion };
 }
 

@@ -1394,3 +1394,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - El E2E lo detectó (toasts "No se pudo cargar el resumen"); el harness determinista con datos reales de la nube lo reprodujo (0/3) y verificó el fix (3/3): TEST-SEMANAL neto $85.00 = $100 − $15 aplicados.
 - Fix: `periodoKey: periodKey`. Lección: los tests del módulo no cubrían getResumen; el harness queda en /tmp/harness (mover a .tests/ pendiente).
 - Build OK.
+
+## v2.1.27 — 2026-10-03 — Fix: mismo ReferenceError periodoKey en liquidar()
+- El E2E (v2.1.26) mostró que `liquidar()` lanzaba "periodoKey is not defined" al confirmar: líneas 674 y 732 usaban el shorthand `periodoKey` con la variable local `periodKey`. Mismo typo que en getResumen.
+- Fix: `periodoKey: periodKey` en el doc de liquidación y en el contexto del log.
+- Harness determinista extendido (datos reales de la nube): 5/5 PASS — getResumen×3 (netos $85.00 / $114.68 / $200.00), liquidar TEST-SEMANAL (folio NOM-2026-W40-00E1AA, neto $85 / Bs 74,120, gasto GASTO_INTERNO 'personal' único, consumos marcados, período cerrado), doble liquidación bloqueada (PAYROLL_YA_LIQUIDADO).
+- Lección: los shorthands `{ periodoKey }` con nombres parecidos (periodoKey vs periodKey) son trampa; el linter no los caza si la variable no existe (ReferenceError en runtime). Todo flujo que la UI consuma debe tener caso en el harness.
+- Build OK.
