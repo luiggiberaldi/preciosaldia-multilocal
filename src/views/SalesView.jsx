@@ -47,7 +47,7 @@ export default function SalesView({ triggerHaptic, isActive }) {
     const { notifyLowStock, notifySaleComplete } = useNotifications();
 
     // ── Global Context ──────────────────────────────────────
-    const { products, setProducts, isLoadingProducts, rateMode, setRateMode, useAutoRate, setUseAutoRate, customRate, setCustomRate, effectiveRate, rates, rateDiscrepancyWarning, copEnabled, copPrimary, tasaCop, autoCopEnabled, setAutoCopEnabled, tasaCopManual, setTasaCopManual, categories, checkoutMode, effectiveCheckoutMode, setCheckoutMode } = useProductContext();
+    const { products, setProducts, isLoadingProducts, rateMode, setRateMode, useAutoRate, setUseAutoRate, customRate, setCustomRate, effectiveRate, redondearTasaAuto, setRedondearTasaAuto, rates, rateDiscrepancyWarning, copEnabled, copPrimary, tasaCop, autoCopEnabled, setAutoCopEnabled, tasaCopManual, setTasaCopManual, categories, checkoutMode, effectiveCheckoutMode, setCheckoutMode } = useProductContext();
 
     // ── State ──────────────────────────────────────
     const [showConfetti, setShowConfetti] = useState(false);
@@ -754,6 +754,7 @@ export default function SalesView({ triggerHaptic, isActive }) {
                 showRateConfig={showRateConfig} setShowRateConfig={setShowRateConfig}
                 setShowKeyboardHelp={setShowKeyboardHelp}
                 triggerHaptic={triggerHaptic}
+                redondearTasaAuto={redondearTasaAuto} setRedondearTasaAuto={setRedondearTasaAuto}
                 copEnabled={copEnabled} copPrimary={copPrimary} tasaCop={tasaCop}
                 autoCopEnabled={autoCopEnabled} setAutoCopEnabled={setAutoCopEnabled}
                 tasaCopManual={tasaCopManual} setTasaCopManual={setTasaCopManual}

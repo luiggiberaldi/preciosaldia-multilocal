@@ -1314,3 +1314,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Reporte de Luigi: problemas de contraste e icono de imprimir montado sobre otros datos.
 - Columna de acciones: 110px → 160px (4 botones de 36px necesitan ~156px).
 - Contraste: código de barras slate-300 → slate-400; guiones "-" slate-300 → slate-400.
+
+## v2.1.14 (2026-10-02) — Toggle redondear tasa automática
+- Pedido de Luigi: opción para elegir si la tasa aplicada no-manual (BCV/Euro/USDT) se redondea o no.
+- Nuevo estado `redondearTasaAuto` en RateContext (default true), persistido en localStorage + sync local.
+- `effectiveRate` redondea a 2 decimales solo cuando la tasa no es manual y el toggle está activo.
+- Toggle "Redondear tasa automática" en el panel de tasa del POS (SalesHeader), visible solo en modos no-manuales.
+- Test determinista: 8/8 pass con la lógica real extraída del fuente.

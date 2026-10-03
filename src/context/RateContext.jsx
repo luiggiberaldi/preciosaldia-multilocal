@@ -46,6 +46,12 @@ export function RateProvider({ children, rates = {}, rateDiscrepancyWarning = nu
         return localStorage.getItem('cop_primary') === 'true';
     });
 
+    // ── REDONDEO DE TASA AUTOMÁTICA — solo aplica cuando rateMode !== 'manual' ──
+    const [redondearTasaAuto, setRedondearTasaAuto] = useState(() => {
+        const saved = localStorage.getItem('redondear_tasa_auto');
+        return saved === null ? true : saved === 'true';
+    });
+
     // Sync con localStorage
     useEffect(() => {
         localStorage.setItem('bodega_rate_mode', rateMode);
@@ -66,6 +72,11 @@ export function RateProvider({ children, rates = {}, rateDiscrepancyWarning = nu
     }, [streetRate]);
 
     useEffect(() => {
+        localStorage.setItem('redondear_tasa_auto', redondearTasaAuto.toString());
+        pushLocalSync('redondear_tasa_auto', redondearTasaAuto.toString());
+    }, [redondearTasaAuto]);
+
+    useEffect(() => {
         localStorage.setItem('cop_enabled', copEnabled.toString());
         localStorage.setItem('auto_cop_enabled', autoCopEnabled.toString());
         localStorage.setItem('cop_primary', copPrimary.toString());
@@ -82,6 +93,7 @@ export function RateProvider({ children, rates = {}, rateDiscrepancyWarning = nu
         const handleStorageChange = (e) => {
             if (e.key === 'bodega_custom_rate' && e.newValue && parseFloat(e.newValue) > 0) setCustomRate(e.newValue);
             if (e.key === 'bodega_rate_mode' && e.newValue) setRateMode(e.newValue);
+            if (e.key === 'redondear_tasa_auto') setRedondearTasaAuto(e.newValue === 'true');
             if (e.key === 'cop_enabled') setCopEnabled(e.newValue === 'true');
             if (e.key === 'auto_cop_enabled') setAutoCopEnabled(e.newValue === 'true');
             if (e.key === 'tasa_cop') setTasaCopManual(e.newValue || '');
@@ -114,15 +126,24 @@ export function RateProvider({ children, rates = {}, rateDiscrepancyWarning = nu
     }, []);
 
     // ── CÁLCULO DE TASA EFECTIVA EN BS Y COP ──
+    // Si redondearTasaAuto está activo y la tasa NO es manual, se redondea a 2 decimales.
     const effectiveRate = useMemo(() => {
+        let rate;
         if (rateMode === 'manual') {
             const parsed = parseFloat(customRate);
-            return (parsed && parsed > 0) ? parsed : (rates?.bcv?.price || 1);
+            rate = (parsed && parsed > 0) ? parsed : (rates?.bcv?.price || 1);
+        } else if (rateMode === 'usdt') {
+            rate = rates?.usdt?.price || rates?.bcv?.price || 1;
+        } else if (rateMode === 'euro') {
+            rate = rates?.euro?.price || rates?.bcv?.price || 1;
+        } else {
+            rate = rates?.bcv?.price || 1;
         }
-        if (rateMode === 'usdt') return rates?.usdt?.price || rates?.bcv?.price || 1;
-        if (rateMode === 'euro') return rates?.euro?.price || rates?.bcv?.price || 1;
-        return rates?.bcv?.price || 1;
-    }, [rateMode, customRate, rates]);
+        if (rateMode !== 'manual' && redondearTasaAuto) {
+            return Math.round(rate * 100) / 100;
+        }
+        return rate;
+    }, [rateMode, customRate, rates, redondearTasaAuto]);
 
     const tasaCop = useMemo(() => {
         if (!copEnabled) return 0;
@@ -143,6 +164,8 @@ export function RateProvider({ children, rates = {}, rateDiscrepancyWarning = nu
         customRate,
         setCustomRate,
         effectiveRate,
+        redondearTasaAuto,
+        setRedondearTasaAuto,
         rates,
         rateDiscrepancyWarning,
         copEnabled,
@@ -161,6 +184,7 @@ export function RateProvider({ children, rates = {}, rateDiscrepancyWarning = nu
         setUseAutoRate,
         customRate,
         effectiveRate,
+        redondearTasaAuto,
         rates,
         rateDiscrepancyWarning,
         copEnabled,

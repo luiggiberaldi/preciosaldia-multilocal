@@ -19,6 +19,8 @@ export default function SalesHeader({
     setShowRateConfig,
     setShowKeyboardHelp,
     triggerHaptic,
+    redondearTasaAuto,
+    setRedondearTasaAuto,
     copEnabled,
     copPrimary,
     tasaCop,
@@ -34,6 +36,7 @@ export default function SalesHeader({
     const [localRateMode, setLocalRateMode] = useState(rateMode);
     const [localCustomRate, setLocalCustomRate] = useState(customRate || '');
     const [localTasaCop, setLocalTasaCop] = useState(tasaCopManual || '');
+    const [localRedondear, setLocalRedondear] = useState(redondearTasaAuto !== false);
 
     // Reset local states to context values when modal is toggled
     useEffect(() => {
@@ -41,8 +44,9 @@ export default function SalesHeader({
             setLocalRateMode(rateMode);
             setLocalCustomRate(customRate || '');
             setLocalTasaCop(tasaCopManual || '');
+            setLocalRedondear(redondearTasaAuto !== false);
         }
-    }, [showRateConfig, rateMode, customRate, tasaCopManual]);
+    }, [showRateConfig, rateMode, customRate, tasaCopManual, redondearTasaAuto]);
 
     const handleRateToggle = () => {
         setShowRateConfig(!showRateConfig);
@@ -74,6 +78,9 @@ export default function SalesHeader({
             setRateMode(localRateMode);
             if (localRateMode === 'manual' && localCustomRate) {
                 setCustomRate(localCustomRate);
+            }
+            if (localRateMode !== 'manual') {
+                setRedondearTasaAuto(localRedondear);
             }
         }
         setShowRateConfig(false);
@@ -214,6 +221,24 @@ export default function SalesHeader({
                                             placeholder="Ingresa la tasa manual (ej: 42.50)"
                                             autoFocus
                                         />
+                                    </div>
+                                )}
+
+                                {localRateMode !== 'manual' && (
+                                    <div className="flex items-center justify-between pt-1">
+                                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Redondear tasa automática</span>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={localRedondear}
+                                            aria-label="Redondear tasa automática a 2 decimales"
+                                            onClick={() => { triggerHaptic && triggerHaptic(); setLocalRedondear(!localRedondear); }}
+                                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 cursor-pointer select-none shrink-0 active:scale-95 transition-transform"
+                                        >
+                                            <span className={`relative inline-flex h-6 w-11 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out ${localRedondear ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}>
+                                                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${localRedondear ? 'translate-x-5' : 'translate-x-0'}`} />
+                                            </span>
+                                        </button>
                                     </div>
                                 )}
                             </div>
