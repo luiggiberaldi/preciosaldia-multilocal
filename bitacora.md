@@ -1226,3 +1226,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 **Fix:** incluidos en `commonProps` + default `() => {}` en el Quick como red de seguridad.
 **Tests deterministas:** lógica 5/5 (función real extraída), cableado de props 11/11 (cadena ProductsView→Modal→Quick verificada estáticamente). Scripts en `.tests/` (no commiteados).
 **Versión:** 2.1.4.
+
+## 2026-10-02 ~20:50 — v2.1.5: fix subrayado fantasma en tarjetas de inventario
+**Reportado por:** Luigi (screenshot) — "al cambiar de ventana a veces se subraya todo".
+**Causa:** selección de texto fantasma que el navegador deja al cambiar de ventana; los nombres/precios de las tarjetas quedaban resaltados.
+**Fix:** `select-none` en la raíz de ProductCard (no se puede seleccionar texto en las tarjetas).
+**Test determinista:** `select-none` presente en el source y en el chunk compilado (ProductsView-*.js, en el class string de la tarjeta).
+**Versión:** 2.1.5.
