@@ -1425,3 +1425,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - El backend `registerConsumo` ya aceptaba decimales (qty finito > 0); el stock se descuenta con 3 decimales vía `adjustStockForItems`.
 - Harness de la lógica granel: 12/12 PASS (parseo, coma decimal, redondeo a 3, rechazo de decimales en unidad, detección, labels).
 - Build OK.
+
+## v2.1.32 — 2026-10-03 — Fix E2 (tarjeta mostraba sueldo actual) + L6 (reapertura de período)
+- Bug E2: la tarjeta del Resumen mostraba el sueldo ACTUAL del empleado en vez del snapshot congelado, y "CONSUMIDO $0.00"/"CONSUMOS 0" porque desestructuraba `consumidoUsd`/`consumos`/`limitePct` que `getResumen` no retorna (retorna `totalConsumosUsd`/`count`). Fix: la tarjeta usa `salarioSnapshot`, `totalConsumosUsd`, `count` y `empleado.limiteConsumoPorc`. Los cálculos siempre usaron el snapshot correcto; era solo visual.
+- Bug L6: registrar un consumo después de liquidar fallaba con "El período ya fue liquidado". Ahora `_getOrCreatePeriod` abre un período secuenciado (`2026-W40-2`, `-3`...) cuando el base está liquidado; `getResumen`/`liquidar` usan `_displayPeriodKey` (el más reciente con documento). Tras liquidar sin consumos nuevos, la tarjeta sigue mostrando el período liquidado con su botón Recibo (comportamiento verificado intacto).
+- `periodBounds` ahora tolera el sufijo `-N` (usa la key base para los límites).
+- Harness determinista del flujo completo: 6/6 PASS (consumo → liquidar → consumo post-liquidación en -2 → resumen en -2 → liquidar -2 → doble liquidación bloqueada).
+- Build OK.

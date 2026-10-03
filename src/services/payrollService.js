@@ -250,36 +250,54 @@ function _periodId(employeeId, periodKey) {
 }
 
 /**
- * Lee el período corriente del empleado; lo crea al primer consumo con el
- * snapshot del sueldo vigente (patrón DondeJuancho: el sueldo se congela).
+ * Key del período a CREAR/usar al registrar: el primero no-liquidado
+ * (base, base-2, base-3...). Un consumo posterior a la liquidación abre
+ * un período secuenciado en vez de fallar.
  */
 async function _getOrCreatePeriod(emp) {
-    const periodKey = currentPeriodKey(emp.frecuenciaPago);
-    const id = _periodId(emp.id, periodKey);
-    let period = await appForage.getItem(id, null);
-    if (period && period.status === 'LIQUIDADO') {
-        throw _err('PAYROLL_PERIODO_CERRADO', `El período ${periodKey} ya fue liquidado.`);
+    const base = currentPeriodKey(emp.frecuenciaPago);
+    for (let n = 1; n <= 99; n++) {
+        const periodKey = n === 1 ? base : `${base}-${n}`;
+        const id = _periodId(emp.id, periodKey);
+        let period = await appForage.getItem(id, null);
+        if (period && period.status === 'LIQUIDADO') continue;
+        if (!period) {
+            const bounds = periodBounds(periodKey);
+            const now = _nowISO();
+            period = {
+                kind: 'periodo',
+                id,
+                employeeId: emp.id,
+                periodKey,
+                frecuencia: emp.frecuenciaPago,
+                inicioISO: bounds.inicioISO,
+                finISO: bounds.finISO,
+                salarioSnapshot: { monto: emp.salarioMonto, moneda: emp.salarioMoneda },
+                status: 'ABIERTO',
+                liquidacionId: null,
+                createdAt: now,
+                updatedAt: now,
+            };
+            await _savePayrollDoc(period);
+        }
+        return period;
     }
-    if (!period) {
-        const bounds = periodBounds(periodKey);
-        const now = _nowISO();
-        period = {
-            kind: 'periodo',
-            id,
-            employeeId: emp.id,
-            periodKey,
-            frecuencia: emp.frecuenciaPago,
-            inicioISO: bounds.inicioISO,
-            finISO: bounds.finISO,
-            salarioSnapshot: { monto: emp.salarioMonto, moneda: emp.salarioMoneda },
-            status: 'ABIERTO',
-            liquidacionId: null,
-            createdAt: now,
-            updatedAt: now,
-        };
-        await _savePayrollDoc(period);
+    throw _err('PAYROLL_PERIODO_CERRADO', `El período ${base} ya fue liquidado.`);
+}
+
+/**
+ * Key del período a MOSTRAR (Resumen) y a LIQUIDAR: el más reciente con
+ * documento (base, base-2...). Tras liquidar sin consumos nuevos, sigue
+ * mostrando el período liquidado (con su botón Recibo); al haber consumos
+ * post-liquidación, muestra el período secuenciado abierto.
+ */
+async function _displayPeriodKey(emp) {
+    const base = currentPeriodKey(emp.frecuenciaPago);
+    for (let n = 99; n >= 1; n--) {
+        const key = n === 1 ? base : `${base}-${n}`;
+        if (await appForage.getItem(_periodId(emp.id, key), null)) return key;
     }
-    return period;
+    return base;
 }
 
 // ─── EMPLEADOS ─────────────────────────────────────────
@@ -578,7 +596,7 @@ export async function listConsumos(employeeId = null, periodoKey = null) {
  */
 export async function getResumen(employeeId, tasaBcv = null) {
     const { emp } = await _getEmployeeOrThrow(employeeId);
-    const periodKey = currentPeriodKey(emp.frecuenciaPago);
+    const periodKey = await _displayPeriodKey(emp);
     const period = await appForage.getItem(_periodId(emp.id, periodKey), null);
     const snap = (period && period.salarioSnapshot)
         ? period.salarioSnapshot

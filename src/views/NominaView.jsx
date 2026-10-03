@@ -12,9 +12,9 @@
  *   createEmployee(data) / updateEmployee(id,data) / deactivateEmployee(id)
  *   registerConsumo({employeeId, items:[{productId,qty,priceUsd}], overrideLimite}) -> consumo
  *   anularConsumo(consumoId, motivo)
- *   getResumen(employeeId) -> {empleado, periodo:{key,frecuencia,inicioISO,finISO,
- *     salarioSnapshot:{monto,moneda}|null}, salarioUsd, consumidoUsd, pct, netoUsd,
- *     consumos, limitePct, liquidacion|null}
+ *   getResumen(employeeId) -> {empleado, periodo:{periodKey,frecuencia,inicioISO,finISO,
+ *     salarioSnapshot:{monto,moneda}|null}|null, periodoKey, salarioSnapshot:{monto,moneda},
+ *     salarioUsd, totalConsumosUsd, netoUsd, count, pct}
  *   liquidar(employeeId) -> liquidacion
  *   listConsumos(employeeId?) -> [{id,employeeId,employeeNombre,timestamp,
  *     items:[{nombre,qty,priceUsd}],totalUsd,status:'APPLIED'|'VOIDED',settlementId,actor}]
@@ -167,7 +167,10 @@ function EmployeeForm({ initial, onSave, onCancel, saving }) {
 
 /* ─── Tarjeta de resumen por empleado ─────────────────────────────────── */
 function ResumenCard({ resumen, liquidaciones, onConsumo, onLiquidar, onRecibo, triggerHaptic }) {
-    const { empleado, periodo, salarioUsd, consumidoUsd, pct, netoUsd, consumos, limitePct, liquidacion } = resumen;
+    const { empleado, periodo, salarioUsd, totalConsumosUsd, pct, netoUsd, count, salarioSnapshot, liquidacion } = resumen;
+    const limitePct = empleado?.limiteConsumoPorc ?? 100;
+    // Sueldo mostrado: snapshot congelado del período (no el sueldo actual del empleado).
+    const snap = salarioSnapshot || periodo?.salarioSnapshot || { monto: empleado?.salarioMonto, moneda: empleado?.salarioMoneda };
     const sem = semaforo(pct || 0);
     const tone = SEM_TONE[sem];
     const liq = liquidacion || liquidaciones.find((l) => l.employeeId === empleado.id && l.periodoKey === periodo?.periodKey);
@@ -179,7 +182,7 @@ function ResumenCard({ resumen, liquidaciones, onConsumo, onLiquidar, onRecibo, 
                     <p className="font-black text-slate-800 dark:text-white truncate">{empleado.nombre}</p>
                     <p className="text-[11px] font-semibold text-slate-400">
                         Sueldo del período: <span className="font-extrabold text-slate-600 dark:text-slate-200">
-                            {empleado.salarioMoneda === 'USD' ? `$${formatUsd(empleado.salarioMonto)}` : `Bs ${formatUsd(empleado.salarioMonto)}`}
+                            {snap.moneda === 'USD' ? `$${formatUsd(snap.monto)}` : `Bs ${formatUsd(snap.monto)}`}
                         </span>
                         {' · '}{FREC_LABEL[empleado.frecuenciaPago] || empleado.frecuenciaPago}
                         {periodo?.salarioSnapshot && (
@@ -199,7 +202,7 @@ function ResumenCard({ resumen, liquidaciones, onConsumo, onLiquidar, onRecibo, 
             <div className="grid grid-cols-3 gap-2 text-center mb-3">
                 <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl py-2">
                     <p className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Consumido</p>
-                    <p className={`text-sm font-black ${tone.text}`}>${formatUsd(consumidoUsd)}</p>
+                    <p className={`text-sm font-black ${tone.text}`}>${formatUsd(totalConsumosUsd)}</p>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl py-2">
                     <p className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Neto</p>
@@ -207,7 +210,7 @@ function ResumenCard({ resumen, liquidaciones, onConsumo, onLiquidar, onRecibo, 
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl py-2">
                     <p className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Consumos</p>
-                    <p className="text-sm font-black text-slate-800 dark:text-white">{consumos ?? 0}</p>
+                    <p className="text-sm font-black text-slate-800 dark:text-white">{count ?? 0}</p>
                 </div>
             </div>
 

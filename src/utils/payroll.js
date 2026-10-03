@@ -88,10 +88,16 @@ export function periodKeyFor(date, frecuencia) {
  * Límites del período a partir de su key.
  * → { inicioISO, finISO, frecuencia, label } (ISOs = 00:00 Caracas del día).
  * Soporta las 3 formas: '2026-W40', '2026-10-Q1', '2026-10'.
+ * También acepta sufijo de reapertura ('2026-W40-2'): los límites son los de la key base.
  */
+export function basePeriodKey(periodKey) {
+    return String(periodKey || '').replace(/-\d+$/, '');
+}
+
 export function periodBounds(periodKey) {
+    const base = basePeriodKey(periodKey);
     let m;
-    if ((m = /^(\d{4})-W(\d{1,2})$/.exec(periodKey))) {
+    if ((m = /^(\d{4})-W(\d{1,2})$/.exec(base))) {
         const isoYear = Number(m[1]);
         const week = Number(m[2]);
         const mon = mondayOfIsoWeek(isoYear, week);
@@ -103,7 +109,7 @@ export function periodBounds(periodKey) {
             label: `Semana ${week} · ${isoYear}`,
         };
     }
-    if ((m = /^(\d{4})-(\d{2})-Q([12])$/.exec(periodKey))) {
+    if ((m = /^(\d{4})-(\d{2})-Q([12])$/.exec(base))) {
         const y = Number(m[1]);
         const mo = Number(m[2]);
         const q = m[3];
@@ -119,7 +125,7 @@ export function periodBounds(periodKey) {
             label: `Quincena ${q} · ${MESES[mo - 1]} ${y}`,
         };
     }
-    if ((m = /^(\d{4})-(\d{2})$/.exec(periodKey))) {
+    if ((m = /^(\d{4})-(\d{2})$/.exec(base))) {
         const y = Number(m[1]);
         const mo = Number(m[2]);
         const end = mo === 12 ? { y: y + 1, m: 1 } : { y, m: mo + 1 };
