@@ -1505,3 +1505,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 ## v2.1.46 — 2026-10-04 — Fix: teclado móvil en modal PIN
 - El input oculto del PIN tenía inputMode="numeric", lo que abría el teclado del sistema en móvil tapando el pad numérico de la app.
 - Fix: inputMode="none" — no abre teclado virtual pero sigue capturando teclado físico en desktop.
+
+## v2.1.47 — 2026-10-04 — Pull de sedes independiente del modo cuenta
+- Causa: el pull del registro dependía de getAccountSyncContext(), que en equipos nuevos puede ser null.
+- Fix: nueva función pullBusinessRegistry() que baja el registro directo de Supabase sin filtros de dispositivo ni modo cuenta.
+- Se llama al arrancar la app (3s después) y al inicio de cada syncNow().

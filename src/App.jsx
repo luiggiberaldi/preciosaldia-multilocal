@@ -187,6 +187,23 @@ export default function App() {
   // Inicializar Sincronización Realtime con Supabase (device_id como clave)
   useCloudSync(isMonitorMode ? null : deviceId);
 
+  // V2.1.47: al arrancar, bajar el registro de sedes de forma independiente.
+  // No depende del modo cuenta: cualquier equipo activado descubre las sedes.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // Esperar a que el store de negocios se hidrate.
+        await new Promise((r) => setTimeout(r, 3000));
+        if (cancelled) return;
+        const { pullBusinessRegistry } = await import('./hooks/useCloudSync');
+        const res = await pullBusinessRegistry();
+        console.log('[App] pullBusinessRegistry al arranque:', res?.message);
+      } catch { /* noop */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Detectar iOS Safari (no standalone) para mostrar instrucciones manuales
   const isIOS = useMemo(() => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream, []);
   const isStandalone = useMemo(() => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone, []);

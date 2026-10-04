@@ -474,7 +474,51 @@ export const queueCloudSync = (key, value) => {
  *
  * @returns {Promise<{ok: boolean, pulled: number, pushed: number, message: string}>}
  */
+/**
+ * V2.1.47: Baja el registro global de sedes directamente de Supabase,
+ * sin depender del modo cuenta ni de la lista de dispositivos.
+ * Se llama al inicio de syncNow y al arrancar la app.
+ * @returns {Promise<{ok: boolean, count: number, message: string}>}
+ */
+export const pullBusinessRegistry = async () => {
+    if (!supabaseCloud) {
+        return { ok: false, count: 0, message: 'Sin conexión a la nube' };
+    }
+    try {
+        const { mergeBusinessRegistry, BUSINESS_REGISTRY_DOC_KEY } = await import('../utils/businessRegistry.js');
+        const { data, error } = await supabaseCloud
+            .from('sync_documents')
+            .select('data, updated_at')
+            .eq('doc_id', BUSINESS_REGISTRY_DOC_KEY)
+            .order('updated_at', { ascending: false })
+            .limit(1);
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            return { ok: false, count: 0, message: 'No hay registro en la nube' };
+        }
+        const payload = data[0]?.data?.payload;
+        if (!payload || !Array.isArray(payload.businesses)) {
+            return { ok: false, count: 0, message: 'Documento inválido' };
+        }
+        const { useNegociosStore } = await import('./store/useNegociosStore.js');
+        const st = useNegociosStore.getState();
+        const merged = mergeBusinessRegistry(st.negocios, payload);
+        const before = st.negocios.length;
+        if (typeof st.aplicarRegistroRemoto === 'function') {
+            st.aplicarRegistroRemoto(merged);
+        }
+        console.log(`[pullBusinessRegistry] locales=${before}, remotos=${payload.businesses.length}, fusionados=${merged.length}`);
+        return { ok: true, count: merged.length, message: `${merged.length} sedes` };
+    } catch (e) {
+        console.warn('[pullBusinessRegistry] Error:', e?.message ?? e);
+        return { ok: false, count: 0, message: e?.message ?? 'Error' };
+    }
+};
+
 export const syncNow = async () => {
+    // V2.1.47: al inicio de cada sync, intentar bajar el registro de sedes
+    // de forma independiente (no depende del modo cuenta).
+    try { await pullBusinessRegistry(); } catch { /* noop */ }
     if (!supabaseCloud) {
         return { ok: false, pulled: 0, pushed: 0, message: 'Sin conexión a la nube' };
     }
