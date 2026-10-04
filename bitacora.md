@@ -1478,3 +1478,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 
 ## v2.1.40 — 2026-10-04 — Diagnóstico de sync de sedes
 - Botón "Publicar sedes ahora" + lista de IDs en el modal Mis Sedes para diagnosticar sin tiros al aire.
+
+## v2.1.41 — 2026-10-04 — Fix: pull de sedes sin filtro de dispositivo
+- El pull filtraba por `device_id` en `accountCtx.deviceIds`, pero el equipo principal no estaba en esa lista (devices: 1). Los docs globales (registro de sedes) nunca llegaban.
+- Fix: query separada para `bodega_businesses_registry_v1` sin filtro de device_id (trae el más reciente de cualquier dispositivo).
+- Build pendiente.

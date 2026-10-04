@@ -506,6 +506,29 @@ export const syncNow = async () => {
                 .limit(2000);
             if (docsError) throw docsError;
 
+            // V2.1.41: los docs GLOBALES (registro de sedes) se buscan sin
+            // filtro de device_id, porque el dispositivo que los publicó
+            // puede no estar en accountCtx.deviceIds.
+            try {
+                const { data: globalDocs } = await supabaseCloud
+                    .from('sync_documents')
+                    .select('collection, doc_id, data, updated_at, device_id')
+                    .eq('doc_id', 'bodega_businesses_registry_v1')
+                    .in('collection', ['store', 'local'])
+                    .order('updated_at', { ascending: false })
+                    .limit(1);
+                if (globalDocs && globalDocs.length > 0) {
+                    const gd = globalDocs[0];
+                    // Evitar duplicado si ya vino en el pull principal.
+                    if (!docs.some((d) => d.doc_id === gd.doc_id)) {
+                        docs.push(gd);
+                        console.log(`[syncNow] PULL global: registro de sedes de ${gd.device_id}`);
+                    }
+                }
+            } catch (e) {
+                console.warn('[syncNow] No se pudo traer el registro global de sedes:', e?.message);
+            }
+
             console.log(`[syncNow] PULL: ${docs?.length || 0} documentos de la nube`);
             for (const doc of docs || []) {
                 if (!isDocForActiveBusiness(doc.doc_id)) {
