@@ -168,7 +168,7 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
       {/* Version Tag - Top Left */}
       <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
         <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-900/5 dark:bg-slate-100/10 border border-slate-900/10 dark:border-slate-100/10 rounded-xl backdrop-blur-md">
-          <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 tracking-wider">v2.1.34</span>
+          <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 tracking-wider">v2.1.35</span>
         </div>
       </div>
 

@@ -79,6 +79,15 @@ function useSecurityState() {
     // HOOK-040: checkLicense memoizado para evitar recreate en cada render.
     // SEC-001/SEC-007: Solo aceptar tokens con firma RSA válida.
     const checkLicense = useCallback(async (currentDeviceId) => {
+        // V2.1.35: flag sincrónico de CloudGate (sin imports async, sin race).
+        // Si el equipo completó la activación, la licencia es válida.
+        try {
+            if (localStorage.getItem('pda_pro_activated') === 'true') {
+                setIsPremium(true);
+                setLoading(false);
+                return;
+            }
+        } catch {}
         // Si hay código Pro activo (CloudGate), la licencia es válida sin más validación.
         try {
             const { getCustomerProject } = await import('../config/supabaseCloud.js');

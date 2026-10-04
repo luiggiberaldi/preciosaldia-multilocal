@@ -1446,3 +1446,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Bug 3: en equipo nuevo solo aparecía la sede bodega, no cosméticos. Causa estructural: el registro de negocios era solo local (localStorage), sin sincronización. Fix: nuevo `src/utils/businessRegistry.js` (doc global `bodega_businesses_registry_v1`, build/validate/merge por id); `useCloudSync._applyFromCloud` fusiona el registro remoto sin tocar el negocio activo; `useNegociosStore` publica el registro vía `queueCloudSync` al crear/actualizar/eliminar/importar. Un equipo nuevo descubre las sedes automáticamente al sincronizar.
 - Harness determinista 8/8 PASS (fusión usuarios 2-no-4, adopción uid, PIN conservado, sede descubierta, doc sin secretos, renombrado por uid).
 - Build pendiente de verificación.
+
+## v2.1.35 — 2026-10-04 — Fix: equipo activado caía en PremiumGuard (callejón sin salida)
+- Bug (auditoría E2E, reportado por luigi): equipo nuevo activado correctamente con `LIC-G3K43S` (1/6 vinculados, CloudGate completado) pero la app mostraba el PremiumGuard ("Solicitar Licencia") en vez del contenido. Causa: `useSecurity.checkLicense` validaba vía `getCustomerProject().code` (import async, propenso a race) o `pda_account_linked`; en el equipo esos no se leyeron a tiempo y `isPremium` quedó en false.
+- Fix 1: flag sincrónico `pda_pro_activated='true'` que CloudGate setea en TODAS las vías de activación (login, auto-skip por sesión, registro tras liberar cupo). `useSecurity` lo lee PRIMERO, sin imports async ni race conditions. Triple redundancia con `pda_account_linked` y `pda_license_cache`.
+- Fix 2: PremiumGuard tenía solo "Solicitar Licencia" (WhatsApp) sin forma de meter un código — callejón sin salida. Ahora tiene botón "Ya tengo un código — activar de nuevo" que limpia los flags y recarga; CloudGate revalida (auto-salta si la sesión sigue válida).
+- Harness determinista `.tests/v2.1.35-license-flags.mjs`: 6/6 PASS (flag→premium, sin flag→no premium, CloudGate setea flags, retry limpia).
+- Build pendiente de verificación.

@@ -115,10 +115,26 @@ export default function PremiumGuard({ children, featureName = "Esta función", 
                 {/* CTA: Solicitar Licencia */}
                 <button
                     onClick={openWhatsApp}
-                    className="w-full bg-brand hover:bg-brand-dark text-white dark:text-slate-950 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 mb-3 transition-all shadow-lg shadow-brand/20 hover:-translate-y-0.5 active:scale-95 text-sm"
+                    className="w-full bg-brand hover:bg-brand-dark text-white dark:text-slate-950 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 mb-2 transition-all shadow-lg shadow-brand/20 hover:-translate-y-0.5 active:scale-95 text-sm"
                 >
                     <Send size={16} className="fill-white dark:fill-slate-950" />
                     <span>Solicitar Licencia</span>
+                </button>
+
+                {/* V2.1.35: salida del callejón sin salida — reintentar activación */}
+                <button
+                    onClick={() => {
+                        try {
+                            // Limpiar flags potencialmente corruptos y recargar:
+                            // CloudGate revalida (auto-salta si la sesión sigue válida).
+                            localStorage.removeItem('pda_pro_activated');
+                            localStorage.removeItem('pda_account_linked');
+                        } catch {}
+                        window.location.reload();
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl font-bold text-xs text-brand hover:bg-brand/10 transition-colors mb-3"
+                >
+                    Ya tengo un código — activar de nuevo
                 </button>
 
                 {/* Device ID */}

@@ -159,6 +159,11 @@ export default function CloudGate({ onReady }) {
                 const { session } = await getOwnerSession();
                 if (!alive) return;
                 if (session && !session.user?.is_anonymous) {
+                    // V2.1.35: asegurar flags aunque se haya auto-saltado.
+                    try {
+                        localStorage.setItem('pda_pro_activated', 'true');
+                        localStorage.setItem('pda_account_linked', 'true');
+                    } catch {}
                     setState('ready');
                     onReady();
                 } else {
@@ -193,6 +198,8 @@ export default function CloudGate({ onReady }) {
         setBusy(false);
         if (res.ok) {
             // Marcar licencia Pro como activa (el código ya fue validado)
+            // Triple redundancia: pda_license_cache + pda_account_linked + pda_pro_activated
+            // (el último es sincrónico y lo lee useSecurity sin imports async).
             try {
                 const proj = getCustomerProject();
                 if (proj?.code) {
@@ -203,6 +210,8 @@ export default function CloudGate({ onReady }) {
                         productId: 'pro',
                     }));
                 }
+                localStorage.setItem('pda_pro_activated', 'true');
+                localStorage.setItem('pda_account_linked', 'true');
             } catch {}
             setState('ready');
             onReady();
@@ -245,6 +254,11 @@ export default function CloudGate({ onReady }) {
         const reg = await registerCurrentDevice();
         setBusy(false);
         if (reg.ok) {
+            // V2.1.35: asegurar flags en todas las vías de activación.
+            try {
+                localStorage.setItem('pda_pro_activated', 'true');
+                localStorage.setItem('pda_account_linked', 'true');
+            } catch {}
             setState('ready');
             onReady();
         } else {
