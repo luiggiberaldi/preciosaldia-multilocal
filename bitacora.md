@@ -1453,3 +1453,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Fix 2: PremiumGuard tenía solo "Solicitar Licencia" (WhatsApp) sin forma de meter un código — callejón sin salida. Ahora tiene botón "Ya tengo un código — activar de nuevo" que limpia los flags y recarga; CloudGate revalida (auto-salta si la sesión sigue válida).
 - Harness determinista `.tests/v2.1.35-license-flags.mjs`: 6/6 PASS (flag→premium, sin flag→no premium, CloudGate setea flags, retry limpia).
 - Build pendiente de verificación.
+
+## v2.1.36 — 2026-10-04 — Fix: sedes no se sincronizaban a equipos nuevos
+- Bug (reportado por luigi): el equipo nuevo no mostraba la sede cosméticos, solo bodega. Causa: v2.1.34 solo publicaba el registro al crear/editar/eliminar un negocio; los equipos existentes con 2 sedes nunca lo publicaban, así que no había nada que bajar.
+- Fix: `useNegociosStore` publica el registro al rehidratar (delay 8s para dar chance al pull inicial). `aplicarRegistroRemoto` republica el fusionado para que la nube converja a la unión (con guard anti ping-pong: si no hubo cambios, no republica).
+- Harness `.tests/v2.1.36-business-converge.mjs`: 4/4 PASS (descubrimiento, sin cambios, convergencia, sin ping-pong).
+- Build pendiente de verificación.

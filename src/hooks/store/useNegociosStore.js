@@ -176,15 +176,20 @@ export const useNegociosStore = create(
              */
             aplicarRegistroRemoto: (merged) => {
                 if (!Array.isArray(merged)) return;
-                const { negocioActivoId } = get();
+                const { negocioActivoId, negocios } = get();
+                // Si no cambió nada, no hacer nada (evita ping-pong).
+                const same = negocios.length === merged.length &&
+                    merged.every((m) => negocios.some((n) => n.id === m.id));
+                if (same) return;
                 // Conservar el activo aunque el remoto no lo traiga.
                 set({ negocios: merged });
                 if (negocioActivoId && !merged.some((n) => n.id === negocioActivoId)) {
-                    // El activo desapareció del registro: no cambiarlo a la
-                    // fuerza; el usuario lo verá en el selector.
                     console.warn('[Negocios] El negocio activo no está en el registro remoto');
                 }
                 try { logEvent('NEGOCIO', 'REGISTRO_SINCRO', `${merged.length} negocios en registro`, null); } catch { /* noop */ }
+                // V2.1.36: republicar el fusionado para que la nube converja
+                // a la unión de todas las sedes.
+                _pushBusinessRegistry();
             },
 
             /**
@@ -216,6 +221,17 @@ export const useNegociosStore = create(
                 negocios: state.negocios,
                 negocioActivoId: state.negocioActivoId,
             }),
+            // V2.1.36: al rehidratar, publicar el registro para que los
+            // equipos nuevos descubran las sedes aunque nunca se haya
+            // creado/editado un negocio en este equipo.
+            onRehydrateStorage: () => (state) => {
+                try {
+                    if (state && Array.isArray(state.negocios) && state.negocios.length > 0) {
+                        // Delay para no competir con el sync inicial (pull primero).
+                        setTimeout(() => _pushBusinessRegistry(), 8000);
+                    }
+                } catch {}
+            },
         }
     )
 );
