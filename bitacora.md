@@ -1487,3 +1487,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 ## v2.1.42 — 2026-10-04 — Fix: equipos con registro incompleto sobrescribían la nube
 - Bug: el equipo secundario (1 sede) publicaba automáticamente al rehidratar y al fusionar, sobrescribiendo (LWW) el registro completo del principal (2 sedes).
 - Fix: eliminada la publicación automática. Solo se publica por acción explícita (abrir Mis Sedes, botón Publicar, crear/editar/eliminar).
+
+## v2.1.43 — 2026-10-04 — Fix definitivo: sin auto-publish del registro
+- Causa raíz confirmada en Supabase: el secundario publicaba su versión de 1 sede (más nueva) y sobrescribía la del principal (2 sedes) por LWW.
+- Fix: eliminado TODO auto-publish (rehidratar, fusionar, abrir gestor). Solo publica explícitamente: botón "Publicar sedes ahora", crear/editar/eliminar negocio.
+- Limpieza: borrada la fila stale del secundario en sync_documents; solo queda la del principal con las 2 sedes.
