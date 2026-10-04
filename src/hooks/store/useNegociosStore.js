@@ -26,6 +26,23 @@ import {
     syncFiscalMirror,
 } from '../../utils/negocioContext';
 import { logEvent } from '../../services/auditService';
+import { buildBusinessRegistryDoc, BUSINESS_REGISTRY_DOC_KEY } from '../../utils/businessRegistry';
+
+/**
+ * Publica el registro de negocios a la nube (documento GLOBAL).
+ * Fire-and-forget: un fallo del push jamás debe romper la gestión.
+ */
+function _pushBusinessRegistry() {
+    try {
+        import('../useCloudSync.js')
+            .then((cs) => {
+                if (typeof cs?.queueCloudSync !== 'function') return;
+                const { negocios } = useNegociosStore.getState();
+                cs.queueCloudSync(BUSINESS_REGISTRY_DOC_KEY, buildBusinessRegistryDoc(negocios));
+            })
+            .catch(() => {});
+    } catch { /* silenciar: el push nunca rompe el flujo */ }
+}
 
 function _newId() {
     try {
@@ -96,6 +113,7 @@ export const useNegociosStore = create(
                 const negocio = { ...clean, id: _newId(), createdAt: new Date().toISOString() };
                 set((s) => ({ negocios: [...s.negocios, negocio] }));
                 try { logEvent('NEGOCIO', 'NEGOCIO_CREADO', `Negocio "${negocio.nombre}" creado`, null); } catch { /* noop */ }
+                _pushBusinessRegistry();
                 return { ok: true, id: negocio.id };
             },
 
@@ -113,6 +131,7 @@ export const useNegociosStore = create(
                 const negocio = { ...clean, id: String(id), createdAt: new Date().toISOString(), importadoDeNube: true };
                 set((s) => ({ negocios: [...s.negocios, negocio] }));
                 try { logEvent('NEGOCIO', 'NEGOCIO_IMPORTADO', `Negocio "${negocio.nombre}" importado con ID ${id}`, null); } catch { /* noop */ }
+                _pushBusinessRegistry();
                 return { ok: true, id: negocio.id };
             },
 
@@ -130,6 +149,7 @@ export const useNegociosStore = create(
                 }));
                 if (id === negocioActivoId) syncFiscalMirror();
                 try { logEvent('NEGOCIO', 'NEGOCIO_ACTUALIZADO', `Datos de "${clean.nombre}" actualizados`, null); } catch { /* noop */ }
+                _pushBusinessRegistry();
                 return { ok: true };
             },
 
@@ -146,7 +166,25 @@ export const useNegociosStore = create(
                 await _purgeNegocioData(id);
                 set((s) => ({ negocios: s.negocios.filter((n) => n.id !== id) }));
                 try { logEvent('NEGOCIO', 'NEGOCIO_ELIMINADO', `Negocio "${target.nombre}" eliminado`, null); } catch { /* noop */ }
+                _pushBusinessRegistry();
                 return { ok: true };
+            },
+
+            /**
+             * Aplica el registro fusionado que llegó de la nube.
+             * No toca el negocio activo: cada equipo mantiene su sede.
+             */
+            aplicarRegistroRemoto: (merged) => {
+                if (!Array.isArray(merged)) return;
+                const { negocioActivoId } = get();
+                // Conservar el activo aunque el remoto no lo traiga.
+                set({ negocios: merged });
+                if (negocioActivoId && !merged.some((n) => n.id === negocioActivoId)) {
+                    // El activo desapareció del registro: no cambiarlo a la
+                    // fuerza; el usuario lo verá en el selector.
+                    console.warn('[Negocios] El negocio activo no está en el registro remoto');
+                }
+                try { logEvent('NEGOCIO', 'REGISTRO_SINCRO', `${merged.length} negocios en registro`, null); } catch { /* noop */ }
             },
 
             /**

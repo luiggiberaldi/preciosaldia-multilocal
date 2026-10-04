@@ -1439,3 +1439,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Causa raíz del fallo de subida: RLS activo en `storage.objects` sin política de INSERT para el bucket `product-images` (verificado por SQL, solo lectura). Cuando se corrija la política, las fotos volverán a subirse como URL automáticamente. No se tocó la config del proyecto del cliente.
 - Harness determinista 3/3 PASS (incluye regresión: sin el fix, el caso "upload con error" devuelve URL en vez de null).
 - Build OK.
+
+## v2.1.34 — 2026-10-04 — Fix: 4 usuarios en equipo nuevo + botón Instalar + sync de negocios
+- Bug 1 (reportado por luigi en equipo nuevo): al activar un equipo nuevo aparecían 4 usuarios (Admin/Cajero duplicados). Causa: el equipo crea 2 usuarios por defecto con uids aleatorios y al bajar el catálogo de la nube los 2 reales traen uids distintos; `mergeUserCatalog` no los reconocía como los mismos. Fix en `src/utils/userCatalog.js`: fallback 2b que fusiona por nombre+rol cuando los uids no coinciden, adoptando el uid remoto y conservando el PIN local.
+- Bug 2: el botón "Instalar" aparecía en la barra inferior aunque la app ya estaba instalada. Causa: se mostraba con el evento `beforeinstallprompt` sin verificar modo standalone. Fix en `src/App.jsx`: si `matchMedia('(display-mode: standalone)')` o `navigator.standalone`, se oculta el botón.
+- Bug 3: en equipo nuevo solo aparecía la sede bodega, no cosméticos. Causa estructural: el registro de negocios era solo local (localStorage), sin sincronización. Fix: nuevo `src/utils/businessRegistry.js` (doc global `bodega_businesses_registry_v1`, build/validate/merge por id); `useCloudSync._applyFromCloud` fusiona el registro remoto sin tocar el negocio activo; `useNegociosStore` publica el registro vía `queueCloudSync` al crear/actualizar/eliminar/importar. Un equipo nuevo descubre las sedes automáticamente al sincronizar.
+- Harness determinista 8/8 PASS (fusión usuarios 2-no-4, adopción uid, PIN conservado, sede descubierta, doc sin secretos, renombrado por uid).
+- Build pendiente de verificación.

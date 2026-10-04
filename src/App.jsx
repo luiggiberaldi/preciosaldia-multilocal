@@ -259,6 +259,14 @@ export default function App() {
   useEffect(() => { if (rates) cacheRates(rates); }, [rates, cacheRates]);
 
   useEffect(() => {
+    // Si ya corre como app instalada, no ofrecer instalación.
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+    if (isStandalone) {
+      setInstallPrompt(null);
+      window.deferredInstallPrompt = null;
+      return;
+    }
     if (window.deferredInstallPrompt) {
       setInstallPrompt(window.deferredInstallPrompt);
     }

@@ -12,6 +12,7 @@ import { getAccountSyncContext } from '../services/cloudAccount';
 import { mergeLedgerEntries, rebuildCustomersFromLedger } from '../utils/customerLedger';
 // Catálogo de usuarios sin PINs (SEC-002): merge preservando PINs locales.
 import { mergeUserCatalog, isValidUserCatalogDoc, buildUserCatalogDoc, readUserTombstones } from '../utils/userCatalog';
+import { mergeBusinessRegistry, BUSINESS_REGISTRY_DOC_KEY } from '../utils/businessRegistry';
 // QUOTA-001: sincronización delta (stock liviano vs catálogo) + poda de ventas.
 import {
     applyStockMapDelta,
@@ -776,6 +777,27 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
                 window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_users_catalog_v1', source: 'remote' } }));
                 const hashKey = LAST_PUSH_HASH_PREFIX + docId;
                 localStorage.setItem(hashKey, quickHash(payload));
+                if (envelope.updatedAt) localStorage.setItem(metadataKey, envelope.updatedAt);
+                return true;
+            }
+            // ── Registro de negocios (multi-sede) ───────────────────────────
+            // Documento GLOBAL: permite que un equipo nuevo descubra
+            // automáticamente las sedes. Se fusiona por id sin tocar el
+            // negocio activo local.
+            if (key === BUSINESS_REGISTRY_DOC_KEY && payload && typeof payload === 'object' && !Array.isArray(payload)) {
+                try {
+                    const { useNegociosStore } = await import('./store/useNegociosStore.js');
+                    const negState = useNegociosStore.getState();
+                    const merged = mergeBusinessRegistry(negState.negocios, payload);
+                    if (typeof negState.aplicarRegistroRemoto === 'function') {
+                        negState.aplicarRegistroRemoto(merged);
+                    }
+                } catch (e) {
+                    console.warn('[CloudSync] No se pudo aplicar el registro de negocios:', e?.message ?? e);
+                }
+                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: BUSINESS_REGISTRY_DOC_KEY, source: 'remote' } }));
+                const hashKey2 = LAST_PUSH_HASH_PREFIX + docId;
+                localStorage.setItem(hashKey2, quickHash(payload));
                 if (envelope.updatedAt) localStorage.setItem(metadataKey, envelope.updatedAt);
                 return true;
             }

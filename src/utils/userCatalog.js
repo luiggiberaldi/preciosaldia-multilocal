@@ -222,6 +222,29 @@ export function mergeUserCatalog(localUsers, doc) {
             }
         }
 
+        // 2b) Fallback equipo nuevo: el usuario local (creado por defecto con
+        //     uid aleatorio) y el remoto son el mismo si coinciden nombre+rol
+        //     y el local aún no fue fusionado. Adopta el uid remoto para que
+        //     futuros merges lo reconozcan por uid.
+        if (r.uid) {
+            const byNameRol = local.find(u =>
+                u && u.id != null &&
+                !mergedById.has(u.id) &&
+                u.nombre === r.nombre &&
+                u.rol === r.rol
+            );
+            if (byNameRol) {
+                pushMerged({
+                    ...byNameRol,
+                    uid: r.uid,
+                    nombre: typeof r.nombre === 'string' ? r.nombre : byNameRol.nombre,
+                    rol: typeof r.rol === 'string' ? r.rol : byNameRol.rol,
+                    requirePin: r.requirePin !== false,
+                });
+                continue;
+            }
+        }
+
         // 3) Usuario nuevo para este equipo: entra con `pinPendiente: true`.
         //    Si su id numérico ya está ocupado, se le asigna uno libre
         //    (el uid lo identifica de forma estable entre equipos).
