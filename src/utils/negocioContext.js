@@ -39,6 +39,8 @@ export const NEGOCIO_CHANGED_EVENT = 'pda:negocio-changed';
 export const GLOBAL_STORAGE_KEYS = new Set([
     // Registro de negocios
     'pda-negocios-registry',
+    // Registro de negocios sincronizado (multi-sede, v2.1.36)
+    'bodega_businesses_registry_v1',
     // Identidad del dispositivo / pairing / sync
     'pda_device_id',
     'pda_pairing_mode',

@@ -1464,3 +1464,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Pregunta de luigi ("¿cómo se crea una sede ahorita?") reveló que NO había UI: `NegocioSelector` existía pero no estaba conectado en ningún lado.
 - Fix: sección "Mis Sedes" en Ajustes → Negocio con el `NegocioSelector` (crear, cambiar, editar, eliminar sedes). Solo el dueño puede crear/editar/eliminar; el supervisor solo cambia de sede.
 - Build OK.
+
+## v2.1.38 — 2026-10-04 — Fix: registro de sedes no pasaba el sync
+- Bug (causa raíz del "no sale cosméticos"): `queueCloudSync` descartaba silenciosamente `bodega_businesses_registry_v1` porque no estaba en `SYNC_KEYS` (allowlist `SUPERVISOR_SYNC_KEYS`). Además la key no estaba en `GLOBAL_STORAGE_KEYS`, así que se hubiera namespaced por negocio en vez de ser global.
+- Fix: validador `bodega_businesses_registry_v1` en `supervisorContracts.js` (solo id/nombre/datos fiscales, sin PINs) + key agregada a `GLOBAL_STORAGE_KEYS` en `negocioContext.js`.
+- Harness: 4/4 PASS en validación del contrato.
+- Build OK.

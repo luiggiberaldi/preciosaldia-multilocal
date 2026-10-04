@@ -58,6 +58,16 @@ const SYNC_VALIDATORS = Object.freeze({
             && !('pin' in u)
             && !('plainPin' in u)
         ),
+    // Registro de negocios multi-sede (v2.1.36): `{ businesses: [...] }`.
+    // Solo id/nombre/datos fiscales; jamás PINs ni secretos.
+    bodega_businesses_registry_v1: (value) =>
+        value && typeof value === 'object' && !Array.isArray(value)
+        && Array.isArray(value.businesses)
+        && value.businesses.every(b =>
+            b && typeof b === 'object'
+            && typeof b.id === 'string' && b.id
+            && typeof b.nombre === 'string'
+        ),
     // QUOTA-002: la bitácora de auditoría es diagnóstico por dispositivo;
     // ya NO viaja a la nube (crecía sin cota y se re-subía entera).
     monitor_rates_v12: isPlainObject,
