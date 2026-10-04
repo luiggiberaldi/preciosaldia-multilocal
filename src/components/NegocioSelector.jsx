@@ -223,6 +223,45 @@ export default function NegocioSelector({ triggerHaptic }) {
                                 >
                                     Publicar sedes ahora
                                 </button>
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const { supabaseCloud } = await import('../config/supabaseCloud.js');
+                                            const br = await import('../utils/businessRegistry.js');
+                                            if (!supabaseCloud) {
+                                                showToast('Sin conexión a la nube', 'error');
+                                                return;
+                                            }
+                                            showToast('Buscando sedes...', 'info');
+                                            const { data, error } = await supabaseCloud
+                                                .from('sync_documents')
+                                                .select('data, updated_at, device_id')
+                                                .eq('doc_id', br.BUSINESS_REGISTRY_DOC_KEY)
+                                                .order('updated_at', { ascending: false })
+                                                .limit(1);
+                                            if (error) throw error;
+                                            if (!data || data.length === 0) {
+                                                showToast('No hay sedes en la nube', 'info');
+                                                return;
+                                            }
+                                            const payload = data[0]?.data?.payload;
+                                            if (!payload || !Array.isArray(payload.businesses)) {
+                                                showToast('Documento inválido', 'error');
+                                                return;
+                                            }
+                                            const st = (await import('../hooks/store/useNegociosStore.js')).useNegociosStore.getState();
+                                            const merged = br.mergeBusinessRegistry(st.negocios, payload);
+                                            st.aplicarRegistroRemoto(merged);
+                                            showToast(`Sedes encontradas: ${merged.length}`, 'success');
+                                        } catch (e) {
+                                            console.error('[BuscarSedes] Error:', e);
+                                            showToast('Error: ' + (e?.message || e), 'error');
+                                        }
+                                    }}
+                                    className="w-full mt-2 py-2 px-3 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white transition-colors"
+                                >
+                                    Buscar sedes en la nube
+                                </button>
                             </div>
                         )}
                     </div>

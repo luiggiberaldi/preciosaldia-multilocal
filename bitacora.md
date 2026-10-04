@@ -1496,3 +1496,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 ## v2.1.44 — 2026-10-04 — Fix: scroll en LockScreen
 - El selector de usuarios no permitía scroll cuando había más de 4 usuarios (overflow-hidden en el root).
 - Fix: contenedor de contenido con overflow-y-auto y centrado vertical cuando el contenido es corto.
+
+## v2.1.45 — 2026-10-04 — Botón "Buscar sedes en la nube"
+- Los equipos nuevos no estaban bajando el registro automáticamente.
+- Agregado botón explícito que busca el registro global en Supabase, lo fusiona y muestra el resultado.
+- Fix scroll LockScreen incluido en v2.1.44.
