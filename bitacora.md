@@ -1501,3 +1501,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Los equipos nuevos no estaban bajando el registro automáticamente.
 - Agregado botón explícito que busca el registro global en Supabase, lo fusiona y muestra el resultado.
 - Fix scroll LockScreen incluido en v2.1.44.
+
+## v2.1.46 — 2026-10-04 — Fix: teclado móvil en modal PIN
+- El input oculto del PIN tenía inputMode="numeric", lo que abría el teclado del sistema en móvil tapando el pad numérico de la app.
+- Fix: inputMode="none" — no abre teclado virtual pero sigue capturando teclado físico en desktop.

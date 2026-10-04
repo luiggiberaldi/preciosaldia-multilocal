@@ -121,7 +121,7 @@ export default function LoginPinModal({ isOpen, onClose, user, onSubmit }) {
           }}
           className="absolute opacity-0 w-0 h-0"
           autoComplete="off"
-          inputMode="numeric"
+          inputMode="none"
         />
 
         {/* Numpad */}
