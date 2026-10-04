@@ -4,6 +4,8 @@ import { Store, Printer, Coins, Check, Tag } from 'lucide-react';
 import { SectionCard, Toggle } from '../../SettingsShared';
 import { generarPreviewLabel } from '../../../utils/labelGenerator';
 import NegocioSelector from '../../NegocioSelector';
+import { useAuthStore } from '../../../hooks/store/useAuthStore';
+import { isOwner } from '../../../utils/roles';
 
 
 const CalibratorSlider = ({ label, value, setValue, baseKey, mode, paperWidth, min, max, step = 0.5, unit = 'mm', triggerHaptic }) => {
@@ -189,14 +191,20 @@ export default function SettingsTabNegocio({
     };
 
 
+    // V2.1.37: gestión de sedes solo para el dueño.
+    const usuarioActivo = useAuthStore((s) => s.usuarioActivo);
+    const esDueno = isOwner(usuarioActivo);
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
-            {/* V2.1.37: Gestión de sedes (crear/cambiar/eliminar) */}
+            {/* V2.1.37: Gestión de sedes (crear/cambiar/eliminar) — solo dueño */}
+            {esDueno && (
             <div className="md:col-span-2 xl:col-span-3">
                 <SectionCard icon={Store} title="Mis Sedes" subtitle="Crea y cambia entre tus negocios" iconColor="text-brand">
                     <NegocioSelector triggerHaptic={triggerHaptic} />
                 </SectionCard>
             </div>
+            )}
             {/* Mi Negocio */}
             <div className="md:col-span-2 xl:col-span-3">
                 <SectionCard icon={Store} title="Mi Negocio" subtitle="Datos que aparecen en tickets" iconColor="text-brand">
