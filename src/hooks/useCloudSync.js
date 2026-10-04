@@ -475,8 +475,12 @@ export const queueCloudSync = (key, value) => {
  * @returns {Promise<{ok: boolean, pulled: number, pushed: number, message: string}>}
  */
 /**
- * V2.1.47: Baja el registro global de sedes directamente de Supabase,
+ * V2.1.49: Baja el registro global de sedes directamente de Supabase,
  * sin depender del modo cuenta ni de la lista de dispositivos.
+ * FUSIONA todas las versiones (de todos los dispositivos): la unión
+ * de sedes, no solo la más reciente por timestamp. Esto evita que un
+ * equipo con registro incompleto (versión vieja con auto-publish)
+ * oculte las sedes de otros equipos.
  * Se llama al inicio de syncNow y al arrancar la app.
  * @returns {Promise<{ok: boolean, count: number, message: string}>}
  */
@@ -486,28 +490,34 @@ export const pullBusinessRegistry = async () => {
     }
     try {
         const { mergeBusinessRegistry, BUSINESS_REGISTRY_DOC_KEY } = await import('../utils/businessRegistry.js');
+        // Traer TODAS las versiones del registro (de todos los dispositivos).
         const { data, error } = await supabaseCloud
             .from('sync_documents')
             .select('data, updated_at')
             .eq('doc_id', BUSINESS_REGISTRY_DOC_KEY)
             .order('updated_at', { ascending: false })
-            .limit(1);
+            .limit(10);
         if (error) throw error;
         if (!data || data.length === 0) {
             return { ok: false, count: 0, message: 'No hay registro en la nube' };
         }
-        const payload = data[0]?.data?.payload;
-        if (!payload || !Array.isArray(payload.businesses)) {
-            return { ok: false, count: 0, message: 'Documento inválido' };
-        }
         const { useNegociosStore } = await import('./store/useNegociosStore.js');
         const st = useNegociosStore.getState();
-        const merged = mergeBusinessRegistry(st.negocios, payload);
+        // Fusionar todas las versiones remotas entre sí, luego con lo local.
+        // La unión por ID garantiza que ninguna sede se pierda.
+        let merged = Array.isArray(st.negocios) ? [...st.negocios] : [];
+        let remoteCount = 0;
+        for (const row of data) {
+            const payload = row?.data?.payload;
+            if (!payload || !Array.isArray(payload.businesses)) continue;
+            remoteCount += payload.businesses.length;
+            merged = mergeBusinessRegistry(merged, payload);
+        }
         const before = st.negocios.length;
         if (typeof st.aplicarRegistroRemoto === 'function') {
             st.aplicarRegistroRemoto(merged);
         }
-        console.log(`[pullBusinessRegistry] locales=${before}, remotos=${payload.businesses.length}, fusionados=${merged.length}`);
+        console.log(`[pullBusinessRegistry] versiones=${data.length}, locales=${before}, remotos(total)=${remoteCount}, fusionados=${merged.length}`);
         return { ok: true, count: merged.length, message: `${merged.length} sedes` };
     } catch (e) {
         console.warn('[pullBusinessRegistry] Error:', e?.message ?? e);

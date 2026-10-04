@@ -1514,3 +1514,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 ## v2.1.48 — 2026-10-04 — Solución definitiva sedes + teclado
 - Teclado móvil: no se hace focus automático en dispositivos táctiles (el input oculto solo sirve para teclado físico en desktop). Prueba determinista 6/6 PASS.
 - Sedes: pullBusinessRegistry() ahora se llama DESPUÉS de verificar la sesión en syncNow (antes era al inicio, cuando la sesión no estaba lista). Al arrancar, reintenta hasta 30s esperando la sesión.
+
+## v2.1.49 — 2026-10-04 — Fusión de TODAS las versiones del registro
+- Causa raíz: el secundario (versión vieja con auto-publish) publicaba su versión de 1 sede con timestamp más nuevo, y el LWW la elegía, ocultando Cosmeticos.
+- Fix: pullBusinessRegistry() ahora trae las 10 versiones más recientes y las FUSIONA todas (unión por ID), no solo la última.
+- Prueba determinista v2.1.49-fusion-real.mjs: 6/6 PASS con datos reales de Supabase (2 versiones → 2 sedes fusionadas).
