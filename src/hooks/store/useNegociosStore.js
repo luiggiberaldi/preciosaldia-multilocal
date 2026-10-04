@@ -187,9 +187,9 @@ export const useNegociosStore = create(
                     console.warn('[Negocios] El negocio activo no está en el registro remoto');
                 }
                 try { logEvent('NEGOCIO', 'REGISTRO_SINCRO', `${merged.length} negocios en registro`, null); } catch { /* noop */ }
-                // V2.1.36: republicar el fusionado para que la nube converja
-                // a la unión de todas las sedes.
-                _pushBusinessRegistry();
+                // V2.1.42: NO republicar automáticamente. El equipo que recibe
+                // no debe sobrescribir el registro con su versión fusionada;
+                // solo el equipo que CREA/MODIFICA publica explícitamente.
             },
 
             /**
@@ -221,17 +221,10 @@ export const useNegociosStore = create(
                 negocios: state.negocios,
                 negocioActivoId: state.negocioActivoId,
             }),
-            // V2.1.36: al rehidratar, publicar el registro para que los
-            // equipos nuevos descubran las sedes aunque nunca se haya
-            // creado/editado un negocio en este equipo.
-            onRehydrateStorage: () => (state) => {
-                try {
-                    if (state && Array.isArray(state.negocios) && state.negocios.length > 0) {
-                        // Delay para no competir con el sync inicial (pull primero).
-                        setTimeout(() => _pushBusinessRegistry(), 8000);
-                    }
-                } catch {}
-            },
+            // V2.1.42: NO publicar automáticamente al rehidratar. La publicación
+            // automática causaba que equipos con registro incompleto sobrescribieran
+            // el registro completo de otros equipos (LWW). Solo se publica por
+            // acción explícita: abrir Mis Sedes, botón Publicar, o CRUD.
         }
     )
 );

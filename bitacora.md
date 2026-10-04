@@ -1483,3 +1483,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - El pull filtraba por `device_id` en `accountCtx.deviceIds`, pero el equipo principal no estaba en esa lista (devices: 1). Los docs globales (registro de sedes) nunca llegaban.
 - Fix: query separada para `bodega_businesses_registry_v1` sin filtro de device_id (trae el más reciente de cualquier dispositivo).
 - Build pendiente.
+
+## v2.1.42 — 2026-10-04 — Fix: equipos con registro incompleto sobrescribían la nube
+- Bug: el equipo secundario (1 sede) publicaba automáticamente al rehidratar y al fusionar, sobrescribiendo (LWW) el registro completo del principal (2 sedes).
+- Fix: eliminada la publicación automática. Solo se publica por acción explícita (abrir Mis Sedes, botón Publicar, crear/editar/eliminar).
