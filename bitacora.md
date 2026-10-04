@@ -1459,3 +1459,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Fix: `useNegociosStore` publica el registro al rehidratar (delay 8s para dar chance al pull inicial). `aplicarRegistroRemoto` republica el fusionado para que la nube converja a la unión (con guard anti ping-pong: si no hubo cambios, no republica).
 - Harness `.tests/v2.1.36-business-converge.mjs`: 4/4 PASS (descubrimiento, sin cambios, convergencia, sin ping-pong).
 - Build pendiente de verificación.
+
+## v2.1.37 — 2026-10-04 — UI para crear/cambiar sedes
+- Pregunta de luigi ("¿cómo se crea una sede ahorita?") reveló que NO había UI: `NegocioSelector` existía pero no estaba conectado en ningún lado.
+- Fix: sección "Mis Sedes" en Ajustes → Negocio con el `NegocioSelector` (crear, cambiar, editar, eliminar sedes). Solo el dueño puede crear/editar/eliminar; el supervisor solo cambia de sede.
+- Build OK.
