@@ -1475,3 +1475,6 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - El equipo principal tenía las 2 sedes pero no las publicaba (el push de v2.1.36 solo corría al rehidratar).
 - Fix: `NegocioSelector.openManager` publica el registro al abrir "Mis negocios".
 - Build pendiente.
+
+## v2.1.40 — 2026-10-04 — Diagnóstico de sync de sedes
+- Botón "Publicar sedes ahora" + lista de IDs en el modal Mis Sedes para diagnosticar sin tiros al aire.

@@ -212,6 +212,33 @@ export default function NegocioSelector({ triggerHaptic }) {
                             Cambiar de negocio recarga la app.
                             {!canManage && ' Solo el dueño puede crear o modificar negocios.'}
                         </p>
+                        {/* V2.1.40: diagnóstico de sincronización de sedes */}
+                        {canManage && (
+                            <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Diagnóstico sync</p>
+                                <div className="text-[11px] font-mono text-slate-600 dark:text-slate-300 mb-2 break-all whitespace-pre-wrap">
+                                    {negocios.map((n) => `${n.id}: ${n.nombre}`).join('\n')}
+                                </div>
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const br = await import('../utils/businessRegistry.js');
+                                            const cs = await import('../hooks/useCloudSync.js');
+                                            const doc = br.buildBusinessRegistryDoc(negocios);
+                                            console.log('[DiagSedes] Publicando:', JSON.stringify(doc));
+                                            cs.queueCloudSync(br.BUSINESS_REGISTRY_DOC_KEY, doc);
+                                            showToast('Sedes publicadas: ' + negocios.length, 'success');
+                                        } catch (e) {
+                                            console.error('[DiagSedes] Error:', e);
+                                            showToast('Error: ' + (e?.message || e), 'error');
+                                        }
+                                    }}
+                                    className="w-full py-2 px-3 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                                >
+                                    Publicar sedes ahora
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
