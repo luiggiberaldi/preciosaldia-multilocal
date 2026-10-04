@@ -1432,3 +1432,10 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - `periodBounds` ahora tolera el sufijo `-N` (usa la key base para los límites).
 - Harness determinista del flujo completo: 6/6 PASS (consumo → liquidar → consumo post-liquidación en -2 → resumen en -2 → liquidar -2 → doble liquidación bloqueada).
 - Build OK.
+
+## v2.1.33 — 2026-10-03 — Fix: foto de producto guardaba URL 404
+- Bug real (E2E navegador): al elegir foto con AUTO-BUSCAR FOTO y guardar, el producto quedaba con imagen rota. Causa: `uploadProductImage` (src/utils/imageUpload.js) ignoraba el `{ error }` del upload a Storage y devolvía la URL pública igual → el doc guardaba una URL cuyo objeto nunca existió (404). El contrato documentado ("devuelve null si el upload falla; el caller conserva el base64") no se cumplía.
+- Fix: `if (error) return null;` — ahora la foto se conserva en base64 cuando la subida falla, nunca se pierde.
+- Causa raíz del fallo de subida: RLS activo en `storage.objects` sin política de INSERT para el bucket `product-images` (verificado por SQL, solo lectura). Cuando se corrija la política, las fotos volverán a subirse como URL automáticamente. No se tocó la config del proyecto del cliente.
+- Harness determinista 3/3 PASS (incluye regresión: sin el fix, el caso "upload con error" devuelve URL en vez de null).
+- Build OK.

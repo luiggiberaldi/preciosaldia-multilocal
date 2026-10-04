@@ -68,6 +68,10 @@ export async function uploadProductImage(dataUri, opts = {}) {
         const { error } = await supabaseCloud.storage
             .from(BUCKET)
             .upload(path, blob, { contentType: blob.type, upsert: true });
+        // BUGFIX 2026-10-03: el error del upload se ignoraba y se devolvía la
+        // URL igual → el producto guardaba una URL 404 (objeto inexistente).
+        // Ahora se retorna null y el caller conserva el base64 (contrato doc).
+        if (error) return null;
 
         const { data } = supabaseCloud.storage.from(BUCKET).getPublicUrl(path);
         if (!data?.publicUrl) return null;
