@@ -42,6 +42,24 @@ export default function NegocioSelector({ triggerHaptic }) {
     const openManager = () => {
         triggerHaptic && triggerHaptic();
         setShowManager(true);
+        // V2.1.39: al abrir el gestor, publicar el registro para que
+        // otros equipos descubran las sedes.
+        try {
+            import('../hooks/store/useNegociosStore.js').then((m) => {
+                const st = m.useNegociosStore.getState();
+                if (st.negocios.length > 0) {
+                    import('../hooks/useCloudSync.js').then((cs) => {
+                        if (typeof cs?.queueCloudSync !== 'function') return;
+                        import('../utils/businessRegistry.js').then((br) => {
+                            cs.queueCloudSync(
+                                br.BUSINESS_REGISTRY_DOC_KEY,
+                                br.buildBusinessRegistryDoc(st.negocios)
+                            );
+                        });
+                    });
+                }
+            });
+        } catch {}
     };
 
     const handleSwitch = (id) => {

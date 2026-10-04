@@ -1470,3 +1470,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Fix: validador `bodega_businesses_registry_v1` en `supervisorContracts.js` (solo id/nombre/datos fiscales, sin PINs) + key agregada a `GLOBAL_STORAGE_KEYS` en `negocioContext.js`.
 - Harness: 4/4 PASS en validación del contrato.
 - Build OK.
+
+## v2.1.39 — 2026-10-04 — Publicar sedes al abrir el gestor
+- El equipo principal tenía las 2 sedes pero no las publicaba (el push de v2.1.36 solo corría al rehidratar).
+- Fix: `NegocioSelector.openManager` publica el registro al abrir "Mis negocios".
+- Build pendiente.
