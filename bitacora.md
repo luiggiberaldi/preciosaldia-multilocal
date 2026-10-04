@@ -1492,3 +1492,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Causa raíz confirmada en Supabase: el secundario publicaba su versión de 1 sede (más nueva) y sobrescribía la del principal (2 sedes) por LWW.
 - Fix: eliminado TODO auto-publish (rehidratar, fusionar, abrir gestor). Solo publica explícitamente: botón "Publicar sedes ahora", crear/editar/eliminar negocio.
 - Limpieza: borrada la fila stale del secundario en sync_documents; solo queda la del principal con las 2 sedes.
+
+## v2.1.44 — 2026-10-04 — Fix: scroll en LockScreen
+- El selector de usuarios no permitía scroll cuando había más de 4 usuarios (overflow-hidden en el root).
+- Fix: contenedor de contenido con overflow-y-auto y centrado vertical cuando el contenido es corto.

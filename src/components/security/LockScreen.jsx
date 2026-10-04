@@ -168,11 +168,12 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
       {/* Version Tag - Top Left */}
       <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
         <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-900/5 dark:bg-slate-100/10 border border-slate-900/10 dark:border-slate-100/10 rounded-xl backdrop-blur-md">
-          <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 tracking-wider">v2.1.43</span>
+          <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 tracking-wider">v2.1.44</span>
         </div>
       </div>
 
-      <div className="relative z-10 flex flex-col items-center justify-center flex-1 p-6">
+      <div className="relative z-10 flex-1 p-6 overflow-y-auto">
+        <div className="min-h-full flex flex-col items-center justify-center">
         {/* Header */}
         <div className="text-center mb-14">
           <div className="flex justify-center mb-5">
@@ -272,6 +273,7 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
         {/* NOTA: el "Modo Supervisor" por pairing está congelado (Fase 1.5):
             el código se conserva pero ya no se ofrece en la UI. La supervisión
             ahora es por roles (dueño/administrador/cajero). */}
+        </div>
       </div>
 
       {/* PIN Modal */}
