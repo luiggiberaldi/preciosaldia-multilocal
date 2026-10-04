@@ -1510,3 +1510,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Causa: el pull del registro dependía de getAccountSyncContext(), que en equipos nuevos puede ser null.
 - Fix: nueva función pullBusinessRegistry() que baja el registro directo de Supabase sin filtros de dispositivo ni modo cuenta.
 - Se llama al arrancar la app (3s después) y al inicio de cada syncNow().
+
+## v2.1.48 — 2026-10-04 — Solución definitiva sedes + teclado
+- Teclado móvil: no se hace focus automático en dispositivos táctiles (el input oculto solo sirve para teclado físico en desktop). Prueba determinista 6/6 PASS.
+- Sedes: pullBusinessRegistry() ahora se llama DESPUÉS de verificar la sesión en syncNow (antes era al inicio, cuando la sesión no estaba lista). Al arrancar, reintenta hasta 30s esperando la sesión.

@@ -19,7 +19,15 @@ export default function LoginPinModal({ isOpen, onClose, user, onSubmit }) {
       setPin('');
       setError(false);
       setLockoutMsg('');
-      setTimeout(() => inputRef.current?.focus(), 100);
+      // V2.1.48: no hacer focus automático en dispositivos táctiles.
+      // El focus abre el teclado del sistema en móvil, tapando el pad
+      // numérico de la app. El input oculto solo sirve para teclado físico.
+      const isTouch = typeof window !== 'undefined' && (
+        'ontouchstart' in window || (navigator?.maxTouchPoints ?? 0) > 0
+      );
+      if (!isTouch) {
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }
     }
   }, [isOpen]);
 
@@ -48,7 +56,13 @@ export default function LoginPinModal({ isOpen, onClose, user, onSubmit }) {
       setPin('');
       setProcessing(false);
       setTimeout(() => setError(false), 600);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      // V2.1.48: no refocus en táctiles (ver arriba).
+      const isTouchRetry = typeof window !== 'undefined' && (
+        'ontouchstart' in window || (navigator?.maxTouchPoints ?? 0) > 0
+      );
+      if (!isTouchRetry) {
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }
     }
   };
 

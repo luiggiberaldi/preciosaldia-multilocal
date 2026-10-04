@@ -516,9 +516,6 @@ export const pullBusinessRegistry = async () => {
 };
 
 export const syncNow = async () => {
-    // V2.1.47: al inicio de cada sync, intentar bajar el registro de sedes
-    // de forma independiente (no depende del modo cuenta).
-    try { await pullBusinessRegistry(); } catch { /* noop */ }
     if (!supabaseCloud) {
         return { ok: false, pulled: 0, pushed: 0, message: 'Sin conexión a la nube' };
     }
@@ -529,6 +526,9 @@ export const syncNow = async () => {
     if (!isCloudSyncActive) {
         return { ok: false, pulled: 0, pushed: 0, message: 'Sincronización no activa (revisa tu sesión)' };
     }
+    // V2.1.48: bajar el registro de sedes DESPUÉS de verificar la sesión.
+    // Antes estaba al inicio, cuando la sesión aún no estaba lista.
+    try { await pullBusinessRegistry(); } catch { /* noop */ }
 
     let pulled = 0;
     let pushed = 0;

@@ -187,18 +187,26 @@ export default function App() {
   // Inicializar Sincronización Realtime con Supabase (device_id como clave)
   useCloudSync(isMonitorMode ? null : deviceId);
 
-  // V2.1.47: al arrancar, bajar el registro de sedes de forma independiente.
+  // V2.1.48: al arrancar, bajar el registro de sedes de forma independiente.
   // No depende del modo cuenta: cualquier equipo activado descubre las sedes.
+  // Espera a que la sesión de sync esté activa antes de intentar.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        // Esperar a que el store de negocios se hidrate.
-        await new Promise((r) => setTimeout(r, 3000));
-        if (cancelled) return;
-        const { pullBusinessRegistry } = await import('./hooks/useCloudSync');
-        const res = await pullBusinessRegistry();
-        console.log('[App] pullBusinessRegistry al arranque:', res?.message);
+        const { isCloudSyncActiveNow, pullBusinessRegistry } = await import('./hooks/useCloudSync');
+        // Reintentar hasta 30s esperando que la sesión esté lista.
+        for (let i = 0; i < 15 && !cancelled; i++) {
+          await new Promise((r) => setTimeout(r, 2000));
+          if (cancelled) return;
+          try {
+            if (isCloudSyncActiveNow()) {
+              const res = await pullBusinessRegistry();
+              console.log('[App] pullBusinessRegistry al arranque:', res?.message);
+              break;
+            }
+          } catch { /* reintentar */ }
+        }
       } catch { /* noop */ }
     })();
     return () => { cancelled = true; };
