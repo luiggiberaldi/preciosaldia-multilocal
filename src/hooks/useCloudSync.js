@@ -785,12 +785,18 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
             // automáticamente las sedes. Se fusiona por id sin tocar el
             // negocio activo local.
             if (key === BUSINESS_REGISTRY_DOC_KEY && payload && typeof payload === 'object' && !Array.isArray(payload)) {
+                console.log(`[syncNow] ${docId}: validando registro de negocios`, JSON.stringify(payload).slice(0, 200));
                 try {
                     const { useNegociosStore } = await import('./store/useNegociosStore.js');
                     const negState = useNegociosStore.getState();
+                    console.log(`[syncNow] ${docId}: negocios locales=${negState.negocios.length}, remotos=${payload.businesses?.length}`);
                     const merged = mergeBusinessRegistry(negState.negocios, payload);
+                    console.log(`[syncNow] ${docId}: fusionados=${merged.length}`);
                     if (typeof negState.aplicarRegistroRemoto === 'function') {
                         negState.aplicarRegistroRemoto(merged);
+                        console.log(`[syncNow] ${docId}: APLICADO registro de negocios`);
+                    } else {
+                        console.warn(`[syncNow] ${docId}: aplicarRegistroRemoto no es función`);
                     }
                 } catch (e) {
                     console.warn('[CloudSync] No se pudo aplicar el registro de negocios:', e?.message ?? e);
