@@ -262,6 +262,35 @@ export default function NegocioSelector({ triggerHaptic }) {
                                 >
                                     Buscar sedes en la nube
                                 </button>
+                                <button
+                                    onClick={async () => {
+                                        if (!confirm('¿Limpiar datos de otras sedes y resincronizar? Se borrarán los datos locales de las sedes no activas para bajarlos de nuevo.')) return;
+                                        try {
+                                            const { default: localforage } = await import('localforage');
+                                            const { NEGOCIO_KEY_PREFIX } = await import('../utils/negocioContext.js');
+                                            const st = (await import('../hooks/store/useNegociosStore.js')).useNegociosStore.getState();
+                                            const activeId = st.negocioActivoId;
+                                            let cleaned = 0;
+                                            for (const n of st.negocios) {
+                                                if (n.id === activeId) continue;
+                                                const prefix = `${NEGOCIO_KEY_PREFIX}${n.id}:`;
+                                                const keys = await localforage.keys();
+                                                for (const k of keys) {
+                                                    if (k.startsWith(prefix)) {
+                                                        await localforage.removeItem(k);
+                                                        cleaned++;
+                                                    }
+                                                }
+                                            }
+                                            showToast(`Limpieza: ${cleaned} claves. Sincroniza ahora.`, 'success');
+                                        } catch (e) {
+                                            showToast('Error: ' + (e?.message || e), 'error');
+                                        }
+                                    }}
+                                    className="w-full mt-2 py-2 px-3 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition-colors"
+                                >
+                                    Reparar: limpiar otras sedes
+                                </button>
                             </div>
                         )}
                     </div>

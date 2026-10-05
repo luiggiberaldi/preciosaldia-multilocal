@@ -1530,3 +1530,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Causa raíz: pullBusinessRegistry actualizaba el store Zustand (async), pero isDocForKnownBusiness leía de localStorage (no actualizado aún). El teléfono rechazaba docs de Cosmeticos.
 - Fix: caché en memoria _knownBusinessIdsCache, actualizado sincronizadamente por pullBusinessRegistry. isDocForKnownBusiness lo revisa primero.
 - Prueba determinista v2.1.51-cache.mjs: 4/4 PASS.
+
+## v2.1.52 — 2026-10-04 — Botón reparar datos mezclados
+- Los inventarios se mezclaron por un bug anterior (productos de Bodega en la clave de Cosmeticos).
+- Agregado botón "Reparar: limpiar otras sedes" que borra los datos locales de sedes no activas para resincronizar limpio.
