@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { appForage } from '../utils/appForage';
 import { supabaseCloud } from '../config/supabaseCloud';
 import { useAuthStore } from './store/useAuthStore';
-import { toCloudDocId, parseCloudDocId, isDocForActiveBusiness } from '../utils/negocioContext';
+import { toCloudDocId, parseCloudDocId, isDocForActiveBusiness, isDocForKnownBusiness } from '../utils/negocioContext';
 import { SUPERVISOR_SYNC_KEYS, validateSupervisorSyncDocument } from '../services/supervisorContracts';
 import { ensureSupervisorSession } from '../services/supervisorAuth';
 import { ensureDeviceSessionRegistered } from '../utils/deviceIdentity';
@@ -585,8 +585,9 @@ export const syncNow = async () => {
 
             console.log(`[syncNow] PULL: ${docs?.length || 0} documentos de la nube`);
             for (const doc of docs || []) {
-                if (!isDocForActiveBusiness(doc.doc_id)) {
-                    console.log(`[syncNow] SKIP (no es del negocio activo): ${doc.doc_id}`);
+                // V2.1.50: aceptar docs de cualquier sede conocida (para el supervisor).
+                if (!isDocForKnownBusiness(doc.doc_id)) {
+                    console.log(`[syncNow] SKIP (no es de sede conocida): ${doc.doc_id}`);
                     continue;
                 }
                 try {
@@ -711,8 +712,19 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
         if (!['store', 'local'].includes(collection)) return false;
 
         // ── Filtro multi-negocio (Fase 1) + SEC-002 ──
-        if (!isDocForActiveBusiness(docId)) return false;
-        const { key } = parseCloudDocId(docId);
+        // V2.1.50: aceptar cualquier sede conocida (el supervisor lee todas).
+        if (!isDocForKnownBusiness(docId)) return false;
+        const { key, negocioId } = parseCloudDocId(docId);
+        // V2.1.50: si el doc es de una sede NO activa, escribir directo con
+        // el namespace correcto, sin pasar por el router (que usa la activa).
+        const { NEGOCIO_KEY_PREFIX, getNegocioActivoId } = await import('../utils/negocioContext.js');
+        const targetNegocioId = negocioId || getNegocioActivoId();
+        const isOtherBusiness = negocioId && negocioId !== getNegocioActivoId();
+        // Helper para leer/escribir en el namespace correcto.
+        const { default: localforage } = await import('localforage');
+        const nsKey = (k) => isOtherBusiness ? `${NEGOCIO_KEY_PREFIX}${targetNegocioId}:${k}` : k;
+        const nsGet = (k) => isOtherBusiness ? localforage.getItem(nsKey(k)) : appForage.getItem(k);
+        const nsSet = (k, v) => isOtherBusiness ? localforage.setItem(nsKey(k), v) : appForage.setItem(k, v);
 
         const envelope = readSyncEnvelope(data);
         if (!envelope.valid) {
@@ -796,7 +808,7 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
             // storageService.setItem.
             // El ledger es append-only: nunca se reemplaza por un snapshot remoto.
             if (key === 'bodega_customer_ledger_v1') {
-                const localLedger = await appForage.getItem(key);
+                const localLedger = await nsGet(key);
                 const merged = mergeLedgerEntries(localLedger, payload);
                 payloadToStore = merged.ledger;
                 if (merged.conflicts.length > 0) {
@@ -811,14 +823,14 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
             if (key === 'bodega_stock_v1' && payload && typeof payload === 'object') {
                 const ownId = _currentDeviceId || (() => { try { return localStorage.getItem('pda_device_id'); } catch { return null; } })();
                 const isOwnDoc = Boolean(sourceDeviceId && ownId && sourceDeviceId === ownId);
-                const localProducts = await appForage.getItem('bodega_products_v1');
+                const localProducts = await nsGet('bodega_products_v1');
                 if (Array.isArray(localProducts) && !isOwnDoc) {
                     const lastRemote = readLastRemoteStockMap(docId, sourceDeviceId);
                     const { products: mergedProducts, nextRemoteMap } =
                         applyStockMapDelta(localProducts, payload, lastRemote);
                     writeLastRemoteStockMap(docId, sourceDeviceId, nextRemoteMap);
                     if (mergedProducts !== localProducts) {
-                        await appForage.setItem('bodega_products_v1', mergedProducts);
+                        await nsSet('bodega_products_v1', mergedProducts);
                         window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_products_v1', source: 'remote' } }));
                     }
                 } else if (isOwnDoc) {
@@ -887,17 +899,17 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
             // QUOTA-002: las ventas remotas llegan podadas (90 días); se
             // fusionan por id para jamás perder historial local.
             if (key === 'bodega_sales_v1' && Array.isArray(payload)) {
-                const localSales = await appForage.getItem(key);
+                const localSales = await nsGet(key);
                 payloadToStore = mergeSales(localSales, payload);
             }
             // QUOTA-003: el delta diario trae { date, tickets }; se fusiona por
             // id sobre las ventas locales (idempotente: duplicados no hacen daño)
             // y se guarda en `bodega_sales_v1`, no bajo la key del delta.
             if (isSalesDeltaKey(key)) {
-                const localSales = await appForage.getItem('bodega_sales_v1');
+                const localSales = await nsGet('bodega_sales_v1');
                 const deltaTickets = salesDeltaTickets(payload);
                 payloadToStore = mergeSales(localSales, deltaTickets);
-                await appForage.setItem('bodega_sales_v1', payloadToStore);
+                await nsSet('bodega_sales_v1', payloadToStore);
                 window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_sales_v1', source: 'remote' } }));
                 const hashKey = LAST_PUSH_HASH_PREFIX + docId;
                 localStorage.setItem(hashKey, quickHash(payloadToStore));
@@ -911,7 +923,7 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
                 try {
                     const hashKeyB = LAST_PUSH_HASH_PREFIX + docId;
                     const confirmedHashB = localStorage.getItem(hashKeyB);
-                    const localValue = await appForage.getItem(key);
+                    const localValue = await nsGet(key);
                     if (localValue != null && confirmedHashB
                         && quickHash(localValue) !== confirmedHashB
                         && quickHash(payloadToStore) !== quickHash(localValue)) {
@@ -924,11 +936,11 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
                     }
                 } catch { /* la detección nunca debe romper el sync */ }
             }
-            await appForage.setItem(key, payloadToStore);
+            await nsSet(key, payloadToStore);
             if (key === 'bodega_customer_ledger_v1') {
-                const localCustomers = await appForage.getItem('bodega_customers_v1');
+                const localCustomers = await nsGet('bodega_customers_v1');
                 if (Array.isArray(localCustomers)) {
-                    await appForage.setItem('bodega_customers_v1', rebuildCustomersFromLedger(localCustomers, payloadToStore));
+                    await nsSet('bodega_customers_v1', rebuildCustomersFromLedger(localCustomers, payloadToStore));
                     window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_customers_v1', source: 'remote' } }));
                 }
             }
@@ -1081,7 +1093,7 @@ export function useCloudSync(deviceId) {
                     isCloudSyncActive = true;
                     const criticalKeys = ['bodega_sales_v1', 'bodega_products_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1', 'bodega_accounts_v2'];
                     for (const key of criticalKeys) {
-                        const localValue = await appForage.getItem(key);
+                        const localValue = await nsGet(key);
                         if (localValue !== null) {
                             const result = await pushCloudSync(key, localValue);
                             if (result?.ok) {
@@ -1117,9 +1129,9 @@ export function useCloudSync(deviceId) {
 
                     if (docs.length > 0) {
                         for (const doc of docs) {
-                            // FASE 1 + SEC-002: solo documentos del negocio activo
+                            // FASE 1 + SEC-002 + V2.1.50: documentos de sedes conocidas
                             // (o globales); los legacy sin prefijo se ignoran.
-                            if (!isDocForActiveBusiness(doc.doc_id)) continue;
+                            if (!isDocForKnownBusiness(doc.doc_id)) continue;
                             try {
                                 await _applyFromCloud(doc.doc_id, doc.collection, doc.data, doc.device_id);
                             } catch (e) {
@@ -1148,9 +1160,9 @@ export function useCloudSync(deviceId) {
 
                     if (docs.length > 0) {
                         for (const doc of docs) {
-                            // FASE 1 + SEC-002: solo documentos del negocio activo
+                            // FASE 1 + SEC-002 + V2.1.50: documentos de sedes conocidas
                             // (o globales); los legacy sin prefijo se ignoran.
-                            if (!isDocForActiveBusiness(doc.doc_id)) continue;
+                            if (!isDocForKnownBusiness(doc.doc_id)) continue;
                             try {
                                 await _applyFromCloud(doc.doc_id, doc.collection, doc.data, doc.device_id);
                             } catch (e) {
@@ -1176,7 +1188,7 @@ export function useCloudSync(deviceId) {
                     );
 
                     for (const key of criticalKeys) {
-                        const localValue = await appForage.getItem(key);
+                        const localValue = await nsGet(key);
                         if (!localValue) continue;
 
                         const hashKey = _pushHashKey(key);
@@ -1225,7 +1237,7 @@ export function useCloudSync(deviceId) {
             try {
                 const criticalKeys = ['bodega_sales_v1', 'bodega_products_v1', 'bodega_customers_v1', 'bodega_customer_ledger_v1', 'bodega_accounts_v2'];
                 for (const key of criticalKeys) {
-                    const localValue = await appForage.getItem(key);
+                    const localValue = await nsGet(key);
                     if (!localValue) continue;
 
                     const hashKey = _pushHashKey(key);

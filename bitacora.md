@@ -1519,3 +1519,9 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Causa raíz: el secundario (versión vieja con auto-publish) publicaba su versión de 1 sede con timestamp más nuevo, y el LWW la elegía, ocultando Cosmeticos.
 - Fix: pullBusinessRegistry() ahora trae las 10 versiones más recientes y las FUSIONA todas (unión por ID), no solo la última.
 - Prueba determinista v2.1.49-fusion-real.mjs: 6/6 PASS con datos reales de Supabase (2 versiones → 2 sedes fusionadas).
+
+## v2.1.50 — 2026-10-04 — Supervisor ve todas las sedes (no solo la activa)
+- Bug: el sync filtraba por negocio activo, entonces el supervisor no veía ventas de otras sedes.
+- Fix: nueva función isDocForKnownBusiness() acepta docs de cualquier sede en el registro. Los pulls la usan; los push siguen siendo solo de la activa.
+- Fix: _applyFromCloud escribe con el namespace correcto (nb_<id>:<key>) para sedes no activas, vía nsGet/nsSet.
+- Prueba determinista v2.1.50-supervisor.mjs: 7/7 PASS.

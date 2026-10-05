@@ -196,6 +196,27 @@ export function isDocForActiveBusiness(docId) {
     return isGlobalKey(key);
 }
 
+/**
+ * V2.1.50: el supervisor necesita datos de TODAS las sedes, no solo la activa.
+ * Retorna true si el doc es para el negocio activo, para cualquier negocio
+ * en el registro local, o si es una clave global.
+ * Solo se usa en el PULL (la subida sigue siendo solo del negocio activo).
+ */
+export function isDocForKnownBusiness(docId) {
+    const { negocioId, key } = parseCloudDocId(docId);
+    if (key === 'abasto-auth-storage') return false;
+    if (!negocioId) return isGlobalKey(key);
+    if (negocioId === getNegocioActivoId()) return true;
+    // ¿Está en el registro de negocios conocido?
+    try {
+        const state = _readRegistryState();
+        const ids = (state?.negocios || []).map((n) => n?.id).filter(Boolean);
+        return ids.includes(negocioId);
+    } catch {
+        return false;
+    }
+}
+
 /** Lee el registro crudo (sin depender del store). */
 function _readRegistryState() {
     try {
