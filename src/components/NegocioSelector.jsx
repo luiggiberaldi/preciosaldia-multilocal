@@ -264,25 +264,34 @@ export default function NegocioSelector({ triggerHaptic }) {
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        // V2.1.55: sin confirm() nativo (bloqueado en algunos navegadores).
+                                        // V2.1.56: Reparar trae datos buenos directo de la nube.
                                         try {
                                             const { default: localforage } = await import('localforage');
                                             const { NEGOCIO_KEY_PREFIX } = await import('../utils/negocioContext.js');
+                                            const { supabaseCloud } = await import('../config/supabaseCloud.js');
                                             const st = (await import('../hooks/store/useNegociosStore.js')).useNegociosStore.getState();
-                                            const activeId = st.negocioActivoId;
-                                            let cleaned = 0;
+                                            if (!supabaseCloud) { showToast('Sin conexión a la nube', 'error'); return; }
+                                            showToast('Reparando...', 'info');
+                                            let fixed = 0;
                                             for (const n of st.negocios) {
-                                                if (n.id === activeId) continue;
-                                                const prefix = `${NEGOCIO_KEY_PREFIX}${n.id}:`;
-                                                const keys = await localforage.keys();
-                                                for (const k of keys) {
-                                                    if (k.startsWith(prefix)) {
-                                                        await localforage.removeItem(k);
-                                                        cleaned++;
+                                                const docId = `${NEGOCIO_KEY_PREFIX}${n.id}:bodega_products_v1`;
+                                                // Buscar la versión más reciente en la nube
+                                                const { data } = await supabaseCloud
+                                                    .from('sync_documents')
+                                                    .select('data, updated_at')
+                                                    .eq('doc_id', docId)
+                                                    .order('updated_at', { ascending: false })
+                                                    .limit(1);
+                                                if (data && data[0]?.data) {
+                                                    const payload = typeof data[0].data === 'string' ? JSON.parse(data[0].data) : data[0].data;
+                                                    const products = payload?.payload || payload;
+                                                    if (Array.isArray(products) && products.length > 0) {
+                                                        await localforage.setItem(docId, products);
+                                                        fixed++;
                                                     }
                                                 }
                                             }
-                                            showToast(`Limpieza: ${cleaned} claves. Sincroniza ahora.`, 'success');
+                                            showToast(`Reparado: ${fixed} sedes con datos de la nube.`, 'success');
                                         } catch (e) {
                                             showToast('Error: ' + (e?.message || e), 'error');
                                         }

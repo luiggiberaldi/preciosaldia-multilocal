@@ -1547,3 +1547,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 ## v2.1.55 — 2026-10-04 — Reparar sin confirm() nativo
 - El confirm() bloqueaba el botón en navegadores automatizados.
 - Removido para que el botón funcione.
+
+## v2.1.56 — 2026-10-04 — Reparar trae datos directo de la nube
+- El pull automático no descargaba los datos buenos.
+- El botón Reparar ahora busca la versión más reciente de cada sede en la nube y la guarda directo.
