@@ -1525,3 +1525,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - Fix: nueva función isDocForKnownBusiness() acepta docs de cualquier sede en el registro. Los pulls la usan; los push siguen siendo solo de la activa.
 - Fix: _applyFromCloud escribe con el namespace correcto (nb_<id>:<key>) para sedes no activas, vía nsGet/nsSet.
 - Prueba determinista v2.1.50-supervisor.mjs: 7/7 PASS.
+
+## v2.1.51 — 2026-10-04 — Fix race condition en isDocForKnownBusiness
+- Causa raíz: pullBusinessRegistry actualizaba el store Zustand (async), pero isDocForKnownBusiness leía de localStorage (no actualizado aún). El teléfono rechazaba docs de Cosmeticos.
+- Fix: caché en memoria _knownBusinessIdsCache, actualizado sincronizadamente por pullBusinessRegistry. isDocForKnownBusiness lo revisa primero.
+- Prueba determinista v2.1.51-cache.mjs: 4/4 PASS.

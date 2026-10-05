@@ -197,6 +197,19 @@ export function isDocForActiveBusiness(docId) {
 }
 
 /**
+ * V2.1.51: caché en memoria de IDs conocidos, actualizado por pullBusinessRegistry.
+ * Evita el race condition entre el store Zustand (async) y localStorage.
+ */
+let _knownBusinessIdsCache = null;
+
+/** Actualiza el caché de IDs conocidos (llamado por pullBusinessRegistry). */
+export function setKnownBusinessIds(ids) {
+    if (Array.isArray(ids)) {
+        _knownBusinessIdsCache = [...ids];
+    }
+}
+
+/**
  * V2.1.50: el supervisor necesita datos de TODAS las sedes, no solo la activa.
  * Retorna true si el doc es para el negocio activo, para cualquier negocio
  * en el registro local, o si es una clave global.
@@ -207,8 +220,12 @@ export function isDocForKnownBusiness(docId) {
     if (key === 'abasto-auth-storage') return false;
     if (!negocioId) return isGlobalKey(key);
     if (negocioId === getNegocioActivoId()) return true;
-    // ¿Está en el registro de negocios conocido?
+    // V2.1.51: primero el caché en memoria (actualizado por pullBusinessRegistry),
+    // luego el registro en localStorage.
     try {
+        if (_knownBusinessIdsCache && _knownBusinessIdsCache.includes(negocioId)) {
+            return true;
+        }
         const state = _readRegistryState();
         const ids = (state?.negocios || []).map((n) => n?.id).filter(Boolean);
         return ids.includes(negocioId);

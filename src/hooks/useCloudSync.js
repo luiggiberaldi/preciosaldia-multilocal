@@ -517,6 +517,12 @@ export const pullBusinessRegistry = async () => {
         if (typeof st.aplicarRegistroRemoto === 'function') {
             st.aplicarRegistroRemoto(merged);
         }
+        // V2.1.51: actualizar el caché sincronizado para que isDocForKnownBusiness
+        // acepte docs de estas sedes inmediatamente (sin esperar a localStorage).
+        try {
+            const { setKnownBusinessIds } = await import('../utils/negocioContext.js');
+            setKnownBusinessIds(merged.map((n) => n?.id).filter(Boolean));
+        } catch { /* noop */ }
         console.log(`[pullBusinessRegistry] versiones=${data.length}, locales=${before}, remotos(total)=${remoteCount}, fusionados=${merged.length}`);
         return { ok: true, count: merged.length, message: `${merged.length} sedes` };
     } catch (e) {
