@@ -1,7 +1,7 @@
 {
   "name": "preciosaldia",
   "private": true,
-  "version": "2.1.54",
+  "version": "2.1.55",
   "type": "module",
   "packageManager": "bun@1.1.0",
   "scripts": {

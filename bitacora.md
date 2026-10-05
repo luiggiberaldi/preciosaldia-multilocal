@@ -1543,3 +1543,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 ## v2.1.54 — 2026-10-04 — Fix Reparar: guardar remoto si no hay local
 - El botón "Reparar" borraba la clave local, pero el sync no guardaba el remoto (esperaba array local para merge).
 - Ahora si no hay datos locales, se guarda el remoto directamente.
+
+## v2.1.55 — 2026-10-04 — Reparar sin confirm() nativo
+- El confirm() bloqueaba el botón en navegadores automatizados.
+- Removido para que el botón funcione.

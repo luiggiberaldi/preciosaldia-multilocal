@@ -264,7 +264,7 @@ export default function NegocioSelector({ triggerHaptic }) {
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        if (!confirm('¿Limpiar datos de otras sedes y resincronizar? Se borrarán los datos locales de las sedes no activas para bajarlos de nuevo.')) return;
+                                        // V2.1.55: sin confirm() nativo (bloqueado en algunos navegadores).
                                         try {
                                             const { default: localforage } = await import('localforage');
                                             const { NEGOCIO_KEY_PREFIX } = await import('../utils/negocioContext.js');
