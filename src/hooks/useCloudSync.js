@@ -589,6 +589,32 @@ export const syncNow = async () => {
                 console.warn('[syncNow] No se pudo traer el registro global de sedes:', e?.message);
             }
 
+            // V2.1.53: los docs de ventas/inventario de otras sedes también se
+            // buscan sin filtro de device_id, porque el dispositivo que los
+            // publicó puede no estar en accountCtx.deviceIds (el supervisor
+            // debe ver ventas de todos los equipos).
+            try {
+                const { data: businessDocs } = await supabaseCloud
+                    .from('sync_documents')
+                    .select('collection, doc_id, data, updated_at, device_id')
+                    .like('doc_id', 'nb\\_%')
+                    .in('collection', ['store', 'local'])
+                    .order('updated_at', { ascending: false })
+                    .limit(500);
+                if (businessDocs && businessDocs.length > 0) {
+                    let added = 0;
+                    for (const bd of businessDocs) {
+                        if (!docs.some((d) => d.doc_id === bd.doc_id && d.device_id === bd.device_id)) {
+                            docs.push(bd);
+                            added++;
+                        }
+                    }
+                    if (added > 0) console.log(`[syncNow] PULL global: ${added} docs de sedes (sin filtro device)`);
+                }
+            } catch (e) {
+                console.warn('[syncNow] No se pudo traer docs globales de sedes:', e?.message);
+            }
+
             console.log(`[syncNow] PULL: ${docs?.length || 0} documentos de la nube`);
             for (const doc of docs || []) {
                 // V2.1.50: aceptar docs de cualquier sede conocida (para el supervisor).

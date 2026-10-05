@@ -1534,3 +1534,8 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 ## v2.1.52 — 2026-10-04 — Botón reparar datos mezclados
 - Los inventarios se mezclaron por un bug anterior (productos de Bodega en la clave de Cosmeticos).
 - Agregado botón "Reparar: limpiar otras sedes" que borra los datos locales de sedes no activas para resincronizar limpio.
+
+## v2.1.53 — 2026-10-04 — Pull global de docs de sedes (fix venta $7.40)
+- El pull filtraba por deviceIds conocidos; si un equipo no conocía el ID del otro, no descargaba sus ventas.
+- Agregada consulta sin filtro de device_id para docs `nb_*` (como v2.1.41 hizo para el registro).
+- El supervisor ahora debe ver la venta de $7.40 de Bodega.
