@@ -1539,3 +1539,7 @@ La auditoría general de debugging (subagente, solo lectura) verificó los 58 ha
 - El pull filtraba por deviceIds conocidos; si un equipo no conocía el ID del otro, no descargaba sus ventas.
 - Agregada consulta sin filtro de device_id para docs `nb_*` (como v2.1.41 hizo para el registro).
 - El supervisor ahora debe ver la venta de $7.40 de Bodega.
+
+## v2.1.54 — 2026-10-04 — Fix Reparar: guardar remoto si no hay local
+- El botón "Reparar" borraba la clave local, pero el sync no guardaba el remoto (esperaba array local para merge).
+- Ahora si no hay datos locales, se guarda el remoto directamente.

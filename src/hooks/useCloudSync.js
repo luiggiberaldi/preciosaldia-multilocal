@@ -856,7 +856,11 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
                 const ownId = _currentDeviceId || (() => { try { return localStorage.getItem('pda_device_id'); } catch { return null; } })();
                 const isOwnDoc = Boolean(sourceDeviceId && ownId && sourceDeviceId === ownId);
                 const localProducts = await nsGet('bodega_products_v1');
-                if (Array.isArray(localProducts) && !isOwnDoc) {
+                // V2.1.54: si no hay datos locales (post-Reparar), usar el remoto directamente.
+                if (!Array.isArray(localProducts) && Array.isArray(payload) && !isOwnDoc) {
+                    await nsSet('bodega_products_v1', payload);
+                    window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_products_v1', source: 'remote' } }));
+                } else if (Array.isArray(localProducts) && !isOwnDoc) {
                     const lastRemote = readLastRemoteStockMap(docId, sourceDeviceId);
                     const { products: mergedProducts, nextRemoteMap } =
                         applyStockMapDelta(localProducts, payload, lastRemote);
