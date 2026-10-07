@@ -36,18 +36,52 @@ export function friendlyConflictName(key) {
     return key || 'documento';
 }
 
-export function recordSyncConflict({ key, docId, direction, detail }) {
+function conflictIdentity(conflict) {
+    // Un conflicto pendiente por documento basta como aviso; releer la misma
+    // fila con otro payload/fecha no debe llenar la lista repetidamente.
+    return [conflict?.key, conflict?.docId, conflict?.direction]
+        .map((part) => String(part ?? ''))
+        .join('\u0000');
+}
+
+function deduplicateConflicts(list) {
+    const seen = new Set();
+    return (Array.isArray(list) ? list : []).filter((conflict) => {
+        const identity = conflictIdentity(conflict);
+        if (seen.has(identity)) return false;
+        seen.add(identity);
+        return true;
+    }).slice(0, MAX_CONFLICTS);
+}
+
+/** Solo reporta divergencia si los cambios locales no están en el último push propio. */
+export function isUnconfirmedLocalConflict(localHash, incomingHash, lastLocalPushHash) {
+    return Boolean(
+        lastLocalPushHash
+        && localHash
+        && incomingHash
+        && localHash !== lastLocalPushHash
+        && incomingHash !== localHash
+    );
+}
+
+export function recordSyncConflict({ key, docId, direction, detail, fingerprint = null }) {
     const entry = {
         key: key || null,
         docId: docId || null,
         direction: direction || 'unknown',
         detail: detail || null,
+        ...(fingerprint ? { fingerprint } : {}),
         at: new Date().toISOString(),
     };
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         const list = raw ? JSON.parse(raw) : [];
-        const next = [entry, ...(Array.isArray(list) ? list : [])].slice(0, MAX_CONFLICTS);
+        const existing = deduplicateConflicts(list).find(
+            (conflict) => conflictIdentity(conflict) === conflictIdentity(entry),
+        );
+        if (existing) return existing;
+        const next = deduplicateConflicts([entry, ...(Array.isArray(list) ? list : [])]);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch { /* almacenamiento no disponible: el evento igual se emite */ }
     try {
@@ -60,7 +94,11 @@ export function getSyncConflicts() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         const list = raw ? JSON.parse(raw) : [];
-        return Array.isArray(list) ? list : [];
+        const unique = deduplicateConflicts(list);
+        if (JSON.stringify(unique) !== JSON.stringify(list)) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(unique)); } catch { /* no bloquear lectura */ }
+        }
+        return unique;
     } catch { return []; }
 }
 

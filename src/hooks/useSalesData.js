@@ -122,7 +122,7 @@ export function useSalesData({ setCart, cartRef, isActive }) {
         };
 
         const onStorageUpdate = (e) => {
-            if (e.detail && e.detail.key === SALES_KEY) {
+            if (e.detail?.source === 'remote' && e.detail.key === SALES_KEY) {
                 // Pequeño timeout para dar margen a que IndexedDB haya persistido los datos
                 setTimeout(handleReloadContent, 50);
             }

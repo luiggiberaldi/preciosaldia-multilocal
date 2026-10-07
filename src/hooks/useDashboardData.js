@@ -29,6 +29,25 @@ export function useDashboardData(isActive, requestPermission) {
         return () => { mounted = false; };
     }, [isActive]);
 
+    useEffect(() => {
+        if (!isActive) return undefined;
+        let mounted = true;
+        const reloadRemoteSales = async (event) => {
+            if (event.detail?.source !== 'remote' || event.detail.key !== SALES_KEY) return;
+            // Pull de la nube puede llegar después del primer render; el estado
+            // del dashboard no depende solo de montar o cambiar de pestaña.
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            if (!mounted) return;
+            const savedSales = await storageService.getItem(SALES_KEY, []);
+            if (mounted) setSales(savedSales);
+        };
+        window.addEventListener('app_storage_update', reloadRemoteSales);
+        return () => {
+            mounted = false;
+            window.removeEventListener('app_storage_update', reloadRemoteSales);
+        };
+    }, [isActive]);
+
     const refreshData = async () => {
         const [savedSales, savedCustomers] = await Promise.all([
             storageService.getItem(SALES_KEY, []),

@@ -811,8 +811,13 @@ function BottomNav({
   }, [cart]);
 
   return (
-    <div className="fixed bottom-1 left-0 right-0 lg:right-[400px] px-1 sm:px-6 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-0 max-w-xl lg:max-w-lg mx-auto z-30 pointer-events-none animate-in slide-in-from-bottom-4 duration-300">
-      <div className="relative bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-2xl rounded-2xl px-1 sm:px-2 py-1.5 flex justify-between items-center shadow-2xl shadow-black/40 border border-white/10 ring-1 ring-black/10 pointer-events-auto">
+    <div
+      className="fixed left-0 right-0 lg:right-[400px] px-2 sm:px-6 pt-0 max-w-xl lg:max-w-lg mx-auto z-30 pointer-events-none animate-in slide-in-from-bottom-4 duration-300"
+      style={{
+        bottom: 'calc(0.875rem + env(safe-area-inset-bottom, 0px))',
+      }}
+    >
+      <div className="relative bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-2xl rounded-2xl px-1 sm:px-2 pt-1.5 pb-2 flex justify-between items-center shadow-2xl shadow-black/40 border border-white/10 ring-1 ring-black/10 pointer-events-auto">
         {tabs.map(tab => {
           const isVender = tab.id === 'ventas';
           const isActive = activeTab === tab.id;
@@ -835,20 +840,20 @@ function BottomNav({
 
 
         {installPrompt && activeTab === 'inicio' && (
-          <button onClick={() => { triggerHaptic(); handleInstall(); }} className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 min-h-[44px] rounded-xl transition-all duration-300 text-brand hover:bg-brand/10 animate-pulse overflow-hidden">
-            <span className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand text-white shadow-md shrink-0">
+          <button onClick={() => { triggerHaptic(); handleInstall(); }} className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-0.5 sm:py-1 px-0.5 min-h-[44px] rounded-xl transition-all duration-300 text-brand hover:bg-brand/10 animate-pulse overflow-hidden">
+            <span className="flex items-center justify-center w-[34px] h-[34px] sm:w-10 sm:h-10 rounded-full bg-brand text-white shadow-md shrink-0">
               <Download size={18} strokeWidth={2.5} />
             </span>
-            <span className="w-full max-w-full truncate text-center text-[10px] sm:text-xs font-bold text-brand leading-tight">Instalar</span>
+            <span className="w-full max-w-full truncate text-center text-[9px] sm:text-xs font-bold text-brand leading-none mt-0.5">Instalar</span>
           </button>
         )}
 
         {!installPrompt && showIOSButton && activeTab === 'inicio' && (
-          <button onClick={() => { triggerHaptic(); setShowIOSInstall(true); }} className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 min-h-[44px] rounded-xl transition-all duration-300 text-brand hover:bg-brand/10 animate-pulse overflow-hidden">
-            <span className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand text-white shadow-md shrink-0">
+          <button onClick={() => { triggerHaptic(); setShowIOSInstall(true); }} className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-0.5 sm:py-1 px-0.5 min-h-[44px] rounded-xl transition-all duration-300 text-brand hover:bg-brand/10 animate-pulse overflow-hidden">
+            <span className="flex items-center justify-center w-[34px] h-[34px] sm:w-10 sm:h-10 rounded-full bg-brand text-white shadow-md shrink-0">
               <Download size={18} strokeWidth={2.5} />
             </span>
-            <span className="w-full max-w-full truncate text-center text-[10px] sm:text-xs font-bold text-brand leading-tight">Instalar</span>
+            <span className="w-full max-w-full truncate text-center text-[9px] sm:text-xs font-bold text-brand leading-none mt-0.5">Instalar</span>
           </button>
         )}
       </div>
@@ -861,9 +866,9 @@ function TabButton({ id, icon, label, isActive, badgeCount, onClick, 'data-tour'
     <button
       data-tour={dataTour}
       onClick={onClick}
-      className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 min-h-[44px] group relative transition-all duration-200 active:scale-95 overflow-visible"
+      className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-0.5 sm:py-1 min-h-[44px] group relative transition-all duration-200 active:scale-95 overflow-visible"
     >
-      <div className={`relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full transition-all duration-300 shrink-0 ${
+      <div className={`relative flex items-center justify-center w-[34px] h-[34px] sm:w-10 sm:h-10 rounded-full transition-all duration-300 shrink-0 ${
         isActive 
           ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40 ring-2 ring-emerald-400/50 scale-105' 
           : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
@@ -875,7 +880,7 @@ function TabButton({ id, icon, label, isActive, badgeCount, onClick, 'data-tour'
           </span>
         )}
       </div>
-      <span className={`w-full max-w-full truncate text-center text-[9px] sm:text-xs tracking-tight leading-tight transition-colors duration-200 ${
+      <span className={`w-full max-w-full truncate text-center text-[9px] sm:text-xs tracking-tight leading-none mt-0.5 transition-colors duration-200 ${
         isActive ? 'text-white font-bold' : 'text-slate-400 group-hover:text-slate-200 font-medium'
       }`}>
         {label}

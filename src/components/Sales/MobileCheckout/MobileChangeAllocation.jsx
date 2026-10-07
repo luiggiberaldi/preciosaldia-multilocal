@@ -246,7 +246,8 @@ export default function MobileChangeAllocation({
             onClick={onClose}
         >
             <div
-                className="bg-white dark:bg-slate-950 w-full rounded-t-3xl shadow-2xl max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-full duration-300 pb-[max(1rem,env(safe-area-inset-bottom))]"
+                className="bg-white dark:bg-slate-950 w-full rounded-t-3xl shadow-2xl max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-full duration-300"
+                style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}
                 onClick={e => e.stopPropagation()}
                 role="dialog"
                 aria-modal="true"

@@ -12,6 +12,7 @@ import {
     getSyncConflicts,
     clearSyncConflicts,
     friendlyConflictName,
+    isUnconfirmedLocalConflict,
     SYNC_CONFLICT_EVENT,
 } from '../src/utils/syncConflicts';
 
@@ -126,6 +127,35 @@ describe('CRÍTICO-2(a): deltas de días previos se pueden construir', () => {
         expect(payload.tickets).toHaveLength(2);
     });
 
+    it('una anulación editada después de su fecha de venta vuelve a salir en el delta de esa fecha', () => {
+        const saleDate = new Date(Date.now() - 3 * dayMs);
+        const saleDay = salesDayString(saleDate);
+        const now = new Date();
+        const voidedSale = {
+            id: 'voided-old-sale',
+            tipo: 'VENTA',
+            status: 'ANULADA',
+            timestamp: saleDate.toISOString(),
+            voidedAt: now.toISOString(),
+        };
+        const payload = buildSalesDeltaPayload([voidedSale], saleDay);
+        expect(payload.tickets).toEqual([voidedSale]);
+        expect(mergeSales([{ ...voidedSale, status: 'PAGADA' }], payload.tickets)[0].status).toBe('ANULADA');
+    });
+
+    it('la apertura de caja viaja dentro del delta correspondiente al día local', () => {
+        const opening = {
+            id: 'opening-test',
+            tipo: 'APERTURA_CAJA',
+            openingUsd: 50,
+            openingBs: 1000,
+            timestamp: new Date().toISOString(),
+        };
+        const day = salesDayString(new Date(opening.timestamp));
+        const payload = buildSalesDeltaPayload([opening], day);
+        expect(payload.tickets).toEqual([opening]);
+    });
+
     it('flujo E2E simulado: venta offline de ayer llega hoy y aparece en el monitor', () => {
         // La caja estuvo offline ayer: su delta de ayer nunca se empujó.
         // Hoy reconecta: empuja el delta de ayer + el de hoy.
@@ -174,12 +204,28 @@ describe('M-17: registro de conflictos de sincronización', () => {
     it('tope de 20, los más recientes primero', () => {
         clearSyncConflicts();
         for (let i = 0; i < 25; i++) {
-            recordSyncConflict({ key: 'k', direction: 'd', detail: `n${i}` });
+            recordSyncConflict({ key: `k${i}`, direction: 'd', detail: `n${i}` });
         }
         const list = getSyncConflicts();
         expect(list).toHaveLength(20);
         expect(list[0].detail).toBe('n24');
         clearSyncConflicts();
+    });
+
+    it('deduplica conflictos repetidos por documento y dirección', () => {
+        clearSyncConflicts();
+        recordSyncConflict({ key: 'bodega_products_v1', docId: 'nb_1:bodega_products_v1', direction: 'local-overwritten', detail: 'primer detalle' });
+        recordSyncConflict({ key: 'bodega_products_v1', docId: 'nb_1:bodega_products_v1', direction: 'local-overwritten', detail: 'detalle repetido' });
+        expect(getSyncConflicts()).toHaveLength(1);
+        expect(getSyncConflicts()[0].detail).toBe('primer detalle');
+        clearSyncConflicts();
+    });
+
+    it('solo trata como conflicto cambios locales posteriores a una base confirmada', () => {
+        expect(isUnconfirmedLocalConflict('local-nuevo', 'remoto-nuevo', 'base')).toBe(true);
+        expect(isUnconfirmedLocalConflict('local-nuevo', 'local-nuevo', 'base')).toBe(false);
+        expect(isUnconfirmedLocalConflict('base', 'remoto-nuevo', 'base')).toBe(false);
+        expect(isUnconfirmedLocalConflict('local-nuevo', 'remoto-nuevo', null)).toBe(false);
     });
 
     it('friendlyConflictName traduce claves conocidas', () => {

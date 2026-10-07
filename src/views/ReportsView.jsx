@@ -94,6 +94,37 @@ export default function ReportsView({ rates, triggerHaptic, onNavigate, isActive
         return () => { mounted = false; };
     }, [isActive]);
 
+    useEffect(() => {
+        if (isActive === false) return undefined;
+        let mounted = true;
+        const reloadRemoteReports = async (event) => {
+            const changedKey = event.detail?.key;
+            if (event.detail?.source !== 'remote' || ![
+                SALES_KEY,
+                'bodega_customers_v1',
+                CUSTOMER_LEDGER_KEY,
+            ].includes(changedKey)) return;
+            // Sync remoto modifica IndexedDB sin pasar por storageService;
+            // actualizar las fuentes del reporte cuando cada merge termina.
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            if (!mounted) return;
+            const [saved, savedCustomers, savedLedger] = await Promise.all([
+                storageService.getItem(SALES_KEY, []),
+                storageService.getItem('bodega_customers_v1', []),
+                storageService.getItem(CUSTOMER_LEDGER_KEY, []),
+            ]);
+            if (!mounted) return;
+            setAllSales(saved);
+            setCustomers(Array.isArray(savedCustomers) ? savedCustomers : []);
+            setLedger(Array.isArray(savedLedger) ? savedLedger : []);
+        };
+        window.addEventListener('app_storage_update', reloadRemoteReports);
+        return () => {
+            mounted = false;
+            window.removeEventListener('app_storage_update', reloadRemoteReports);
+        };
+    }, [isActive]);
+
     const { from, to } = useMemo(() => {
         if (selectedRange === 'custom') {
             return {

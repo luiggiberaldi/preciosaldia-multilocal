@@ -507,7 +507,10 @@ export default function CheckoutModal({
             </div>
 
             {/* --- COMPACT STICKY FOOTER --- */}
-            <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+            <div
+                className="shrink-0 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]"
+                style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0.75rem))' }}
+            >
                 
                 {/* -- COMPACT VUELTO / RESTANTE -- */}
                 <div className={`px-4 py-2 border-b border-slate-100 dark:border-slate-800 transition-all ${isPaid

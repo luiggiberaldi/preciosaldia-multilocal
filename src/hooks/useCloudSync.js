@@ -9,6 +9,7 @@ import {
 } from "../utils/negocioContext";
 import {
   SUPERVISOR_SYNC_KEYS,
+  isSupervisorSyncKey,
   validateSupervisorSyncDocument,
 } from "../services/supervisorContracts";
 import { ensureSupervisorSession } from "../services/supervisorAuth";
@@ -63,6 +64,7 @@ import {
 import {
   recordSyncConflict,
   friendlyConflictName,
+  isUnconfirmedLocalConflict,
 } from "../utils/syncConflicts";
 import { contentHash } from "../utils/contentHash";
 
@@ -72,6 +74,7 @@ const MERGED_SYNC_KEYS = new Set([
   "bodega_sales_v1",
   "bodega_customer_ledger_v1",
   "bodega_stock_v1",
+  "bodega_users_catalog_v1",
 ]);
 const isMergeSemanticsKey = (key) =>
   MERGED_SYNC_KEYS.has(key) || isSalesDeltaKey(key);
@@ -113,10 +116,14 @@ function catalogFingerprint(products) {
 
 const LAST_PUSH_HASH_PREFIX = "bodega_last_periodic_push_hash_";
 const CONFIRMED_PUSH_HASH_PREFIX = "bodega_last_confirmed_push_hash_";
+const LOCAL_SYNC_BASELINE_PREFIX = "bodega_local_sync_baseline_hash_";
 const _pushHashKey = (key) => LAST_PUSH_HASH_PREFIX + toCloudDocId(key);
 const _confirmedPushHashKey = (key) =>
   CONFIRMED_PUSH_HASH_PREFIX + toCloudDocId(key);
 const _confirmedDocHashKey = (docId) => CONFIRMED_PUSH_HASH_PREFIX + docId;
+const _localSyncBaselineKey = (docId) => LOCAL_SYNC_BASELINE_PREFIX + docId;
+const syncConflictHash = (key, value) =>
+  quickHash(key === "bodega_products_v1" ? catalogFingerprint(value) : value);
 
 /* ─── M-6: último mapa de stock visto por fuente (para reconciliar por delta) */
 const lastRemoteStockKey = (docId, sourceDeviceId) =>
@@ -348,6 +355,9 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
     // Solo confirmar los hashes después de que Supabase confirmó el upsert.
     localStorage.setItem(hashKey, currentHash);
     localStorage.setItem(confirmedHashKey, currentHash);
+    if (key === "bodega_products_v1" || key === "bodega_accounts_v2") {
+      localStorage.setItem(_localSyncBaselineKey(docId), await syncConflictHash(key, value));
+    }
     if (pendingCatalogHash) {
       localStorage.setItem(pendingCatalogHash.chKey, pendingCatalogHash.ch);
     }
@@ -967,6 +977,14 @@ export const syncNow = async () => {
           console.log(`[syncNow] SKIP (no es de sede conocida): ${doc.doc_id}`);
           continue;
         }
+        const { key } = parseCloudDocId(doc.doc_id);
+        // Ignorar claves que dejaron de pertenecer al contrato vigente. Esto
+        // permite recuperar sync_documents antiguos sin ocultar payloads
+        // inválidos en documentos permitidos.
+        if (!isSupervisorSyncKey(key)) {
+          console.info(`[syncNow] SKIP (clave obsoleta/no sincronizable): ${doc.doc_id}`);
+          continue;
+        }
         try {
           const applied = await _applyFromCloud(
             doc.doc_id,
@@ -1228,6 +1246,13 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
     // V2.1.50: aceptar cualquier sede conocida (el supervisor lee todas).
     if (!isDocForKnownBusiness(docId)) return false;
     const { key, negocioId } = parseCloudDocId(docId);
+    // La nube puede conservar claves de versiones antiguas retiradas del
+    // contrato actual. Ignorarlas evita que un documento obsoleto bloquee
+    // toda la inicialización; las claves permitidas siguen validándose abajo.
+    if (!isSupervisorSyncKey(key)) {
+      console.info(`[CloudSync] Documento obsoleto ignorado: ${docId}`);
+      return false;
+    }
     // V2.1.50: si el doc es de una sede NO activa, escribir directo con
     // el namespace correcto, sin pasar por el router (que usa la activa).
     const { NEGOCIO_KEY_PREFIX, getNegocioActivoId } =
@@ -1256,35 +1281,51 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
     const { payload } = envelope;
     let payloadToStore = payload;
 
-    const metadataKey = getSyncMetadataKey(docId);
+    // Las ventas/deltas son fusión append-only: cada equipo aporta una
+    // versión independiente y no debe descartarse usando el watermark de otro.
+    const metadataKey = getSyncMetadataKey(
+      docId,
+      isMergeSemanticsKey(key) ? sourceDeviceId : null,
+    );
     const previousUpdatedAt = localStorage.getItem(metadataKey);
     console.log(
       `[syncNow] ${docId}: remoto=${envelope.updatedAt} local=${previousUpdatedAt || "nunca"}`,
     );
     if (!isNewerSyncDocument(envelope.updatedAt, previousUpdatedAt)) {
+      // Las filas de cada equipo conservan snapshots anteriores. Que un
+      // snapshot antiguo difiera del más reciente no demuestra conflicto: es
+      // convergencia normal del pull multi-dispositivo, no una edición perdida.
       console.log(`[syncNow] ${docId}: DESCARTADO (remoto no es más nuevo)`);
-      // M-17 (2026-10-01): el LWW descartaba en silencio. Si el contenido
-      // remoto difiere del confirmado y la clave no es append-only, se
-      // registra el conflicto para avisar en UI.
-      if (!isMergeSemanticsKey(key)) {
-        const hashKey = CONFIRMED_PUSH_HASH_PREFIX + docId;
-        const confirmedHash = (() => {
-          try {
-            return localStorage.getItem(hashKey);
-          } catch {
-            return null;
-          }
-        })();
-        if (confirmedHash && confirmedHash !== (await quickHash(payload))) {
-          recordSyncConflict({
-            key,
-            docId,
-            direction: "remote-discarded",
-            detail: `Otro equipo también modificó ${friendlyConflictName(key)}; se conservó tu versión (más reciente).`,
-          });
-        }
-      }
       return false;
+    }
+
+    // Solo alertar si el usuario cambió localmente el documento desde la
+    // última versión convergida y este pull realmente va a reemplazarlo.
+    // No usar CONFIRMED_PUSH_HASH_PREFIX: el pull lo actualiza con snapshots
+    // de otros equipos y convertía cada fila antigua en un falso conflicto.
+    if (
+      (key === "bodega_products_v1" || key === "bodega_accounts_v2")
+      && sourceDeviceId !== _currentDeviceId
+    ) {
+      try {
+        const baseline = localStorage.getItem(_localSyncBaselineKey(docId));
+        const localValue = await nsGet(key);
+        if (localValue != null && baseline) {
+          const localHash = await syncConflictHash(key, localValue);
+          const incomingHash = await syncConflictHash(key, payload);
+          if (isUnconfirmedLocalConflict(localHash, incomingHash, baseline)) {
+            recordSyncConflict({
+              key,
+              docId,
+              direction: "local-overwritten",
+              detail: `Tus cambios sin sincronizar en ${friendlyConflictName(key)} fueron reemplazados por la versión más reciente de otro equipo.`,
+              fingerprint: `${docId}:${localHash}:${incomingHash}:${baseline}`,
+            });
+          }
+        }
+      } catch (error) {
+        console.warn("[CloudSync] No se pudo evaluar conflicto local:", error?.message ?? error);
+      }
     }
 
     // Contrato común del supervisor: incluso el primary debe rechazar
@@ -1473,6 +1514,7 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
         localStorage.setItem(CONFIRMED_PUSH_HASH_PREFIX + docId, payloadHash);
         if (envelope.updatedAt)
           localStorage.setItem(metadataKey, envelope.updatedAt);
+        localStorage.setItem(_localSyncBaselineKey(docId), await syncConflictHash(key, payload));
         return true;
       }
       // ── Registro de negocios (multi-sede) ───────────────────────────
@@ -1528,6 +1570,7 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
         localStorage.setItem(CONFIRMED_PUSH_HASH_PREFIX + docId, payloadHash);
         if (envelope.updatedAt)
           localStorage.setItem(metadataKey, envelope.updatedAt);
+        localStorage.setItem(_localSyncBaselineKey(docId), await syncConflictHash(key, payload));
         return true;
       }
       // QUOTA-002: las ventas remotas llegan podadas (90 días); se
@@ -1556,31 +1599,6 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
         if (envelope.updatedAt)
           localStorage.setItem(metadataKey, envelope.updatedAt);
         return true;
-      }
-      // M-17 (2026-10-01): si el documento local tiene cambios sin confirmar
-      // y el remoto (más nuevo) los va a reemplazar, registrar el
-      // conflicto antes de perderlos.
-      if (!isMergeSemanticsKey(key)) {
-        try {
-          const hashKeyB = CONFIRMED_PUSH_HASH_PREFIX + docId;
-          const confirmedHashB = localStorage.getItem(hashKeyB);
-          const localValue = await nsGet(key);
-          if (
-            localValue != null &&
-            confirmedHashB &&
-            (await quickHash(localValue)) !== confirmedHashB &&
-            (await quickHash(payloadToStore)) !== (await quickHash(localValue))
-          ) {
-            recordSyncConflict({
-              key,
-              docId,
-              direction: "local-overwritten",
-              detail: `Tus cambios sin sincronizar en ${friendlyConflictName(key)} fueron reemplazados por la versión más reciente de otro equipo.`,
-            });
-          }
-        } catch {
-          /* la detección nunca debe romper el sync */
-        }
       }
       await nsSet(key, payloadToStore);
       if (key === "bodega_customer_ledger_v1") {
@@ -1615,6 +1633,12 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
     }
     if (envelope.updatedAt)
       localStorage.setItem(metadataKey, envelope.updatedAt);
+    if (!isMergeSemanticsKey(key)) {
+      localStorage.setItem(
+        _localSyncBaselineKey(docId),
+        await syncConflictHash(key, payloadToStore),
+      );
+    }
     return true;
   } finally {
     isSyncingFromCloud = false;
@@ -1775,7 +1799,7 @@ export function useCloudSync(deviceId) {
         // Sincronizar automáticamente todos los datos del POS a la nube en segundo plano (Patrón Donde Juancho)
         // En modo cuenta el push va con hash-gating (sin forzar): siembra la
         // cuenta la primera vez y evita re-subir el catálogo en cada arranque.
-        forceSyncAllPOSData(deviceId, !accountCtx)
+        const startInitialSync = () => forceSyncAllPOSData(deviceId, !accountCtx)
           .then((result) => {
             if (result && !result.ok) {
               console.warn(
@@ -1783,18 +1807,19 @@ export function useCloudSync(deviceId) {
                 result.error,
               );
             }
+            return result;
           })
           .catch((error) => {
             console.warn(
               "[CloudSync] Falló la sincronización inicial:",
               error?.message || error,
             );
+            return { ok: false, error };
           });
 
         // ── Pull Inicial / Sincronización de Importación ──
-        // Declarar el snapshot fuera de la rama condicional: el bloque de
-        // auto-recuperación posterior también necesita conocer qué claves
-        // llegaron desde la nube.
+        // Consultar y fusionar antes de publicar: no se debe subir un snapshot
+        // local anterior que gane LWW solo por tener un timestamp posterior.
         let docs = [];
         const backupImported =
           localStorage.getItem("pda_backup_imported_flag") === "true";
@@ -1859,6 +1884,11 @@ export function useCloudSync(deviceId) {
               // FASE 1 + SEC-002 + V2.1.50: documentos de sedes conocidas
               // (o globales); los legacy sin prefijo se ignoran.
               if (!isDocForKnownBusiness(doc.doc_id)) continue;
+              const { key } = parseCloudDocId(doc.doc_id);
+              if (!isSupervisorSyncKey(key)) {
+                console.info(`[CloudSync] Clave obsoleta omitida: ${doc.doc_id}`);
+                continue;
+              }
               try {
                 await _applyFromCloud(
                   doc.doc_id,
@@ -1883,20 +1913,15 @@ export function useCloudSync(deviceId) {
               `Falló la aplicación de ${applyFailures} documento(s); se conservará el watermark para reintentar`,
             );
           }
-          const maxTs = docs.reduce(
-            (m, d) => (d.updated_at && d.updated_at > m ? d.updated_at : m),
-            watermark || "",
-          );
-          if (maxTs) {
-            try {
-              localStorage.setItem(wmKey, maxTs);
-            } catch {
-              /* noop */
-            }
+          const verifyAccess = await validateCurrentDeviceSyncAccess(deviceId);
+          if (!verifyAccess.ok) throw new Error(verifyAccess.error || "Equipo sin autorización activa");
+          const initialResult = await startInitialSync();
+          if (!initialResult?.ok) {
+            throw new Error(initialResult?.error?.message || initialResult?.error || "Sincronización inicial incompleta");
           }
         } else {
           // Pairing legacy puede recuperar documentos propios; RLS y este
-          // filtro impiden consultar los datos de otras cuentas/dispositivos.
+          // filtro impiden consultar datos de otros equipos.
           const { data: initialDocs, error: docsError } = await supabaseCloud
             .from("sync_documents")
             .select("collection, doc_id, data, updated_at, device_id")
@@ -1930,8 +1955,40 @@ export function useCloudSync(deviceId) {
           }
         }
 
+        if (backupImported && accountCtx) {
+          const pullDocs = async () => {
+            const { data, error } = await supabaseCloud
+              .from("sync_documents")
+              .select("collection, doc_id, data, updated_at, device_id")
+              .in("device_id", accountCtx.deviceIds)
+              .in("collection", ["store", "local"])
+              .order("updated_at", { ascending: true })
+              .limit(2000);
+            if (error) throw error;
+            return data || [];
+          };
+          docs = await pullDocs();
+          for (const doc of docs) {
+            if (!isDocForKnownBusiness(doc.doc_id)) continue;
+            const { key } = parseCloudDocId(doc.doc_id);
+            if (!isSupervisorSyncKey(key)) continue;
+            await _applyFromCloud(doc.doc_id, doc.collection, doc.data, doc.device_id);
+          }
+          const ownerAccess = await validateCurrentDeviceSyncAccess(deviceId);
+          if (!ownerAccess.ok) throw new Error(ownerAccess.error || "Equipo sin autorización activa");
+        }
+
+        if (!backupImported) {
+          const initialResult = await startInitialSync();
+          if (!initialResult?.ok) {
+            throw new Error(initialResult?.error?.message || initialResult?.error || "Sincronización inicial incompleta");
+          }
+        }
+
         // ── Auto-recuperación: Purgar/subir datos locales que no llegaron a enviarse debido al bug anterior ──
         try {
+          const recoveryAccess = await validateCurrentDeviceSyncAccess(deviceId);
+          if (!recoveryAccess.ok || !isCloudSyncActive) throw new Error(recoveryAccess.error || "La sincronización no está autorizada");
           const criticalKeys = [
             "bodega_sales_v1",
             "bodega_products_v1",
@@ -2023,6 +2080,8 @@ export function useCloudSync(deviceId) {
     const forcePushLocalData = async () => {
       if (isSyncingFromCloud || !deviceId) return;
       try {
+        const access = await validateCurrentDeviceSyncAccess(deviceId);
+        if (!access.ok || !isCloudSyncActive) return;
         const criticalKeys = [
           "bodega_sales_v1",
           "bodega_products_v1",
@@ -2070,6 +2129,8 @@ export function useCloudSync(deviceId) {
         if (isSyncingFromCloud || !isCloudSyncActive) return;
         if (document.visibilityState !== "visible") return;
         try {
+          const access = await validateCurrentDeviceSyncAccess(deviceId);
+          if (!access.ok || !isCloudSyncActive) return;
           const res = await syncNow();
           if (res.ok && (res.pulled > 0 || res.pushed > 0)) {
             console.log(`[AutoSync] Periódico: ${res.message}`);

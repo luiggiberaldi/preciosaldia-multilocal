@@ -59,6 +59,8 @@ function getMethodIcon(methodId) {
 export default function OwnerMonitorView({ theme, toggleTheme, triggerHaptic, rates }) {
     const pairedDeviceId = localStorage.getItem('pda_paired_device_id');
     const { products, effectiveRate: bcvRate, copEnabled, tasaCop } = useProductContext();
+    const ownDeviceId = localStorage.getItem('pda_device_id');
+    const hasSeparateMonitorDevice = Boolean(pairedDeviceId && pairedDeviceId !== ownDeviceId);
     const {
         isConnected,
         lastSync,
@@ -66,8 +68,11 @@ export default function OwnerMonitorView({ theme, toggleTheme, triggerHaptic, ra
         syncState,
         syncError,
         triggerRefresh,
-    } = useMonitorSync(pairedDeviceId);
-    const remoteActionsAvailable = Boolean(isConnected && pairedDeviceId);
+    } = useMonitorSync(pairedDeviceId, {
+        excludeDeviceId: ownDeviceId,
+        enabled: hasSeparateMonitorDevice,
+    });
+    const remoteActionsAvailable = Boolean(isConnected && pairedDeviceId && hasSeparateMonitorDevice);
 
     const [sales, setSales] = useState([]);
     const [activeCashier, setActiveCashier] = useState({ nombre: 'Ninguno', rol: '' });

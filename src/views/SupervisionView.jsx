@@ -29,6 +29,7 @@ import { useAuthStore } from '../hooks/store/useAuthStore';
 import { useNegociosStore } from '../hooks/store/useNegociosStore';
 import { useProductContext } from '../context/ProductContext';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
+import { useMonitorSync } from '../hooks/useMonitorSync';
 import { readNegocioData, summarizeSales } from '../utils/supervisionData';
 import { isOwner, isAdministrador } from '../utils/roles';
 import { formatUsd } from '../utils/calculatorUtils';
@@ -290,30 +291,62 @@ export default function SupervisionView({ triggerHaptic, isActive }) {
     const negocioActivoId = useNegociosStore((s) => s.negocioActivoId);
     const activarNegocio = useNegociosStore((s) => s.activarNegocio);
     const { effectiveRate: bcvRate } = useProductContext();
+    const currentDeviceId = localStorage.getItem('pda_device_id');
 
     // Sin login no hay sesión: acceso total (comportamiento legacy).
     const owner = isOwner(usuarioActivo) || !requireLogin;
     const administrador = isAdministrador(usuarioActivo);
 
+    // El Control del POS también mantiene Realtime para los demás dispositivos
+    // de la cuenta; los eventos app_storage_update disparan su recarga local.
+    useMonitorSync(null, {
+        excludeDeviceId: currentDeviceId,
+        enabled: Boolean(isActive && owner),
+    });
+
     const [selected, setSelected] = useState(() => (owner ? 'consolidado' : negocioActivoId));
     const [dataById, setDataById] = useState(null);
     const [updatedAt, setUpdatedAt] = useState(null);
     const [tick, setTick] = useState(0);
+    const refreshRequestRef = useRef(0);
     const firstLoad = useRef(true);
 
-    // R2: refresco en vivo cada 10 s — solo con la vista activa y la pestaña
-    // visible (ahorra batería); limpieza al desmontar/ocultar.
+    // Refresco en vivo al recibir cambios de storage y al volver a la pestaña.
     useEffect(() => {
-        if (!isActive) return;
-        const id = setInterval(() => {
-            if (!document.hidden) setTick((t) => t + 1);
-        }, 10000);
-        return () => clearInterval(id);
+        if (!isActive) return undefined;
+        let refreshTimer;
+        const relevantKeys = new Set([
+            'bodega_sales_v1',
+            'bodega_products_v1',
+            'bodega_customers_v1',
+            'bodega_customer_ledger_v1',
+            'bodega_businesses_registry_v1',
+        ]);
+        const requestRefresh = (event) => {
+            const changedKey = event?.detail?.key || event?.key || '';
+            const baseKey = changedKey.includes(':') ? changedKey.slice(changedKey.lastIndexOf(':') + 1) : changedKey;
+            if (baseKey && !relevantKeys.has(baseKey)) return;
+            clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(() => setTick((value) => value + 1), 75);
+        };
+        const onVisibilityChange = () => {
+            if (!document.hidden) requestRefresh();
+        };
+        window.addEventListener('app_storage_update', requestRefresh);
+        window.addEventListener('storage', requestRefresh);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => {
+            clearTimeout(refreshTimer);
+            window.removeEventListener('app_storage_update', requestRefresh);
+            window.removeEventListener('storage', requestRefresh);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+        };
     }, [isActive]);
 
     useEffect(() => {
         if (!isActive) return;
         let cancelled = false;
+        const requestId = ++refreshRequestRef.current;
         // Loader solo en la primera carga: los refrescos en vivo no parpadean.
         if (firstLoad.current) setDataById(null);
         (async () => {
@@ -322,18 +355,17 @@ export default function SupervisionView({ triggerHaptic, isActive }) {
                 const entries = await Promise.all(
                     ids.map(async (id) => [id, await readNegocioData(id)])
                 );
-                if (!cancelled) {
+                if (!cancelled && requestId === refreshRequestRef.current) {
                     setDataById(Object.fromEntries(entries));
                     setUpdatedAt(Date.now());
                     firstLoad.current = false;
                 }
             } catch {
-                if (!cancelled && firstLoad.current) setDataById({});
+                if (!cancelled && requestId === refreshRequestRef.current && firstLoad.current) setDataById({});
             }
         })();
         return () => { cancelled = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isActive, negocioActivoId, tick]);
+    }, [isActive, negocioActivoId, negocios, owner, tick]);
 
     if (!owner && !administrador) return null;
 

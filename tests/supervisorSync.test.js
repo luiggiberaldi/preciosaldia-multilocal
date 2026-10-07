@@ -7,6 +7,7 @@ import {
 import {
     buildSyncEnvelope,
     buildSupervisorRealtimeChannelName,
+    getSyncMetadataKey,
     isNewerSyncDocument,
     readSyncEnvelope,
     withSyncRetry,
@@ -65,6 +66,15 @@ describe('Supervisor sync contract', () => {
         expect(isNewerSyncDocument('2026-08-09T12:01:00.000Z', '2026-08-09T12:00:00.000Z')).toBe(true);
         expect(isNewerSyncDocument('2026-08-09T12:00:00.000Z', '2026-08-09T12:00:00.000Z')).toBe(false);
         expect(isNewerSyncDocument('2026-08-09T11:59:00.000Z', '2026-08-09T12:00:00.000Z')).toBe(false);
+    });
+
+    it('mantiene metadata independiente para merges recibidos desde cada dispositivo', () => {
+        expect(getSyncMetadataKey('nb_neg-1:bodega_sales_delta_2026-10-07', 'device-a'))
+            .not.toBe(getSyncMetadataKey('nb_neg-1:bodega_sales_delta_2026-10-07', 'device-b'));
+        expect(getSyncMetadataKey('nb_neg-1:bodega_sales_delta_2026-10-07', 'device-a'))
+            .toBe('supervisor_sync_updated_at_nb_neg-1:bodega_sales_delta_2026-10-07__from_device-a');
+        expect(getSyncMetadataKey('nb_neg-1:bodega_products_v1'))
+            .toBe('supervisor_sync_updated_at_nb_neg-1:bodega_products_v1');
     });
 
     it('usa un topic diferente para cada ciclo de vida del monitor', () => {

@@ -54,8 +54,9 @@ export function isNewerSyncDocument(incomingUpdatedAt, previousUpdatedAt) {
     return Date.parse(incomingUpdatedAt) > Date.parse(previousUpdatedAt);
 }
 
-export function getSyncMetadataKey(docId) {
-    return `supervisor_sync_updated_at_${docId}`;
+export function getSyncMetadataKey(docId, sourceDeviceId = null) {
+    const sourceSuffix = sourceDeviceId ? `__from_${sourceDeviceId}` : '';
+    return `supervisor_sync_updated_at_${docId}${sourceSuffix}`;
 }
 
 /**

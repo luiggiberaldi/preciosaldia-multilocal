@@ -16,6 +16,9 @@ import {
     SUPERVISOR_SYNC_STATES,
 } from '../services/supervisorSyncService';
 
+const MERGED_SYNC_KEYS = new Set(['bodega_sales_v1', 'bodega_customer_ledger_v1', 'bodega_stock_v1']);
+const isMergeSemanticsKey = (key) => MERGED_SYNC_KEYS.has(key) || isSalesDeltaKey(key);
+
 localforage.config({ name: 'BodegaApp', storeName: 'bodega_app_data' });
 
 const SUBSCRIBE_TIMEOUT_MS = 8000;
@@ -30,7 +33,7 @@ const MAX_RECONNECT_ATTEMPTS = 12;
  * Acepta un deviceId o un array; en modo cuenta usa TODOS los deviceIds de
  * la cuenta (getAccountSyncContext) para el pull inicial y el Realtime.
  */
-export function useMonitorSync(deviceIdsInput) {
+export function useMonitorSync(deviceIdsInput, { excludeDeviceId = null, enabled = true } = {}) {
     const [isConnected, setIsConnected] = useState(false);
     const [lastSync, setLastSync] = useState(() => {
         const stored = localStorage.getItem('monitor_last_sync');
@@ -58,11 +61,11 @@ export function useMonitorSync(deviceIdsInput) {
         try {
             const ctx = await getAccountSyncContext().catch(() => null);
             if (ctx && Array.isArray(ctx.deviceIds) && ctx.deviceIds.length > 0) {
-                return [...new Set(ctx.deviceIds)];
+                return [...new Set(ctx.deviceIds)].filter((id) => id !== excludeDeviceId);
             }
         } catch { /* fallback abajo */ }
         const input = Array.isArray(deviceIdsInput) ? deviceIdsInput : [deviceIdsInput];
-        return [...new Set(input.filter(Boolean))];
+        return [...new Set(input.filter((id) => Boolean(id) && id !== excludeDeviceId))];
     };
 
     const updateLastSync = (value) => {
@@ -143,7 +146,10 @@ export function useMonitorSync(deviceIdsInput) {
             return { applied: false, rejected: true, error: `Colección remota rechazada: ${collection}` };
         }
 
-        const metadataKey = getSyncMetadataKey(docId);
+        const metadataKey = getSyncMetadataKey(
+            docId,
+            isMergeSemanticsKey(key) ? doc?.device_id : null,
+        );
         const previousUpdatedAt = localStorage.getItem(metadataKey);
         if (!isNewerSyncDocument(envelope.updatedAt, previousUpdatedAt)) {
             return { applied: false, rejected: true, stale: true, error: 'Documento antiguo o repetido' };
@@ -398,16 +404,16 @@ export function useMonitorSync(deviceIdsInput) {
     };
 
     // Clave estable del input (string o array) para el efecto.
-    const inputKey = Array.isArray(deviceIdsInput)
+    const inputKey = `${Array.isArray(deviceIdsInput)
         ? deviceIdsInput.filter(Boolean).sort().join(',')
-        : (deviceIdsInput || '');
+        : (deviceIdsInput || '')}|exclude:${excludeDeviceId || ''}|enabled:${enabled}`;
 
     useEffect(() => {
         disposedRef.current = false;
         const lifecycleId = lifecycleRef.current + 1;
         lifecycleRef.current = lifecycleId;
         reconnectAttemptRef.current = 0;
-        if (!supabaseCloud || !inputKey) {
+        if (!enabled || !supabaseCloud || !inputKey) {
             setLoading(false);
             setIsConnected(false);
             setSyncState(SUPERVISOR_SYNC_STATES.IDLE);
@@ -442,7 +448,7 @@ export function useMonitorSync(deviceIdsInput) {
             subscribeInFlightRef.current = null;
             clearSubscription();
         };
-    }, [inputKey]);
+    }, [inputKey, enabled]);
 
     return {
         isConnected,
