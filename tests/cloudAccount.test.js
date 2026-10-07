@@ -82,6 +82,9 @@ import {
   revokeDevice,
   getAccountSyncContext,
   validateCurrentDeviceSyncAccess,
+  getCurrentDeviceMembershipStatus,
+  resolveCloudGateEntry,
+  authorizeDeviceRebindAfterLicenseCode,
   checkDeviceRevocation,
   getLocalDeviceId,
   PAIRING_CODE_TTL_MIN,
@@ -281,6 +284,44 @@ describe("registerCurrentDevice / límite de equipos", () => {
     expect(r.error).toBe("boom");
   });
 
+  it("solo permite re-vincular un equipo revocado después de verificar el código", async () => {
+    authMocks.getSession.mockResolvedValue({
+      data: { session: OWNER_SESSION },
+      error: null,
+    });
+    projectMock.current = { revokedDeviceIds: ["PDA-TEST-001"] };
+
+    const blocked = await registerCurrentDevice();
+    expect(blocked.ok).toBe(false);
+    expect(blocked.error).toMatch(/código de licencia/i);
+    expect(dbMocks.rpc).not.toHaveBeenCalled();
+
+    expect(authorizeDeviceRebindAfterLicenseCode()).toBe(true);
+    const reactivated = await registerCurrentDevice();
+    expect(reactivated).toMatchObject({ ok: true, deviceId: "PDA-TEST-001" });
+    expect(dbMocks.rpc).toHaveBeenCalledWith("register_account_device", {
+      p_device_id: "PDA-TEST-001",
+      p_alias: null,
+      p_max_devices: MAX_DEVICES_PER_ACCOUNT,
+    });
+  });
+
+  it("no reactiva membresía si falla el registro de identidad", async () => {
+    authMocks.getSession.mockResolvedValue({
+      data: { session: OWNER_SESSION },
+      error: null,
+    });
+    deviceSessionMock.ensure.mockResolvedValue({
+      ok: false,
+      error: { message: "42501" },
+    });
+
+    const result = await registerCurrentDevice();
+
+    expect(result).toMatchObject({ ok: false, error: "42501" });
+    expect(dbMocks.rpc).not.toHaveBeenCalled();
+  });
+
   it("sin sesión de dueño no intenta registrar", async () => {
     const r = await registerCurrentDevice();
     expect(r.ok).toBe(false);
@@ -411,6 +452,58 @@ describe("getAccountSyncContext", () => {
       }),
     );
     expect(await getAccountSyncContext()).toBeNull();
+  });
+});
+
+describe("CloudGate membership revalidation", () => {
+  it("distinguishes active, revoked, missing and unverifiable server membership", async () => {
+    authMocks.getSession.mockResolvedValue({
+      data: { session: OWNER_SESSION },
+      error: null,
+    });
+
+    dbMocks.from.mockImplementation(() =>
+      makeQuery({ data: [{ device_id: "PDA-TEST-001", revoked: false }], error: null }),
+    );
+    await expect(getCurrentDeviceMembershipStatus()).resolves.toEqual({ status: "active" });
+
+    dbMocks.from.mockImplementation(() =>
+      makeQuery({ data: [{ device_id: "PDA-TEST-001", revoked: true }], error: null }),
+    );
+    await expect(getCurrentDeviceMembershipStatus()).resolves.toEqual({ status: "revoked" });
+
+    dbMocks.from.mockImplementation(() => makeQuery({ data: [], error: null }));
+    await expect(getCurrentDeviceMembershipStatus()).resolves.toEqual({ status: "missing" });
+
+    dbMocks.from.mockImplementation(() =>
+      makeQuery({ data: null, error: { message: "sin conexión" } }),
+    );
+    await expect(getCurrentDeviceMembershipStatus()).resolves.toMatchObject({
+      status: "unavailable",
+      error: "sin conexión",
+    });
+  });
+
+  it("validates linked devices through the active-device RPC", async () => {
+    localStorage.setItem("pda_account_linked", "true");
+    authMocks.getSession.mockResolvedValue({
+      data: { session: ANON_SESSION },
+      error: null,
+    });
+    dbMocks.rpc.mockResolvedValue({ data: ["PDA-TEST-001"], error: null });
+    await expect(getCurrentDeviceMembershipStatus()).resolves.toEqual({ status: "active" });
+
+    dbMocks.rpc.mockResolvedValue({ data: [], error: null });
+    await expect(getCurrentDeviceMembershipStatus()).resolves.toEqual({ status: "missing" });
+  });
+
+  it("revoked/missing require the license code; only active membership auto-enters", () => {
+    expect(resolveCloudGateEntry(OWNER_SESSION, "active")).toBe("ready");
+    expect(resolveCloudGateEntry(OWNER_SESSION, "revoked")).toBe("code");
+    expect(resolveCloudGateEntry(OWNER_SESSION, "missing")).toBe("code");
+    expect(resolveCloudGateEntry(OWNER_SESSION, "unavailable")).toBe("blocked");
+    expect(resolveCloudGateEntry(ANON_SESSION, "active")).toBe("login");
+    expect(resolveCloudGateEntry(null, null)).toBe("login");
   });
 });
 

@@ -29,6 +29,16 @@ const MAX_ACTIVE_CODES = 3;
 export const MAX_DEVICES_PER_ACCOUNT = 6;
 /** Mensaje de error de la DB cuando la cuenta llegó al tope. */
 const LIMIT_REACHED_TOKEN = "LIMIT_REACHED";
+let revalidatedLicenseDeviceId = null;
+
+/** Marca temporalmente el equipo tras validar el código en CloudGate. */
+export function authorizeDeviceRebindAfterLicenseCode() {
+  const deviceId = getLocalDeviceId();
+  if (!deviceId) return false;
+  revalidatedLicenseDeviceId = deviceId;
+  return true;
+}
+
 
 export function getLocalDeviceId() {
   try {
@@ -95,7 +105,14 @@ export async function signUpOwner(email, password) {
       await signOutOwner().catch(() => {});
       return { ok: false, limitReached: true };
     }
-    return { ok: true, session: data.session, deviceRegistered: reg.ok };
+    if (!reg.ok) {
+      await signOutOwner().catch(() => {});
+      return {
+        ok: false,
+        error: reg.error || "No se pudo autorizar este dispositivo",
+      };
+    }
+    return { ok: true, session: data.session, deviceRegistered: true };
   } catch (e) {
     return { ok: false, error: e?.message || "Error creando la cuenta" };
   }
@@ -119,7 +136,16 @@ export async function signInOwner(email, password, deviceAlias = null) {
       await signOutOwner().catch(() => {});
       return { ok: false, limitReached: true };
     }
-    return { ok: true, session: data.session, deviceRegistered: reg.ok };
+    if (!reg.ok) {
+      // No dejar que un login válido omita el vínculo del dispositivo:
+      // el CloudGate solo debe abrir tras confirmar la membresía en servidor.
+      await signOutOwner().catch(() => {});
+      return {
+        ok: false,
+        error: reg.error || "No se pudo autorizar este dispositivo",
+      };
+    }
+    return { ok: true, session: data.session, deviceRegistered: true };
   } catch (e) {
     return { ok: false, error: e?.message || "Error iniciando sesión" };
   }
@@ -152,16 +178,41 @@ export async function registerCurrentDevice(alias) {
   // Límite dinámico desde el directorio (default 6)
   const project = getCustomerProject();
   const maxDevices = project?.maxDevices ?? MAX_DEVICES_PER_ACCOUNT;
-  // Si este equipo fue revocado desde la Estación, no permitir re-vincular
-  if ((project?.revokedDeviceIds || []).includes(deviceId)) {
+  // La revocación de servidor (o del directorio) solo se puede reactivar en
+  // esta sesión después de validar otra vez el código de licencia.
+  let membershipQuery;
+  try {
+    membershipQuery = await supabaseCloud
+      .from("account_devices")
+      .select("device_id, revoked")
+      .eq("user_id", session.user.id)
+      .eq("device_id", deviceId);
+  } catch (error) {
+    return { ok: false, error: error?.message || "No se pudo validar el dispositivo" };
+  }
+  if (membershipQuery?.error) {
+    return { ok: false, error: membershipQuery.error.message || "No se pudo validar el dispositivo" };
+  }
+  const currentMembership = (Array.isArray(membershipQuery?.data) ? membershipQuery.data : [])
+    .find((row) => row?.device_id === deviceId);
+  const wasRevoked = currentMembership?.revoked === true
+    || (project?.revokedDeviceIds || []).includes(deviceId);
+  if (wasRevoked && revalidatedLicenseDeviceId !== deviceId) {
     return {
       ok: false,
-      error: "Este equipo fue desvinculado. Contacta al administrador.",
+      error: "Este dispositivo fue revocado. Ingresa nuevamente el código de licencia para reautorizarlo.",
     };
   }
+  if (!wasRevoked) revalidatedLicenseDeviceId = null;
   try {
     // 1. Puente de identidad (también lo usa el RLS de 001/002).
-    await ensureDeviceSessionRegistered(deviceId).catch(() => {});
+    const identity = await ensureDeviceSessionRegistered(deviceId);
+    if (!identity?.ok) {
+      return {
+        ok: false,
+        error: identity?.error?.message || identity?.error || "No se pudo verificar la identidad del dispositivo",
+      };
+    }
     // 2. Vínculo cuenta <-> dispositivo (con tope en el servidor).
     const { error } = await supabaseCloud.rpc("register_account_device", {
       p_device_id: deviceId,
@@ -178,6 +229,7 @@ export async function registerCurrentDevice(alias) {
       }
       return { ok: false, error: error.message };
     }
+    revalidatedLicenseDeviceId = null;
     try {
       localStorage.setItem("pda_account_linked", "true");
     } catch {
@@ -360,6 +412,62 @@ export async function getAccountSyncContext() {
   } catch {
     return null;
   }
+}
+
+/** Comprueba el vínculo de este equipo antes de saltar el CloudGate al arrancar. */
+export async function getCurrentDeviceMembershipStatus() {
+  const deviceId = getLocalDeviceId();
+  if (!deviceId) return { status: "unavailable", error: "Equipo no identificado" };
+
+  const { session, error: sessionError } = await getOwnerSession();
+  if (sessionError) return { status: "unavailable", error: sessionError };
+  if (!session) {
+    if (!isAccountLinkedLocally()) return { status: "no-owner-session" };
+    // Equipos vinculados por código usan una sesión anónima y solo pueden
+    // consultar su membresía mediante el RPC que devuelve device_ids activos.
+    try {
+      const { data, error } = await supabaseCloud.rpc("my_account_device_ids");
+      if (error || !Array.isArray(data)) {
+        return { status: "unavailable", error: error?.message || "No se pudo comprobar la membresía activa" };
+      }
+      return data.includes(deviceId) ? { status: "active" } : { status: "missing" };
+    } catch (error) {
+      return {
+        status: "unavailable",
+        error: error?.message || "No se pudo comprobar la membresía activa",
+      };
+    }
+  }
+
+  try {
+    const { data, error } = await supabaseCloud
+      .from("account_devices")
+      .select("device_id, revoked")
+      .eq("user_id", session.user.id)
+      .eq("device_id", deviceId);
+    if (error) return { status: "unavailable", error: error.message };
+    const membership = (Array.isArray(data) ? data : []).find(
+      (row) => row?.device_id === deviceId,
+    );
+    if (!membership) return { status: "missing" };
+    if (membership.revoked === true) return { status: "revoked" };
+    if (membership.revoked !== false) {
+      return { status: "unavailable", error: "Estado de membresía inválido" };
+    }
+    return { status: "active" };
+  } catch (error) {
+    return {
+      status: "unavailable",
+      error: error?.message || "No se pudo comprobar la membresía del dispositivo",
+    };
+  }
+}
+
+export function resolveCloudGateEntry(session, membershipStatus) {
+  if (!session || session.user?.is_anonymous) return "login";
+  if (membershipStatus === "active") return "ready";
+  if (membershipStatus === "revoked" || membershipStatus === "missing") return "code";
+  return "blocked";
 }
 
 export function isAccountLinkedLocally() {

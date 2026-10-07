@@ -29,6 +29,9 @@ import {
     registerCurrentDevice,
     getLocalDeviceId,
     MAX_DEVICES_PER_ACCOUNT,
+    getCurrentDeviceMembershipStatus,
+    resolveCloudGateEntry,
+    authorizeDeviceRebindAfterLicenseCode,
 } from '../../services/cloudAccount.js';
 
 const inputBase =
@@ -132,6 +135,21 @@ function shortId(id) {
     return id.length > 14 ? `${id.slice(0, 8)}…${id.slice(-4)}` : id;
 }
 
+function persistCloudActivation(project) {
+    try {
+        if (project?.code) {
+            localStorage.setItem('pda_license_cache', JSON.stringify({
+                isActive: true,
+                type: 'permanent',
+                code: project.code,
+                productId: 'pro',
+            }));
+        }
+        localStorage.setItem('pda_pro_activated', 'true');
+        localStorage.setItem('pda_account_linked', 'true');
+    } catch {}
+}
+
 export default function CloudGate({ onReady }) {
     const [state, setState] = useState('checking'); // checking|code|login|limit|ready
     const [busy, setBusy] = useState(false);
@@ -144,9 +162,11 @@ export default function CloudGate({ onReady }) {
     const [offline] = useState(
         typeof navigator !== 'undefined' && navigator.onLine === false
     );
+    const [isRevokedRebind, setIsRevokedRebind] = useState(false);
 
-    // Arranque: ¿ya hay proyecto recordado? ¿Hay sesión guardada?
-    // getSession() es local: no exige red. Sin red y con sesión → se entra igual.
+    // Arranque: una sesión guardada no basta para autorizar este equipo.
+    // La membresía siempre se valida online; revocado, ausente o no verificable
+    // bloquea la entrada hasta revalidar el código y registrar el equipo.
     useEffect(() => {
         let alive = true;
         (async () => {
@@ -158,14 +178,42 @@ export default function CloudGate({ onReady }) {
                 }
                 const { session } = await getOwnerSession();
                 if (!alive) return;
-                if (session && !session.user?.is_anonymous) {
-                    // V2.1.35: asegurar flags aunque se haya auto-saltado.
+                const membership = session && !session.user?.is_anonymous
+                    ? await getCurrentDeviceMembershipStatus()
+                    : null;
+                if (!alive) return;
+                const entryState = resolveCloudGateEntry(session, membership?.status);
+                if (entryState === 'ready') {
+                    // Mantener flags locales solo después de validar en servidor.
                     try {
                         localStorage.setItem('pda_pro_activated', 'true');
                         localStorage.setItem('pda_account_linked', 'true');
                     } catch {}
                     setState('ready');
                     onReady();
+                } else if (entryState === 'code') {
+                    // No cerrar la sesión Auth: permite introducir el código
+                    // y volver a registrar el dispositivo revocado/no vinculado.
+                    try {
+                        localStorage.removeItem('pda_pro_activated');
+                        localStorage.removeItem('pda_account_linked');
+                    } catch {}
+                    setIsRevokedRebind(membership?.status === 'revoked');
+                    setError(
+                        membership?.status === 'revoked'
+                            ? 'Este dispositivo fue revocado. Ingresa nuevamente el código de licencia para volver a vincularlo.'
+                            : 'Este dispositivo no está vinculado. Ingresa el código de licencia para autorizarlo.'
+                    );
+                    setState('code');
+                } else if (entryState === 'blocked') {
+                    // Fail closed: la caché local no puede demostrar que el
+                    // dispositivo no fue revocado mientras estuvo offline.
+                    setError(membership?.error || 'No se pudo validar la autorización de este equipo. Conéctate para verificarla.');
+                    setState('code');
+                } else if (entryState === 'login' && membership?.status === 'no-owner-session'
+                    && localStorage.getItem('pda_account_linked') === 'true') {
+                    setError('Este dispositivo vinculado ya no está autorizado. Ingresa nuevamente el código de licencia para reactivarlo.');
+                    setState('code');
                 } else {
                     setState('login');
                 }
@@ -178,41 +226,66 @@ export default function CloudGate({ onReady }) {
         };
     }, [onReady]);
 
+    const runReady = () => {
+        setState('ready');
+        onReady();
+    };
+
     const handleCode = useCallback(async () => {
         setBusy(true);
         setError('');
-        const res = await lookupProjectByCode(code);
-        setBusy(false);
-        if (!res.ok) {
-            setError(res.error);
-            return;
+        try {
+            const res = await lookupProjectByCode(code);
+            if (!res.ok) {
+                setError(res.error);
+                return;
+            }
+            setCustomerProject(res.project);
+            if (!authorizeDeviceRebindAfterLicenseCode()) {
+                setError('No se pudo identificar este dispositivo para autorizarlo.');
+                return;
+            }
+
+            // Si permanece la sesión autenticada del dueño, el código recién
+            // verificado basta para re-vincular este equipo sin volver a pedir
+            // el correo/contraseña. El servidor decide la membresía y el cupo.
+            const { session } = await getOwnerSession();
+            if (session) {
+                const registration = await registerCurrentDevice(deviceName.trim() || null);
+                if (registration.ok) {
+                    persistCloudActivation(res.project);
+                    runReady();
+                    return;
+                }
+                if (registration.limitReached) {
+                    const result = await getMyDevices();
+                    setDevices(result.ok ? result.devices : []);
+                    setError(registration.error || 'Se alcanzó el límite de equipos.');
+                    setState('limit');
+                    return;
+                }
+                setError(registration.error || 'No se pudo reautorizar este dispositivo.');
+                setState('login');
+                return;
+            }
+
+            setError('');
+            setState('login');
+        } catch (error) {
+            setError(error?.message || 'No se pudo verificar el código o reautorizar el equipo.');
+        } finally {
+            setBusy(false);
         }
-        setCustomerProject(res.project);
-        setState('login');
-    }, [code]);
+    }, [code, deviceName, onReady]);
 
     const handleLogin = useCallback(async () => {
         setBusy(true);
         setError('');
         const res = await signInOwner(email, password, deviceName.trim() || null);
         setBusy(false);
-        if (res.ok) {
-            // Marcar licencia Pro como activa (el código ya fue validado)
-            // Triple redundancia: pda_license_cache + pda_account_linked + pda_pro_activated
-            // (el último es sincrónico y lo lee useSecurity sin imports async).
-            try {
-                const proj = getCustomerProject();
-                if (proj?.code) {
-                    localStorage.setItem('pda_license_cache', JSON.stringify({
-                        isActive: true,
-                        type: 'permanent',
-                        code: proj.code,
-                        productId: 'pro',
-                    }));
-                }
-                localStorage.setItem('pda_pro_activated', 'true');
-                localStorage.setItem('pda_account_linked', 'true');
-            } catch {}
+        if (res.ok && res.deviceRegistered) {
+            // Marcar licencia Pro como activa solo con membresía confirmada.
+            persistCloudActivation(getCustomerProject());
             setState('ready');
             onReady();
             return;
@@ -237,7 +310,7 @@ export default function CloudGate({ onReady }) {
             setBusy(false);
             return;
         }
-        setError(res.error || 'No se pudo iniciar sesión.');
+        setError(res.error || (res.ok ? 'El dispositivo no quedó autorizado.' : 'No se pudo iniciar sesión.'));
     }, [email, password, deviceName, onReady]);
 
     const handleRevoke = useCallback(async (deviceId) => {
@@ -335,6 +408,11 @@ export default function CloudGate({ onReady }) {
                     subtitle={<>Entra con el correo y la clave de tu negocio.<br />Solo se pide una vez; después la app trabaja sin internet.</>}
                 />
                 <ErrorMsg msg={error} />
+                {isRevokedRebind && (
+                    <p className="text-center text-xs text-amber-600 dark:text-amber-400 mb-3">
+                        Tras verificar nuevamente el código, este equipo puede reautorizarse sin volver a ingresar la contraseña.
+                    </p>
+                )}
                 <div className="space-y-3 mb-4">
                     <div className="relative">
                         <Mail className={inputIconCls} />
