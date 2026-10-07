@@ -1,0 +1,240 @@
+/**
+ * components.css — Clases de componentes del design system.
+ *
+ * Estas clases usan los tokens OKLCH de tokens.css directamente.
+ * Son la base para los componentes React en src/components/ui/.
+ *
+ * Cualquier componente nuevo debe usar estas clases en vez de
+ *Utility classes ad-hoc de Tailwind, para garantizar consistencia.
+ */
+
+/* ═════════════════════════════════════════ */
+/* Buttons                                    */
+/* ═════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  min-height: 48px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-primary);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+.btn-ghost:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn-accent {
+  background: var(--accent);
+  color: var(--primary-contrast);
+}
+.btn-accent:hover:not(:disabled) {
+  background: oklch(0.55 0.110 55);
+  box-shadow: 0 8px 24px oklch(0.62 0.110 55 / 0.25);
+}
+.btn-danger {
+  background: var(--danger);
+  color: var(--primary-contrast);
+}
+.btn-danger:hover:not(:disabled) {
+  background: oklch(0.48 0.180 27);
+}
+.btn-sm {
+  padding: 8px 16px;
+  min-height: 40px;
+  font-size: var(--text-xs);
+  border-radius: var(--radius-sm);
+}
+.btn-lg {
+  padding: 16px 32px;
+  min-height: 56px;
+  font-size: var(--text-base);
+  border-radius: var(--radius-lg);
+}
+.btn-icon {
+  padding: 12px;
+  min-height: 48px;
+  min-width: 48px;
+  aspect-ratio: 1;
+}
+
+/* ═════════════════════════════════════════ */
+/* Card                                       */
+/* ═════════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+.card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: grid;
+  place-items: center;
+  margin-bottom: var(--space-4);
+}
+.card h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-2);
+  color: var(--text);
+}
+.card p {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+/* ═════════════════════════════════════════ */
+/* Input                                      */
+/* ═════════════════════════════════════════ */
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  min-height: 48px;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.input::placeholder {
+  color: var(--text-faint);
+}
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.input-error {
+  border-color: var(--danger);
+}
+.input-error:focus {
+  box-shadow: 0 0 0 3px oklch(0.55 0.180 27 / 0.15);
+}
+
+/* ═════════════════════════════════════════ */
+/* Badge / Pill                               */
+/* ═════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.badge-success {
+  background: oklch(0.94 0.04 150);
+  color: var(--success);
+}
+.badge-warning {
+  background: oklch(0.94 0.04 75);
+  color: var(--warning);
+}
+.badge-danger {
+  background: oklch(0.94 0.04 27);
+  color: var(--danger);
+}
+.badge-accent {
+  background: oklch(0.94 0.04 55);
+  color: var(--accent);
+}
+
+/* ═════════════════════════════════════════ */
+/* Display headings (Instrument Serif)       */
+/* ═════════════════════════════════════════ */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.display-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* ═════════════════════════════════════════ */
+/* Surface utilities (para componentes nuevos)*/
+/* ═════════════════════════════════════════ */
+.bg-app { background: var(--bg); }
+.bg-surface-elevated {
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.text-primary-token { color: var(--primary); }
+.text-muted-token { color: var(--text-muted); }
+.text-faint-token { color: var(--text-faint); }
+.border-token { border-color: var(--border); }
+.border-strong-token { border-color: var(--border-strong); }
+.shadow-tone-sm { box-shadow: var(--shadow-sm); }
+.shadow-tone-md { box-shadow: var(--shadow-md); }
+.shadow-tone-lg { box-shadow: var(--shadow-lg); }
+.shadow-primary-tone { box-shadow: var(--shadow-primary); }
+
+/* ═════════════════════════════════════════ */
+/* Sticky header (glassmorphism)             */
+/* ═════════════════════════════════════════ */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: color-mix(in oklch, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid var(--border);
+}

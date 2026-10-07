@@ -1,0 +1,222 @@
+/**
+ * tokens.css — Design tokens del Sistema de Diseño "Precios al Día".
+ *
+ * Espacio de color OKLCH para consistencia perceptual.
+ * Ejes de matiz:
+ *   H=192 (Cian de marca / Turquesa Premium)
+ *   H=85  (Oliva / Cream cálido para fondos y superficies)
+ *   H=60  (Marrón carbón cálido para textos)
+ *
+ * Los valores RGB (separados por espacios para Tailwind rgb(var() / <alpha>))
+ * se derivan de los OKLCH. Fallback HEX documentado en comentarios.
+ *
+ * Post-auditoría v1.2.0: reemplaza las vars azul/slate-cool del v1.1.0.
+ */
+
+:root {
+  /* ═══ OKLCH puros (para CSS custom: color-mix, gradients, shadows) ═══ */
+
+  /* ── Primary (H=192: Cian de marca) ── */
+  --primary:           oklch(0.50 0.085 192);  /* #01696f */
+  --primary-hover:     oklch(0.44 0.090 192);  /* #00575d */
+  --primary-soft:      oklch(0.94 0.035 192);  /* #e6f4f5 */
+  --primary-contrast:  oklch(0.99 0.005 192);  /* #fdfdfd */
+
+  /* ── Background & Surfaces (H=85: Oliva / Cream cálido) ── */
+  --bg:                oklch(0.985 0.010 85);  /* #fbfaf7 */
+  --surface:           oklch(0.965 0.014 85);  /* #f5f3ee */
+  --surface-2:         oklch(0.935 0.022 85);  /* #edeae2 */
+  --surface-3:         oklch(0.91 0.018 85);   /* hover de filas */
+
+  /* ── Text (H=60: Marrón carbón cálido) ── */
+  --text:              oklch(0.28 0.020 60);   /* #2c2924 */
+  --text-muted:        oklch(0.50 0.020 60);   /* #605c56 */
+  --text-faint:        oklch(0.68 0.015 60);   /* #8d8881 */
+
+  /* ── Borders ── */
+  --border:            oklch(0.89 0.018 85);   /* #e2dfd7 */
+  --border-strong:     oklch(0.80 0.025 85);   /* #cbc6b9 */
+
+  /* ── Status / Alertas ── */
+  --accent:            oklch(0.62 0.110 55);   /* #c16729 naranja/óxido */
+  --success:           oklch(0.62 0.130 150);  /* #24a870 verde menta */
+  --warning:           oklch(0.74 0.140 75);   /* #df9d1a amarillo oro */
+  --danger:            oklch(0.55 0.180 27);   /* rojo cálido */
+
+  /* ═══ RGB derivados (para Tailwind rgb(var() / <alpha>)) ═══ */
+
+  /* Primary (H=192) — reemplaza el azul del v1.1.0 */
+  --color-primary-50:  230 244 245;   /* #e6f4f5 primary-soft */
+  --color-primary-100: 200 230 233;
+  --color-primary-200: 165 215 218;
+  --color-primary-300: 120 195 200;
+  --color-primary-400: 70 170 178;
+  --color-primary-500: 1 105 111;     /* #01696f primary */
+  --color-primary-600: 0 87 93;       /* #00575d primary-hover */
+  --color-primary-700: 0 73 78;
+  --color-primary-800: 5 60 65;
+  --color-primary-900: 7 50 54;
+
+  /* Surface (H=85 oliva/cream) — reemplaza slate (gris cool H=220) */
+  /* Los 565 text-slate-400, 293 bg-slate-800, etc. ahora renderizan cálido */
+  --color-surface-50:  251 250 247;   /* #fbfaf7 bg */
+  --color-surface-100: 245 243 238;   /* #f5f3ee surface */
+  --color-surface-200: 237 234 226;   /* #edeae2 surface-2 */
+  --color-surface-300: 226 223 215;   /* #e2dfd7 border */
+  --color-surface-400: 141 136 129;   /* #8d8881 text-faint */
+  --color-surface-500: 96 92 86;      /* #605c56 text-muted */
+  --color-surface-600: 60 57 53;      /* #3c3935 */
+  --color-surface-700: 44 41 36;      /* #2c2924 text */
+  --color-surface-800: 30 28 25;      /* #1e1c19 */
+  --color-surface-900: 26 25 23;      /* #1a1917 bg dark */
+  --color-surface-950: 18 17 15;      /* #12110f */
+
+  /* Success (H=150 verde menta) */
+  --color-success-50:  230 247 238;
+  --color-success-100: 204 239 221;
+  --color-success-400: 60 200 130;
+  --color-success-500: 36 168 112;    /* #24a870 */
+  --color-success-600: 28 140 95;
+  --color-success-900: 18 70 48;
+
+  /* Warning (H=75 amarillo oro) */
+  --color-warning-50:  252 244 226;
+  --color-warning-100: 249 233 195;
+  --color-warning-400: 240 175 40;
+  --color-warning-500: 223 157 26;    /* #df9d1a */
+  --color-warning-600: 195 135 20;
+  --color-warning-900: 110 75 12;
+
+  /* Danger (H=27 rojo cálido) */
+  --color-danger-50:  251 232 225;
+  --color-danger-100: 247 205 190;
+  --color-danger-400: 220 90 60;
+  --color-danger-500: 200 65 40;
+  --color-danger-600: 175 50 30;
+  --color-danger-900: 95 28 18;
+
+  /* Accent (H=55 naranja/óxido) — nuevo, para tasas y estados especiales */
+  --color-accent-50:  250 235 220;
+  --color-accent-100: 245 220 195;
+  --color-accent-400: 210 130 60;
+  --color-accent-500: 193 103 41;     /* #c16729 */
+  --color-accent-600: 170 85 30;
+  --color-accent-900: 95 50 20;
+
+  /* Brand legacy (compat) */
+  --color-brand: var(--color-primary-500);
+  --color-brand-dark: var(--color-primary-600);
+  --color-bg-light: var(--color-surface-50);
+  --color-bg-dark: var(--color-surface-900);
+
+  /* ═══ Tipografía fluida (clamp) ═══ */
+  --text-xs:      clamp(0.72rem, 0.70rem + 0.10vw, 0.80rem);   /* 11.5→12.8px */
+  --text-sm:      clamp(0.82rem, 0.78rem + 0.20vw, 0.94rem);   /* 13.1→15.0px */
+  --text-base:    clamp(0.95rem, 0.91rem + 0.20vw, 1.06rem);   /* 15.2→17.0px */
+  --text-lg:      clamp(1.12rem, 1.05rem + 0.35vw, 1.32rem);   /* 17.9→21.1px */
+  --text-xl:      clamp(1.35rem, 1.25rem + 0.50vw, 1.62rem);   /* 21.6→25.9px */
+  --text-2xl:     clamp(1.68rem, 1.50rem + 0.90vw, 2.18rem);   /* 26.8→34.8px */
+  --text-display: clamp(2.75rem, 2.05rem + 3.50vw, 5.25rem);   /* 44→84px */
+
+  /* ═══ Espaciado (base 4px, confirma Tailwind defaults) ═══ */
+  --space-1: 0.25rem;  --space-2: 0.5rem;   --space-3: 0.75rem;
+  --space-4: 1rem;     --space-5: 1.25rem;  --space-6: 1.5rem;
+  --space-8: 2rem;     --space-10: 2.5rem;  --space-12: 3rem;
+  --space-16: 4rem;    --space-24: 6rem;
+
+  /* ═══ Radios ═══ */
+  --radius-sm: 8px;
+  --radius: 13.6px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 999px;
+
+  /* ═══ Sombras tone-matched (marrón cálido, no negro) ═══ */
+  --shadow-sm:       0 2px 8px oklch(0.28 0.02 60 / 0.04);
+  --shadow-md:       0 6px 16px oklch(0.28 0.02 60 / 0.06);
+  --shadow-lg:       0 16px 32px oklch(0.28 0.02 60 / 0.09);
+  --shadow-primary:  0 8px 24px oklch(0.50 0.085 192 / 0.20);
+
+  /* ═══ Transiciones ═══ */
+  --transition: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ═══ Fuentes ═══ */
+  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --font-sans: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-outfit: "Outfit", sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* Dark mode: [data-theme="dark"] + .dark (compat Tailwind)       */
+/* ═══════════════════════════════════════════════════════════════ */
+[data-theme="dark"],
+.dark {
+  /* Primary brillante sobre fondos oscuros */
+  --primary:           oklch(0.72 0.105 192);  /* #1ce2ee */
+  --primary-hover:     oklch(0.68 0.100 192);
+  --primary-soft:      oklch(0.25 0.040 192);
+  --primary-contrast:  oklch(0.15 0.010 85);
+
+  /* Fondos carbón cálido (no negro puro) */
+  --bg:                oklch(0.165 0.010 85);  /* #1a1917 */
+  --surface:           oklch(0.25 0.012 85);   /* #2d2b28 */
+  --surface-2:         oklch(0.20 0.010 85);   /* #22211f */
+  --surface-3:         oklch(0.28 0.012 85);   /* #35332f hover */
+
+  --text:              oklch(0.94 0.010 85);   /* #f2f0ec */
+  --text-muted:        oklch(0.68 0.015 85);   /* #97948e */
+  --text-faint:        oklch(0.50 0.012 85);
+
+  --border:            oklch(0.28 0.015 85);   /* #383633 */
+  --border-strong:     oklch(0.38 0.018 85);
+
+  /* RGB overrides para dark (invierte la escala surface) */
+  --color-surface-50:  26 25 23;       /* bg dark */
+  --color-surface-100: 45 43 40;       /* surface dark */
+  --color-surface-200: 34 33 31;       /* surface-2 dark */
+  --color-surface-300: 56 54 51;       /* border dark */
+  --color-surface-400: 151 148 142;    /* text-muted dark */
+  --color-surface-500: 120 117 112;
+  --color-surface-600: 90 88 84;
+  --color-surface-700: 242 240 236;    /* text dark (invertido) */
+  --color-surface-800: 230 228 224;
+  --color-surface-900: 250 249 246;
+  --color-surface-950: 252 251 248;
+
+  --color-primary-500: 28 226 238;     /* #1ce2ee cian brillante dark */
+  --color-primary-600: 20 200 210;
+
+  /* Sombras dark más profundas */
+  --shadow-sm: 0 2px 8px oklch(0 0 0 / 0.30);
+  --shadow-md: 0 6px 16px oklch(0 0 0 / 0.40);
+  --shadow-lg: 0 16px 32px oklch(0 0 0 / 0.50);
+  --shadow-primary: 0 8px 24px oklch(0.72 0.105 192 / 0.25);
+}
+
+/* ═══ prefers-reduced-motion: desactiva animaciones ═══ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+
+/* ═══ prefers-color-scheme: respeta el OS si no hay preferencia guardada ═══ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.dark) {
+    --primary: oklch(0.72 0.105 192);
+    --bg: oklch(0.165 0.010 85);
+    --surface: oklch(0.25 0.012 85);
+    --text: oklch(0.94 0.010 85);
+    --text-muted: oklch(0.68 0.015 85);
+    --border: oklch(0.28 0.015 85);
+    --color-surface-50: 26 25 23;
+    --color-surface-100: 45 43 40;
+    --color-surface-700: 242 240 236;
+    --color-primary-500: 28 226 238;
+  }
+}

@@ -1,0 +1,42 @@
+{
+  // wrangler.jsonc — Configuración de Cloudflare Workers + Pages (assets binding).
+  //
+  // ISSUES cubiertos:
+  // - INFRA-010: este es el ÚNICO target de deploy (vercel.json eliminado).
+  // - INFRA-024: observability habilitada + nodejs_compat compatibility flag.
+  // - INFRA-030: console.error ahora se captura en logs de Worker.
+
+  "name": "preciosaldia-bodega",
+  "main": "./worker.js",
+  "compatibility_date": "2024-12-01",
+  // INFRA-024: nodejs_compat para uso de APIs Node (Buffer, etc.) si se necesitan.
+  "compatibility_flags": ["nodejs_compat"],
+  // INFRA-024 / INFRA-030: captura de logs y excepciones en Cloudflare dashboard.
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "./dist/",
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SHARE_STORAGE",
+        "class_name": "ShareStorage"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["ShareStorage"]
+    }
+  ],
+  // INFRA-005 / INFRA-004: secrets inyectados vía `wrangler secret put`.
+  // Lista documentativa (no se incluyen valores aquí):
+  //   - ALLOWED_ORIGINS        (CSV de orígenes permitidos para CORS)
+  //   - BACKUP_ENCRYPTION_KEY  (master key para AES-GCM; hex 64 chars o base64)
+  // Las variables de entorno de la PWA (VITE_*) se inyectan en build time, no aquí.
+  "vars": {}
+}

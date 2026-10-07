@@ -1,0 +1,23 @@
+#!/bin/sh
+# ─────────────────────────────────────────────────────────────────────
+# Gate pre-push — suite e2e del checkout móvil (Playwright).
+#
+# Por qué aquí y no en pre-commit: la suite levanta dev server y corre
+# 11 casos (~1.5 min). En pre-push el coste es aceptable y garantiza
+# que nada que rompa la zona de cobro en móvil salga del equipo.
+#
+# Bypass en emergencias:  git push --no-verify
+# Solo la suite rápida:   bun run test:e2e:checkout
+# ─────────────────────────────────────────────────────────────────────
+
+echo "[pre-push] Ejecutando e2e del checkout móvil (11 casos, ~1.5 min)..."
+
+if ! bun run test:e2e:checkout; then
+    echo ""
+    echo "❌ [pre-push] La suite e2e del checkout falló. El push fue abortado."
+    echo "   Revisa test-results/ para los reportes de error, o usa 'git push --no-verify' para saltar este gate."
+    exit 1
+fi
+
+echo "✅ [pre-push] e2e del checkout móvil OK."
+exit 0

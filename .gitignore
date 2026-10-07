@@ -1,0 +1,90 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencias y Build
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── SEGURIDAD: Variables de entorno (NUNCA commitear secretos) ──
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.staging
+
+# ── API serverless ──
+# Las funciones serverless van en /api pero NO se commitean con claves;
+# las claves se inyectan vía variables de entorno del platform (Vercel/Cloudflare).
+api/*.local.js
+api/secrets.*
+
+# ── Archivos de datos sensibles y binarios (INFRA-023) ──
+# Nunca commitear backups, inventarios reales, PDFs de cierres, videos, etc.
+backup_*.json
+*backup*.json
+*.xls
+*.xlsx
+*.pdf
+*.mp4
+*.mov
+*.avi
+capturas_manual/
+frames/
+verify_financials.py
+inventario*.xls
+cierre_*.pdf
+cierre_*.txt
+
+# ── Assets con nombres problemáticos ──
+logo*.png
+logodark*.png
+"logo .png"
+"Manual Completo de Usuario*"
+Manual_Usuario_*.md
+
+# ── Docs internos y artefactos de auditoría ──
+PERFORMANCE_AUDIT.md
+EXPLICACION_ERRORES.md
+TASASALDIA_MANUAL_TEXTO.md
+"licencia tasas al dia.html"
+.agent/
+CONTEXT.md
+.vercel
+.wrangler/
+
+# ── OS y temporales ──
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.bak
+
+# ── Test y herramientas ──
+test-results/
+test-results-af/
+supabase/.temp/
+.freebuff/
+
+.vercel
+

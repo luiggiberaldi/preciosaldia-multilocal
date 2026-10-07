@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.git/
+coverage/
+playwright-report/
+test-results/
+*.log
+.env
+.env.*
+!.env.example
+backup_*.json
+capturas_manual/
+frames/
+*.mp4
+*.mov
+*.avi

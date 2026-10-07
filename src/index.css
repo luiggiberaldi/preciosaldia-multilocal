@@ -1,0 +1,88 @@
+/**
+ * index.css — Entry point de estilos.
+ *
+ * v1.2.0: Design system "Precios al Día" (OKLCH + Instrument Serif/Work Sans).
+ *
+ * Orden de imports:
+ *   1. tokens.css       — vars OKLCH + RGB derivados + tipografía fluida + radii + shadows
+ *   2. animations.css   — reveal, skeleton, scrollbar, utilidades
+ *   3. components.css   — .btn, .card, .input, .badge, .display
+ *   4. Tailwind layers  — base/components/utilities (usa las vars de tokens.css)
+ *
+ * Las vars antiguas (azul/slate-cool) del v1.1.0 fueron reemplazadas por
+ * las OKLCH de tokens.css. Los 2000+ clases slate-* existentes ahora
+ * renderizan la paleta warm cream/cian automáticamente.
+ */
+
+@import './styles/tokens.css';
+@import './styles/animations.css';
+@import './styles/components.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base styles ── */
+@layer base {
+  html,
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    max-width: 100%;
+    /* Suprime el highlight gris del tap en móviles (el círculo feo al tocar) */
+    -webkit-tap-highlight-color: transparent;
+    /* Sin selección de texto en toda la app: evita el subrayado/resaltado
+       fantasma al cambiar de ventana. Los inputs/textarea siguen permitiendo
+       seleccionar (ver regla abajo) y los botones de copiar usan el portapapeles. */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Los campos de texto sí permiten seleccionar/copiar */
+  input,
+  textarea,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  [data-theme='dark'] html,
+  [data-theme='dark'] body,
+  .dark body {
+    background-color: var(--bg);
+    color: var(--text);
+    color-scheme: dark;
+  }
+
+  /* Headings usan font-display (Instrument Serif) por defecto en landing/login */
+  h1.display-heading,
+  h2.display-heading {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  /* Focus visible global para A11y */
+  *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  /* Selection color */
+  ::selection {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+}
+
+/* Excepción puntual (fuera de capas para que no la toque el build):
+   .allow-select permite seleccionar/copiar en zonas donde sí importa. */
+.allow-select {
+  -webkit-user-select: text;
+  user-select: text;
+}

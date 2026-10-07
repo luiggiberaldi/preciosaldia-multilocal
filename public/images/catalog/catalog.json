@@ -1,0 +1,5018 @@
+[
+  {
+    "name": "Yogurt Griego Mantecado Yolo 150g",
+    "slug": "yogurt-griego-mantecado-yolo-150g",
+    "price": 3.34,
+    "category": "Yogurt",
+    "image_path": "/images/catalog/lacteos-y-huevos/yogurt-griego-mantecado-yolo-150g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche Descremada UHT La Pastoreña 1L",
+    "slug": "leche-descremada-uht-la-pastorena-1l",
+    "price": 3.08,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-descremada-uht-la-pastorena-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cubito de Pollo Maggi 11.5g 1 Und",
+    "slug": "cubito-de-pollo-maggi-115g-1-und",
+    "price": 0.28,
+    "category": "Condimentos",
+    "image_path": "/images/catalog/viveres-y-despensa/cubito-de-pollo-maggi-115g-1-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta Vermicelli Superior Mary 1Kg",
+    "slug": "pasta-vermicelli-superior-mary-1kg",
+    "price": 2.16,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-vermicelli-superior-mary-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Huevos Orgánicos Ávila Ranch Cartón de 12 Und",
+    "slug": "huevos-organicos-avila-ranch-carton-de-12-und",
+    "price": 7.5,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/huevos-organicos-avila-ranch-carton-de-12-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jugo 2 en 1 Naranja/Zanahoria 500ml",
+    "slug": "jugo-2-en-1-naranjazanahoria-500ml",
+    "price": 1.34,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/jugo-2-en-1-naranjazanahoria-500ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Harina Maiz Blanco Libre de Gluten Pan 1 Kg",
+    "slug": "harina-maiz-blanco-libre-de-gluten-pan-1-kg",
+    "price": 1.45,
+    "category": "Harinas",
+    "image_path": "/images/catalog/harina-maiz-blanco-libre-de-gluten-pan-1-kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Huevos Cartón 30 Und",
+    "slug": "huevos-carton-30-und",
+    "price": 4.68,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/huevos-carton-30-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Arroz Tipo I Amanecer 900g",
+    "slug": "arroz-tipo-i-amanecer-900g",
+    "price": 0.99,
+    "category": "Granos",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/arroz-tipo-i-amanecer-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Agua Mineral Canaima 500ml",
+    "slug": "agua-mineral-canaima-500ml",
+    "price": 0.44,
+    "category": "Aguas",
+    "image_path": "/images/catalog/viveres-y-despensa/agua-mineral-canaima-500ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Atún en Agua Venfood 170g",
+    "slug": "atun-en-agua-venfood-170g",
+    "price": 1.99,
+    "category": "Mariscos y Pescados",
+    "image_path": "/images/catalog/carnes-y-proteinas/atun-en-agua-venfood-170g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Recarga Saldo Movistar",
+    "slug": "recarga-saldo-movistar",
+    "price": 0.62,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/recarga-saldo-movistar.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Agua Minalba 5L",
+    "slug": "agua-minalba-5l",
+    "price": 5.45,
+    "category": "Aguas",
+    "image_path": "/images/catalog/viveres-y-despensa/agua-minalba-5l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Yogurt Griego de Fresa Yolo 150g",
+    "slug": "yogurt-griego-de-fresa-yolo-150g",
+    "price": 3.38,
+    "category": "Yogurt",
+    "image_path": "/images/catalog/lacteos-y-huevos/yogurt-griego-de-fresa-yolo-150g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche Entera UHT Natulac 946ml",
+    "slug": "leche-entera-uht-natulac-946ml",
+    "price": 2.76,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-entera-uht-natulac-946ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche Completa en Polvo La Pradera 900g",
+    "slug": "leche-completa-en-polvo-la-pradera-900g",
+    "price": 13.08,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-completa-en-polvo-la-pradera-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Huevos Medio Cartón 15 Und",
+    "slug": "huevos-medio-carton-15-und",
+    "price": 2.58,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/huevos-medio-carton-15-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Agua Mineral Aguafiel 330ml",
+    "slug": "agua-mineral-aguafiel-330ml",
+    "price": 0.44,
+    "category": "Aguas",
+    "image_path": "/images/catalog/viveres-y-despensa/agua-mineral-aguafiel-330ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Aceites, Café y Cacao, Granos",
+    "slug": "aceites-cafe-y-cacao-granos",
+    "price": 9.99,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceites-cafe-y-cacao-granos.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Packs de Salsa Parrillero Heinz 4 Und",
+    "slug": "packs-de-salsa-parrillero-heinz-4-und",
+    "price": 8.53,
+    "category": "Clasicas, Sazonadoras",
+    "image_path": "/images/catalog/viveres-y-despensa/packs-de-salsa-parrillero-heinz-4-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Claras de Huevo Liquida Pasteurizada Don Tito 720g",
+    "slug": "claras-de-huevo-liquida-pasteurizada-don-tito-720g",
+    "price": 6.94,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/claras-de-huevo-liquida-pasteurizada-don-tito-720g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pepperoni Alinieve 100g",
+    "slug": "pepperoni-alinieve-100g",
+    "price": 1.41,
+    "category": "Salchichas y Chorizos",
+    "image_path": "/images/catalog/carnes-y-proteinas/pepperoni-alinieve-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Arroz Premium Mary 900g",
+    "slug": "arroz-premium-mary-900g",
+    "price": 1.26,
+    "category": "Granos",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/arroz-premium-mary-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Mozzarella Rebanado María Gorda 200g",
+    "slug": "queso-mozzarella-rebanado-maria-gorda-200g",
+    "price": 2.91,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-mozzarella-rebanado-maria-gorda-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche Completa en Polvo La Pradera 500g",
+    "slug": "leche-completa-en-polvo-la-pradera-500g",
+    "price": 7.37,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-completa-en-polvo-la-pradera-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Samba de Chocolate Savoy 32g",
+    "slug": "samba-de-chocolate-savoy-32g",
+    "price": 1.07,
+    "category": "Chocolates",
+    "image_path": "/images/catalog/viveres-y-despensa/samba-de-chocolate-savoy-32g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tea de Durazno Green Spot 500ml",
+    "slug": "tea-de-durazno-green-spot-500ml",
+    "price": 1.54,
+    "category": "Jugos, Tés y Energizantes",
+    "image_path": "/images/catalog/viveres-y-despensa/tea-de-durazno-green-spot-500ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Verduras Surtidas 1.5Kg + 1Kg de Costilla de Res",
+    "slug": "verduras-surtidas-15kg-1kg-de-costilla-de-res",
+    "price": 8.91,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/verduras-surtidas-15kg-1kg-de-costilla-de-res.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bombones con Doble Cobertura de Chocolate con Fresa Crack 100g",
+    "slug": "bombones-con-doble-cobertura-de-chocolate-con-fresa-crack-100g",
+    "price": 6.83,
+    "category": "Chocolates",
+    "image_path": "/images/catalog/viveres-y-despensa/bombones-con-doble-cobertura-de-chocolate-con-fresa-crack-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Blanco Llanero Rallado Fino 250g Aprox",
+    "slug": "queso-blanco-llanero-rallado-fino-250g-aprox",
+    "price": 1.55,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-blanco-llanero-rallado-fino-250g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche Semidescremada Deslactosada UHT Silsa 1L",
+    "slug": "leche-semidescremada-deslactosada-uht-silsa-1l",
+    "price": 3.46,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-semidescremada-deslactosada-uht-silsa-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Caraota Negra Vicone 1Kg",
+    "slug": "caraota-negra-vicone-1kg",
+    "price": 4.0,
+    "category": "Granos",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/caraota-negra-vicone-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Salsa de Tomate Ketchup Capri 397g",
+    "slug": "salsa-de-tomate-ketchup-capri-397g",
+    "price": 1.9,
+    "category": "Clasicas",
+    "image_path": "/images/catalog/viveres-y-despensa/salsa-de-tomate-ketchup-capri-397g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Arroz Perlado Primor 900g",
+    "slug": "arroz-perlado-primor-900g",
+    "price": 2.27,
+    "category": "Granos",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/arroz-perlado-primor-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Milanesas de Pollo Que Pollo 500g Aprox",
+    "slug": "milanesas-de-pollo-que-pollo-500g-aprox",
+    "price": 4.53,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/milanesas-de-pollo-que-pollo-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Costilla de Res AA 1Kg",
+    "slug": "costilla-de-res-aa-1kg",
+    "price": 6.46,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/costilla-de-res-aa-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Amarillo Rebanado Tipo Cheddar Maria Gorda 200g",
+    "slug": "queso-amarillo-rebanado-tipo-cheddar-maria-gorda-200g",
+    "price": 3.4,
+    "category": "Amarillos",
+    "image_path": "/images/catalog/viveres-y-despensa/queso-amarillo-rebanado-tipo-cheddar-maria-gorda-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche Descremada Esterilizada Light UHT San Simon 1L",
+    "slug": "leche-descremada-esterilizada-light-uht-san-simon-1l",
+    "price": 2.89,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-descremada-esterilizada-light-uht-san-simon-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Yogurt Griego Plain Yolo 150g",
+    "slug": "yogurt-griego-plain-yolo-150g",
+    "price": 3.39,
+    "category": "Yogurt",
+    "image_path": "/images/catalog/lacteos-y-huevos/yogurt-griego-plain-yolo-150g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Café Gourmet Della Nonna 200g",
+    "slug": "cafe-gourmet-della-nonna-200g",
+    "price": 3.03,
+    "category": "Café y Cacao",
+    "image_path": "/images/catalog/viveres-y-despensa/cafe-gourmet-della-nonna-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tenderloins De Pollo/Lomito de Pollo Que Pollo 300g a 350g",
+    "slug": "tenderloins-de-pollolomito-de-pollo-que-pollo-300g-a-350g",
+    "price": 3.61,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/tenderloins-de-pollolomito-de-pollo-que-pollo-300g-a-350g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Agua Gasificada de Parchita Nevada 355ml",
+    "slug": "agua-gasificada-de-parchita-nevada-355ml",
+    "price": 0.75,
+    "category": "Bebidas Gaseosas",
+    "image_path": "/images/catalog/viveres-y-despensa/agua-gasificada-de-parchita-nevada-355ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bebidas Saludables, Leches y Huevos",
+    "slug": "bebidas-saludables-leches-y-huevos",
+    "price": 4.91,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/bebidas-saludables-leches-y-huevos.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pan de Sándwich Blanco Bimbo 500g",
+    "slug": "pan-de-sandwich-blanco-bimbo-500g",
+    "price": 2.06,
+    "category": "Panes",
+    "image_path": "/images/catalog/viveres-y-despensa/pan-de-sandwich-blanco-bimbo-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche en Polvo Completa Silsa 250g",
+    "slug": "leche-en-polvo-completa-silsa-250g",
+    "price": 4.15,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-en-polvo-completa-silsa-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Combo Carnicero Semanal 3.9Kg",
+    "slug": "combo-carnicero-semanal-39kg",
+    "price": 43.56,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/combo-carnicero-semanal-39kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jugos, Tés y Energizantes",
+    "slug": "jugos-tes-y-energizantes",
+    "price": 2.29,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/jugos-tes-y-energizantes.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Blanco Pasteurizado Montesano 200g",
+    "slug": "queso-blanco-pasteurizado-montesano-200g",
+    "price": 3.45,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-blanco-pasteurizado-montesano-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Harina Precocida de Maíz Blanco sin Gluten Sustanciosa Fina Ideal 1Kg",
+    "slug": "harina-precocida-de-maiz-blanco-sin-gluten-sustanciosa-fina-ideal-1kg",
+    "price": 2.12,
+    "category": "Harinas, Harinas y Pastas Saludable",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/harina-precocida-de-maiz-blanco-sin-gluten-sustanciosa-fina-ideal-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Fresas Frescas Congeladas 500gr aprox",
+    "slug": "fresas-frescas-congeladas-500gr-aprox",
+    "price": 2.29,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/fresas-frescas-congeladas-500gr-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Muslos de Pollo Que Pollo de 780 a 850g aprox",
+    "slug": "muslos-de-pollo-que-pollo-de-780-a-850g-aprox",
+    "price": 4.23,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/muslos-de-pollo-que-pollo-de-780-a-850g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Galletas Oreo Tipo Americano 96g",
+    "slug": "galletas-oreo-tipo-americano-96g",
+    "price": 1.53,
+    "category": "Galletas Dulces",
+    "image_path": "/images/catalog/viveres-y-despensa/galletas-oreo-tipo-americano-96g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mayonesa Kraft 445g",
+    "slug": "mayonesa-kraft-445g",
+    "price": 4.31,
+    "category": "Clasicas",
+    "image_path": "/images/catalog/viveres-y-despensa/mayonesa-kraft-445g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta Caracol Premium Capri 500g",
+    "slug": "pasta-caracol-premium-capri-500g",
+    "price": 1.24,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-caracol-premium-capri-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Atún en Lomos al Agua Los Monjes 160g",
+    "slug": "atun-en-lomos-al-agua-los-monjes-160g",
+    "price": 2.25,
+    "category": "Mariscos y Pescados",
+    "image_path": "/images/catalog/carnes-y-proteinas/atun-en-lomos-al-agua-los-monjes-160g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pollo Picado Que Pollo 1 Kg",
+    "slug": "pollo-picado-que-pollo-1-kg",
+    "price": 6.61,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/pollo-picado-que-pollo-1-kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alitas de Pollo Que Pollo 500g aprox",
+    "slug": "alitas-de-pollo-que-pollo-500g-aprox",
+    "price": 1.63,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/alitas-de-pollo-que-pollo-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Sopa de Pollo con Fideos Maggi 62g",
+    "slug": "sopa-de-pollo-con-fideos-maggi-62g",
+    "price": 1.66,
+    "category": "Caldos y Sopas",
+    "image_path": "/images/catalog/viveres-y-despensa/sopa-de-pollo-con-fideos-maggi-62g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Te Negro con Sabor a Manzana y Mora Fresh Yolo 473ml",
+    "slug": "te-negro-con-sabor-a-manzana-y-mora-fresh-yolo-473ml",
+    "price": 2.18,
+    "category": "Bebidas Saludables, Jugos, Tés y Energizantes",
+    "image_path": "/images/catalog/viveres-y-despensa/te-negro-con-sabor-a-manzana-y-mora-fresh-yolo-473ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Blanco Llanero para Rallar 500g Aprox",
+    "slug": "queso-blanco-llanero-para-rallar-500g-aprox",
+    "price": 3.1,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-blanco-llanero-para-rallar-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Salsa Cheddar Nerano 220g",
+    "slug": "salsa-cheddar-nerano-220g",
+    "price": 2.11,
+    "category": "Clasicas",
+    "image_path": "/images/catalog/viveres-y-despensa/salsa-cheddar-nerano-220g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche Completa UHT Purisima 1L",
+    "slug": "leche-completa-uht-purisima-1l",
+    "price": 2.92,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-completa-uht-purisima-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Carne Molida 85% Libre De Grasa 500gr",
+    "slug": "carne-molida-85-libre-de-grasa-500gr",
+    "price": 5.21,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/carne-molida-85-libre-de-grasa-500gr.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jugo de Durazno Frooti 350ml",
+    "slug": "jugo-de-durazno-frooti-350ml",
+    "price": 1.12,
+    "category": "Jugos, Tés y Energizantes",
+    "image_path": "/images/catalog/viveres-y-despensa/jugo-de-durazno-frooti-350ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mango Verde Con Sal y Adobo 200g",
+    "slug": "mango-verde-con-sal-y-adobo-200g",
+    "price": 0.4,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/mango-verde-con-sal-y-adobo-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bistec de Cerdo 530g",
+    "slug": "bistec-de-cerdo-530g",
+    "price": 6.28,
+    "category": "Cerdo",
+    "image_path": "/images/catalog/carnes-y-proteinas/bistec-de-cerdo-530g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Platano Maduro 900g a 1.1Kg",
+    "slug": "platano-maduro-900g-a-11kg",
+    "price": 1.84,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/platano-maduro-900g-a-11kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bebidas Saludables, Jugos, Tés y Energizantes",
+    "slug": "bebidas-saludables-jugos-tes-y-energizantes",
+    "price": 2.43,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/bebidas-saludables-jugos-tes-y-energizantes.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chocolate con Leche Savoy 30g",
+    "slug": "chocolate-con-leche-savoy-30g",
+    "price": 1.45,
+    "category": "Chocolates",
+    "image_path": "/images/catalog/viveres-y-despensa/chocolate-con-leche-savoy-30g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Café Tostado y Molido Gourmet Amanecer 500g",
+    "slug": "cafe-tostado-y-molido-gourmet-amanecer-500g",
+    "price": 7.13,
+    "category": "Café y Cacao",
+    "image_path": "/images/catalog/viveres-y-despensa/cafe-tostado-y-molido-gourmet-amanecer-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamon de Espalda Cocida Ricci 200g",
+    "slug": "jamon-de-espalda-cocida-ricci-200g",
+    "price": 2.21,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-de-espalda-cocida-ricci-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pan Blanco Pequeño Bimbo 350g",
+    "slug": "pan-blanco-pequeno-bimbo-350g",
+    "price": 1.67,
+    "category": "Panes",
+    "image_path": "/images/catalog/viveres-y-despensa/pan-blanco-pequeno-bimbo-350g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta para Pasticho Ronco 250g",
+    "slug": "pasta-para-pasticho-ronco-250g",
+    "price": 1.34,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-para-pasticho-ronco-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta Vermicelli Premium Ronco 1kg",
+    "slug": "pasta-vermicelli-premium-ronco-1kg",
+    "price": 2.1,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-vermicelli-premium-ronco-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Platano Verde 900g a 1.1Kg",
+    "slug": "platano-verde-900g-a-11kg",
+    "price": 2.22,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/platano-verde-900g-a-11kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pan Árabe El Famoso 6 Und 380g",
+    "slug": "pan-arabe-el-famoso-6-und-380g",
+    "price": 1.68,
+    "category": "Medio Oriente, Panes",
+    "image_path": "/images/catalog/viveres-y-despensa/pan-arabe-el-famoso-6-und-380g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Azúcares y Endulzantes",
+    "slug": "azucares-y-endulzantes",
+    "price": 1.79,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/azucares-y-endulzantes.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Zucaritas de Kelloggs 250g",
+    "slug": "zucaritas-de-kelloggs-250g",
+    "price": 3.82,
+    "category": "Avenas y Cereales",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/zucaritas-de-kelloggs-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta Tipo Rigatoni Premium Capri 500g",
+    "slug": "pasta-tipo-rigatoni-premium-capri-500g",
+    "price": 1.18,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-tipo-rigatoni-premium-capri-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mayonesa Wilos 175g",
+    "slug": "mayonesa-wilos-175g",
+    "price": 1.58,
+    "category": "Clasicas",
+    "image_path": "/images/catalog/viveres-y-despensa/mayonesa-wilos-175g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Corn Flakes de Kelloggs 230g",
+    "slug": "corn-flakes-de-kelloggs-230g",
+    "price": 3.72,
+    "category": "Avenas y Cereales",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/corn-flakes-de-kelloggs-230g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cacao en Polvo 20/20 100g",
+    "slug": "cacao-en-polvo-2020-100g",
+    "price": 4.09,
+    "category": "Café y Cacao, Repostería",
+    "image_path": "/images/catalog/viveres-y-despensa/cacao-en-polvo-2020-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jugo de Naranja Endulzado con Stevia Vivo 1L",
+    "slug": "jugo-de-naranja-endulzado-con-stevia-vivo-1l",
+    "price": 2.82,
+    "category": "Bebidas Saludables",
+    "image_path": "/images/catalog/viveres-y-despensa/jugo-de-naranja-endulzado-con-stevia-vivo-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Harina de Trigo Leudante Mary 900g",
+    "slug": "harina-de-trigo-leudante-mary-900g",
+    "price": 1.09,
+    "category": "Harinas",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/harina-de-trigo-leudante-mary-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Yogurt Griego Sabor a Cheesecake de Fresa Power Cremigurt Sapori 150g",
+    "slug": "yogurt-griego-sabor-a-cheesecake-de-fresa-power-cremigurt-sapori-150g",
+    "price": 3.1,
+    "category": "Postres Saludables, Yogurt",
+    "image_path": "/images/catalog/carnes-y-proteinas/yogurt-griego-sabor-a-cheesecake-de-fresa-power-cremigurt-sapori-150g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toronto Savoy Nestle 125g",
+    "slug": "toronto-savoy-nestle-125g",
+    "price": 9.23,
+    "category": "Chocolates",
+    "image_path": "/images/catalog/viveres-y-despensa/toronto-savoy-nestle-125g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Azúcares y Endulzantes, Repostería",
+    "slug": "azucares-y-endulzantes-reposteria",
+    "price": 1.76,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/azucares-y-endulzantes-reposteria.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tocineta Ahumada 200g Aprox",
+    "slug": "tocineta-ahumada-200g-aprox",
+    "price": 3.69,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/tocineta-ahumada-200g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Harina de Maíz Blanco y Arroz Pan 1 Kg",
+    "slug": "harina-de-maiz-blanco-y-arroz-pan-1-kg",
+    "price": 1.38,
+    "category": "Harinas",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/harina-de-maiz-blanco-y-arroz-pan-1-kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Harina de Trigo Todo Uso Mary 900g",
+    "slug": "harina-de-trigo-todo-uso-mary-900g",
+    "price": 1.02,
+    "category": "Harinas",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/harina-de-trigo-todo-uso-mary-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cuadril o Contramuslo de Pollo Que Pollo 600 a 700g",
+    "slug": "cuadril-o-contramuslo-de-pollo-que-pollo-600-a-700g",
+    "price": 4.6,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/cuadril-o-contramuslo-de-pollo-que-pollo-600-a-700g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche en Polvo Completa La Campesina 800g",
+    "slug": "leche-en-polvo-completa-la-campesina-800g",
+    "price": 14.0,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-en-polvo-completa-la-campesina-800g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Salsa Sabor a Maiz Wilos 240g",
+    "slug": "salsa-sabor-a-maiz-wilos-240g",
+    "price": 2.28,
+    "category": "Clasicas",
+    "image_path": "/images/catalog/viveres-y-despensa/salsa-sabor-a-maiz-wilos-240g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chocolate Cri Cri Savoy 27g",
+    "slug": "chocolate-cri-cri-savoy-27g",
+    "price": 1.43,
+    "category": "Chocolates",
+    "image_path": "/images/catalog/viveres-y-despensa/chocolate-cri-cri-savoy-27g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Aceites, Aceites Saludables",
+    "slug": "aceites-aceites-saludables",
+    "price": 10.72,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceites-aceites-saludables.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta Premium Vermicelli 5 Min Ronco 500g",
+    "slug": "pasta-premium-vermicelli-5-min-ronco-500g",
+    "price": 1.12,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-premium-vermicelli-5-min-ronco-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Lavaplatos Limón Sprint 400ml",
+    "slug": "lavaplatos-limon-sprint-400ml",
+    "price": 2.21,
+    "category": "Lavaplatos",
+    "image_path": "/images/catalog/aseo-del-hogar/lavaplatos-limon-sprint-400ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tostones Maduritos Salseritos 80g",
+    "slug": "tostones-maduritos-salseritos-80g",
+    "price": 2.42,
+    "category": "Papas, Tostones y más",
+    "image_path": "/images/catalog/varios/tostones-maduritos-salseritos-80g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bebidas Gaseosas",
+    "slug": "bebidas-gaseosas",
+    "price": 1.0,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/bebidas-gaseosas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cebolla Blanca con Concha de 400g a 500g Aprox",
+    "slug": "cebolla-blanca-con-concha-de-400g-a-500g-aprox",
+    "price": 0.95,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/cebolla-blanca-con-concha-de-400g-a-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta Vermicelli Tradicional Mary 1 Kg",
+    "slug": "pasta-vermicelli-tradicional-mary-1-kg",
+    "price": 1.84,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-vermicelli-tradicional-mary-1-kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Milanesa de Pollo Empanizada 450g",
+    "slug": "milanesa-de-pollo-empanizada-450g",
+    "price": 5.31,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/milanesa-de-pollo-empanizada-450g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta Linguini Premium Mary 500g",
+    "slug": "pasta-linguini-premium-mary-500g",
+    "price": 1.27,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-linguini-premium-mary-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Coca Cola Zero Azúcar 1L",
+    "slug": "coca-cola-zero-azucar-1l",
+    "price": 1.1,
+    "category": "Bebidas Gaseosas",
+    "image_path": "/images/catalog/viveres-y-despensa/coca-cola-zero-azucar-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Analgésicos, Anti Inflamatorio, Antipiréticos",
+    "slug": "analgesicos-anti-inflamatorio-antipireticos",
+    "price": 1.86,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/analgesicos-anti-inflamatorio-antipireticos.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Aceite Mazeite de 1L",
+    "slug": "aceite-mazeite-de-1l",
+    "price": 4.67,
+    "category": "Aceites",
+    "image_path": "/images/catalog/viveres-y-despensa/aceite-mazeite-de-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Salsa de Tomate Ketchup Capri 198g",
+    "slug": "salsa-de-tomate-ketchup-capri-198g",
+    "price": 1.26,
+    "category": "Clasicas",
+    "image_path": "/images/catalog/viveres-y-despensa/salsa-de-tomate-ketchup-capri-198g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Salsa de Tomate Ketchup Tiquire Flores 397g",
+    "slug": "salsa-de-tomate-ketchup-tiquire-flores-397g",
+    "price": 1.9,
+    "category": "Clasicas",
+    "image_path": "/images/catalog/viveres-y-despensa/salsa-de-tomate-ketchup-tiquire-flores-397g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Yogurt Griego Sabor Naranja y Vainilla Yolo 150g",
+    "slug": "yogurt-griego-sabor-naranja-y-vainilla-yolo-150g",
+    "price": 3.27,
+    "category": "Yogurt",
+    "image_path": "/images/catalog/lacteos-y-huevos/yogurt-griego-sabor-naranja-y-vainilla-yolo-150g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pan de Sándwich Diet Bimbo 350g",
+    "slug": "pan-de-sandwich-diet-bimbo-350g",
+    "price": 2.01,
+    "category": "Panes",
+    "image_path": "/images/catalog/viveres-y-despensa/pan-de-sandwich-diet-bimbo-350g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Avenas y Cereales, Chocolates",
+    "slug": "avenas-y-cereales-chocolates",
+    "price": 3.42,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/avenas-y-cereales-chocolates.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mayonesa Doña Tita 445g",
+    "slug": "mayonesa-dona-tita-445g",
+    "price": 3.28,
+    "category": "Clasicas",
+    "image_path": "/images/catalog/viveres-y-despensa/mayonesa-dona-tita-445g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Harina de Maiz Amarillo Pan 1Kg",
+    "slug": "harina-de-maiz-amarillo-pan-1kg",
+    "price": 1.44,
+    "category": "Harinas",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/harina-de-maiz-amarillo-pan-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabon en Polvo Bebe Las LLaves 400gr",
+    "slug": "jabon-en-polvo-bebe-las-llaves-400gr",
+    "price": 1.86,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/jabon-en-polvo-bebe-las-llaves-400gr.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Arroz Blanco Tradicional Mary 900g",
+    "slug": "arroz-blanco-tradicional-mary-900g",
+    "price": 1.06,
+    "category": "Granos",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/arroz-blanco-tradicional-mary-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pechuga de Pavo Fiesta 200g",
+    "slug": "pechuga-de-pavo-fiesta-200g",
+    "price": 2.75,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/pechuga-de-pavo-fiesta-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chocolate Rikiti 30g",
+    "slug": "chocolate-rikiti-30g",
+    "price": 1.38,
+    "category": "Chocolates",
+    "image_path": "/images/catalog/viveres-y-despensa/chocolate-rikiti-30g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mayonesa Mavesa 445g",
+    "slug": "mayonesa-mavesa-445g",
+    "price": 4.12,
+    "category": "Clasicas",
+    "image_path": "/images/catalog/viveres-y-despensa/mayonesa-mavesa-445g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chuleta de Paleta de Cerdo 500g",
+    "slug": "chuleta-de-paleta-de-cerdo-500g",
+    "price": 5.57,
+    "category": "Cerdo",
+    "image_path": "/images/catalog/carnes-y-proteinas/chuleta-de-paleta-de-cerdo-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche Completa UHT La Pastoreña 1L",
+    "slug": "leche-completa-uht-la-pastorena-1l",
+    "price": 3.08,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-completa-uht-la-pastorena-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Blanco Llanero para Rallar 1Kg Aprox",
+    "slug": "queso-blanco-llanero-para-rallar-1kg-aprox",
+    "price": 6.62,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-blanco-llanero-para-rallar-1kg-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta Vermicelli Superior Mary 500g",
+    "slug": "pasta-vermicelli-superior-mary-500g",
+    "price": 1.15,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-vermicelli-superior-mary-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bistec de Solomo 700gr Aprox",
+    "slug": "bistec-de-solomo-700gr-aprox",
+    "price": 9.86,
+    "category": "Parrillera, Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/bistec-de-solomo-700gr-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mantequillas y Margarinas",
+    "slug": "mantequillas-y-margarinas",
+    "price": 3.26,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/mantequillas-y-margarinas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Papas Pre-Fritas Congeladas Del Monte 1Kg",
+    "slug": "papas-pre-fritas-congeladas-del-monte-1kg",
+    "price": 8.12,
+    "category": "Fruta y Verdura",
+    "image_path": "/images/catalog/frutas-y-verduras/papas-pre-fritas-congeladas-del-monte-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pollo Entero 1.8Kg a 1.895Kg Del Corral",
+    "slug": "pollo-entero-18kg-a-1895kg-del-corral",
+    "price": 6.7,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/pollo-entero-18kg-a-1895kg-del-corral.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leche en Polvo Completa Campestre 400g",
+    "slug": "leche-en-polvo-completa-campestre-400g",
+    "price": 7.62,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-en-polvo-completa-campestre-400g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Lechuga Americana 700g a 1Kg",
+    "slug": "lechuga-americana-700g-a-1kg",
+    "price": 1.21,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/lechuga-americana-700g-a-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Papel Higiénico Rosal 400 Hojas 4 und",
+    "slug": "papel-higienico-rosal-400-hojas-4-und",
+    "price": 2.96,
+    "category": "Papel",
+    "image_path": "/images/catalog/higiene-y-belleza/papel-higienico-rosal-400-hojas-4-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jugo de Naranja Yukery 1.5L",
+    "slug": "jugo-de-naranja-yukery-15l",
+    "price": 5.46,
+    "category": "Jugos, Tés y Energizantes",
+    "image_path": "/images/catalog/viveres-y-despensa/jugo-de-naranja-yukery-15l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Huesito Ahumado Tu Zona 500g",
+    "slug": "huesito-ahumado-tu-zona-500g",
+    "price": 2.52,
+    "category": "Cerdo",
+    "image_path": "/images/catalog/carnes-y-proteinas/huesito-ahumado-tu-zona-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pasta Tipo Dedales Extra Especial Primor 1Kg",
+    "slug": "pasta-tipo-dedales-extra-especial-primor-1kg",
+    "price": 2.12,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/pasta-tipo-dedales-extra-especial-primor-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mantequilla sin Sal Monte Adentro 200g",
+    "slug": "mantequilla-sin-sal-monte-adentro-200g",
+    "price": 5.2,
+    "category": "Mantequillas y Margarinas",
+    "image_path": "/images/catalog/lacteos-y-huevos/mantequilla-sin-sal-monte-adentro-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Granos, Harinas y Pastas Saludable",
+    "slug": "granos-harinas-y-pastas-saludable",
+    "price": 1.76,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/granos-harinas-y-pastas-saludable.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Yogurt Liquido Dulce Cremigurt Sapori 230g",
+    "slug": "yogurt-liquido-dulce-cremigurt-sapori-230g",
+    "price": 2.2,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/yogurt-liquido-dulce-cremigurt-sapori-230g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pack de 10 Unidades Café Amanecer gourmet 200g",
+    "slug": "pack-de-10-unidades-cafe-amanecer-gourmet-200g",
+    "price": 29.06,
+    "category": "Café y Cacao",
+    "image_path": "/images/catalog/viveres-y-despensa/pack-de-10-unidades-cafe-amanecer-gourmet-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bulto Arroz Blanco Tradicional Mary 900g 24 Und",
+    "slug": "bulto-arroz-blanco-tradicional-mary-900g-24-und",
+    "price": 28.09,
+    "category": "Granos",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/bulto-arroz-blanco-tradicional-mary-900g-24-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bulto de Papel Higiénico 600 Hojas Rosal Plus 4 Und 12 Paquetes",
+    "slug": "bulto-de-papel-higienico-600-hojas-rosal-plus-4-und-12-paquetes",
+    "price": 44.32,
+    "category": "Papel",
+    "image_path": "/images/catalog/higiene-y-belleza/bulto-de-papel-higienico-600-hojas-rosal-plus-4-und-12-paquetes.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bulto de Pasta Vermicelli Primor 1Kg 12 Und",
+    "slug": "bulto-de-pasta-vermicelli-primor-1kg-12-und",
+    "price": 30.57,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/bulto-de-pasta-vermicelli-primor-1kg-12-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bulto de Pasta Tornillos Primor 1Kg 12 Und",
+    "slug": "bulto-de-pasta-tornillos-primor-1kg-12-und",
+    "price": 30.57,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/bulto-de-pasta-tornillos-primor-1kg-12-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bulto de Pasta Tipo Tornillos Extra Especial Primor 12 Und",
+    "slug": "bulto-de-pasta-tipo-tornillos-extra-especial-primor-12-und",
+    "price": 18.4,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/bulto-de-pasta-tipo-tornillos-extra-especial-primor-12-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Linterna Frontal Led Recargable con Panel Solar",
+    "slug": "linterna-frontal-led-recargable-con-panel-solar",
+    "price": 11.43,
+    "category": "Iluminación y Pilas",
+    "image_path": "/images/catalog/electricidad-y-pilas/linterna-frontal-led-recargable-con-panel-solar.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Linterna Recargable Multifuncional L-882",
+    "slug": "linterna-recargable-multifuncional-l-882",
+    "price": 5.07,
+    "category": "Iluminación y Pilas",
+    "image_path": "/images/catalog/electricidad-y-pilas/linterna-recargable-multifuncional-l-882.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "6 Diablitos Underwood 115g c/u",
+    "slug": "6-diablitos-underwood-115g-cu",
+    "price": 16.44,
+    "category": "Para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/6-diablitos-underwood-115g-cu.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bulto de Pasta Vermicelli Allegri 1 Kg 12 Und",
+    "slug": "bulto-de-pasta-vermicelli-allegri-1-kg-12-und",
+    "price": 22.05,
+    "category": "Pasta",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/bulto-de-pasta-vermicelli-allegri-1-kg-12-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Linterna Recargable con Panel Solar 3 en 1 F-926 Colores Variados",
+    "slug": "linterna-recargable-con-panel-solar-3-en-1-f-926-colores-variados",
+    "price": 12.0,
+    "category": "Iluminación y Pilas",
+    "image_path": "/images/catalog/electricidad-y-pilas/linterna-recargable-con-panel-solar-3-en-1-f-926-colores-variados.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Linterna Recargable con Panel Solar 3 en 1 JY2288",
+    "slug": "linterna-recargable-con-panel-solar-3-en-1-jy2288",
+    "price": 9.33,
+    "category": "Iluminación y Pilas",
+    "image_path": "/images/catalog/electricidad-y-pilas/linterna-recargable-con-panel-solar-3-en-1-jy2288.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Gel Fijador Extra Fuerte Power Every Night 250g",
+    "slug": "gel-fijador-extra-fuerte-power-every-night-250g",
+    "price": 3.87,
+    "category": "Gel, Cremas y Tratamientos",
+    "image_path": "/images/catalog/higiene-y-belleza/gel-fijador-extra-fuerte-power-every-night-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Higiene Bucal",
+    "slug": "higiene-bucal",
+    "price": 6.25,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/higiene-bucal.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Crema para Peinar de Colágeno Pro-V Miracles Pantene 300ml",
+    "slug": "crema-para-peinar-de-colageno-pro-v-miracles-pantene-300ml",
+    "price": 10.63,
+    "category": "Gel, Cremas y Tratamientos",
+    "image_path": "/images/catalog/higiene-y-belleza/crema-para-peinar-de-colageno-pro-v-miracles-pantene-300ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabon de Tocador Spring Freshnness Dalan 3und 90g C-U",
+    "slug": "jabon-de-tocador-spring-freshnness-dalan-3und-90g-c-u",
+    "price": 4.13,
+    "category": "Jabón",
+    "image_path": "/images/catalog/higiene-y-belleza/jabon-de-tocador-spring-freshnness-dalan-3und-90g-c-u.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cuidado Personal Importado, Jabón",
+    "slug": "cuidado-personal-importado-jabon",
+    "price": 2.7,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/cuidado-personal-importado-jabon.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cepillo Dental Carbón Suave Colores Variados Colgate 1 Und",
+    "slug": "cepillo-dental-carbon-suave-colores-variados-colgate-1-und",
+    "price": 2.09,
+    "category": "Higiene Bucal",
+    "image_path": "/images/catalog/higiene-y-belleza/cepillo-dental-carbon-suave-colores-variados-colgate-1-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabón Antibacterial Fresh Protex 110g",
+    "slug": "jabon-antibacterial-fresh-protex-110g",
+    "price": 2.09,
+    "category": "Jabón",
+    "image_path": "/images/catalog/higiene-y-belleza/jabon-antibacterial-fresh-protex-110g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Serum Facial Anti Edad Glow PDRN Salmon DNA Bacc 30ml",
+    "slug": "serum-facial-anti-edad-glow-pdrn-salmon-dna-bacc-30ml",
+    "price": 6.14,
+    "category": "Hidratación",
+    "image_path": "/images/catalog/viveres-y-despensa/serum-facial-anti-edad-glow-pdrn-salmon-dna-bacc-30ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallas Sanitarias Esencial Flujo Medio Kotex 8 Und",
+    "slug": "toallas-sanitarias-esencial-flujo-medio-kotex-8-und",
+    "price": 1.62,
+    "category": "Cuidado Intimo",
+    "image_path": "/images/catalog/higiene-y-belleza/toallas-sanitarias-esencial-flujo-medio-kotex-8-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desodorante en Barra 72H Tono Uniforme Dove 45g",
+    "slug": "desodorante-en-barra-72h-tono-uniforme-dove-45g",
+    "price": 8.86,
+    "category": "Desodorantes",
+    "image_path": "/images/catalog/higiene-y-belleza/desodorante-en-barra-72h-tono-uniforme-dove-45g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Crema para Peinar Rizos sin Sal Modella 240ml",
+    "slug": "crema-para-peinar-rizos-sin-sal-modella-240ml",
+    "price": 4.64,
+    "category": "Gel, Cremas y Tratamientos",
+    "image_path": "/images/catalog/higiene-y-belleza/crema-para-peinar-rizos-sin-sal-modella-240ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Shampoo para Rizos sin Sal Modella 375ml",
+    "slug": "shampoo-para-rizos-sin-sal-modella-375ml",
+    "price": 4.93,
+    "category": "Shampoo y Acondicionador",
+    "image_path": "/images/catalog/higiene-y-belleza/shampoo-para-rizos-sin-sal-modella-375ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Acondicionador para Rizos sin Sal Modella 375ml",
+    "slug": "acondicionador-para-rizos-sin-sal-modella-375ml",
+    "price": 4.93,
+    "category": "Shampoo y Acondicionador",
+    "image_path": "/images/catalog/higiene-y-belleza/acondicionador-para-rizos-sin-sal-modella-375ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Crema Dental Colgate Plax 100ml",
+    "slug": "crema-dental-colgate-plax-100ml",
+    "price": 4.83,
+    "category": "Higiene Bucal",
+    "image_path": "/images/catalog/higiene-y-belleza/crema-dental-colgate-plax-100ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Afeitadora Prestobarba3 Gillette 2 Und",
+    "slug": "afeitadora-prestobarba3-gillette-2-und",
+    "price": 5.12,
+    "category": "Afeitado y Depilación",
+    "image_path": "/images/catalog/higiene-y-belleza/afeitadora-prestobarba3-gillette-2-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallitas Húmedas Intimas Aroma Arándano Intylact 20 Und",
+    "slug": "toallitas-humedas-intimas-aroma-arandano-intylact-20-und",
+    "price": 3.71,
+    "category": "Cuidado Intimo",
+    "image_path": "/images/catalog/higiene-y-belleza/toallitas-humedas-intimas-aroma-arandano-intylact-20-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desodorante Roll-On Power Fresh Lady Speed Stick 50ml",
+    "slug": "desodorante-roll-on-power-fresh-lady-speed-stick-50ml",
+    "price": 5.14,
+    "category": "Desodorantes",
+    "image_path": "/images/catalog/higiene-y-belleza/desodorante-roll-on-power-fresh-lady-speed-stick-50ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallitas para Bebe Premium Sin Fragancia Members Mark 96 Und",
+    "slug": "toallitas-para-bebe-premium-sin-fragancia-members-mark-96-und",
+    "price": 12.14,
+    "category": "Cuidado Personal Importado, Higiene",
+    "image_path": "/images/catalog/higiene-y-belleza/toallitas-para-bebe-premium-sin-fragancia-members-mark-96-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabón en Barra Antibacterial Cool Protection Covex 115g 3 Und",
+    "slug": "jabon-en-barra-antibacterial-cool-protection-covex-115g-3-und",
+    "price": 4.56,
+    "category": "Jabón",
+    "image_path": "/images/catalog/higiene-y-belleza/jabon-en-barra-antibacterial-cool-protection-covex-115g-3-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Hisopos de Algodón Cosméticos Monalisa 100 Und",
+    "slug": "hisopos-de-algodon-cosmeticos-monalisa-100-und",
+    "price": 0.94,
+    "category": "Maquillaje, Talcos e Hisopos",
+    "image_path": "/images/catalog/higiene-y-belleza/hisopos-de-algodon-cosmeticos-monalisa-100-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Talco para Bebe Baby Finger 200g",
+    "slug": "talco-para-bebe-baby-finger-200g",
+    "price": 3.12,
+    "category": "Higiene",
+    "image_path": "/images/catalog/higiene-y-belleza/talco-para-bebe-baby-finger-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desodorante Roll-On Fresh Old Spice 52g",
+    "slug": "desodorante-roll-on-fresh-old-spice-52g",
+    "price": 3.6,
+    "category": "Desodorantes",
+    "image_path": "/images/catalog/higiene-y-belleza/desodorante-roll-on-fresh-old-spice-52g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Crema Corporal para Caballero Nivea Men 75ml",
+    "slug": "crema-corporal-para-caballero-nivea-men-75ml",
+    "price": 9.89,
+    "category": "Cremas, Protectores y Repelentes",
+    "image_path": "/images/catalog/carnes-y-proteinas/crema-corporal-para-caballero-nivea-men-75ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Vaselina Refrescante para Caballeros Blue Seal Vaseline 100ml",
+    "slug": "vaselina-refrescante-para-caballeros-blue-seal-vaseline-100ml",
+    "price": 2.55,
+    "category": "Cremas, Protectores y Repelentes",
+    "image_path": "/images/catalog/carnes-y-proteinas/vaselina-refrescante-para-caballeros-blue-seal-vaseline-100ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabón en Barra Hidratante Agua Micelar y Pitahaya Dalan 125g 3 Und",
+    "slug": "jabon-en-barra-hidratante-agua-micelar-y-pitahaya-dalan-125g-3-und",
+    "price": 4.91,
+    "category": "Jabón",
+    "image_path": "/images/catalog/higiene-y-belleza/jabon-en-barra-hidratante-agua-micelar-y-pitahaya-dalan-125g-3-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Locion de Afeitar Comfort Deep Nivea Men 100ml",
+    "slug": "locion-de-afeitar-comfort-deep-nivea-men-100ml",
+    "price": 13.12,
+    "category": "Cremas, Protectores y Repelentes",
+    "image_path": "/images/catalog/carnes-y-proteinas/locion-de-afeitar-comfort-deep-nivea-men-100ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desodorante en Spray Pera Frozen y Cedro Black Axe 150ml",
+    "slug": "desodorante-en-spray-pera-frozen-y-cedro-black-axe-150ml",
+    "price": 7.1,
+    "category": "Desodorantes",
+    "image_path": "/images/catalog/higiene-y-belleza/desodorante-en-spray-pera-frozen-y-cedro-black-axe-150ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Afeitadora Original 3 Hojillas con Repuesto Gillette Venus 1und",
+    "slug": "afeitadora-original-3-hojillas-con-repuesto-gillette-venus-1und",
+    "price": 7.23,
+    "category": "Afeitado y Depilación",
+    "image_path": "/images/catalog/higiene-y-belleza/afeitadora-original-3-hojillas-con-repuesto-gillette-venus-1und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabón en Barra Avena y Lavanda Dalán 115g 3 Und",
+    "slug": "jabon-en-barra-avena-y-lavanda-dalan-115g-3-und",
+    "price": 4.8,
+    "category": "Jabón",
+    "image_path": "/images/catalog/higiene-y-belleza/jabon-en-barra-avena-y-lavanda-dalan-115g-3-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Afeitadora con Aloe Vera Suave Venus Gillette 2 Und",
+    "slug": "afeitadora-con-aloe-vera-suave-venus-gillette-2-und",
+    "price": 5.03,
+    "category": "Afeitado y Depilación",
+    "image_path": "/images/catalog/higiene-y-belleza/afeitadora-con-aloe-vera-suave-venus-gillette-2-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Espuma de Afeitar Carbono Gillette 150g",
+    "slug": "espuma-de-afeitar-carbono-gillette-150g",
+    "price": 6.26,
+    "category": "Afeitado y Depilación",
+    "image_path": "/images/catalog/higiene-y-belleza/espuma-de-afeitar-carbono-gillette-150g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Colonia para Caballero Despues de Afeitar R5 Rolda 430ml",
+    "slug": "colonia-para-caballero-despues-de-afeitar-r5-rolda-430ml",
+    "price": 11.25,
+    "category": "Splash y Perfumes",
+    "image_path": "/images/catalog/higiene-y-belleza/colonia-para-caballero-despues-de-afeitar-r5-rolda-430ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Shampoo Extra Hidratante Frenchs Gold 500ml",
+    "slug": "shampoo-extra-hidratante-frenchs-gold-500ml",
+    "price": 6.81,
+    "category": "Shampoo y Acondicionador",
+    "image_path": "/images/catalog/higiene-y-belleza/shampoo-extra-hidratante-frenchs-gold-500ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallitas Húmedas Premium Aloe Vera Oki Baby 64 Und",
+    "slug": "toallitas-humedas-premium-aloe-vera-oki-baby-64-und",
+    "price": 2.24,
+    "category": "Higiene",
+    "image_path": "/images/catalog/higiene-y-belleza/toallitas-humedas-premium-aloe-vera-oki-baby-64-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Masajeador Facial Inteligente en Forma de V",
+    "slug": "masajeador-facial-inteligente-en-forma-de-v",
+    "price": 26.67,
+    "category": "Cuidado y Belleza",
+    "image_path": "/images/catalog/higiene-y-belleza/masajeador-facial-inteligente-en-forma-de-v.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Balsamo Labial Manteca de Cacao Vaseline 4.8g",
+    "slug": "balsamo-labial-manteca-de-cacao-vaseline-48g",
+    "price": 4.64,
+    "category": "Belleza Importado, Maquillaje",
+    "image_path": "/images/catalog/higiene-y-belleza/balsamo-labial-manteca-de-cacao-vaseline-48g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallas Sanitarias Discretas Ultrafinas Kotex 10 Und",
+    "slug": "toallas-sanitarias-discretas-ultrafinas-kotex-10-und",
+    "price": 2.82,
+    "category": "Cuidado Intimo",
+    "image_path": "/images/catalog/higiene-y-belleza/toallas-sanitarias-discretas-ultrafinas-kotex-10-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Protector Solar Facial FPS 50+ Beautycare Hawaiian Tropic 50ml",
+    "slug": "protector-solar-facial-fps-50-beautycare-hawaiian-tropic-50ml",
+    "price": 13.93,
+    "category": "Cremas, Protectores y Repelentes",
+    "image_path": "/images/catalog/carnes-y-proteinas/protector-solar-facial-fps-50-beautycare-hawaiian-tropic-50ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Shampoo de Rizos para Niños Alea 350ml",
+    "slug": "shampoo-de-rizos-para-ninos-alea-350ml",
+    "price": 6.91,
+    "category": "Shampoo y Acondicionador",
+    "image_path": "/images/catalog/higiene-y-belleza/shampoo-de-rizos-para-ninos-alea-350ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Higiene",
+    "slug": "higiene",
+    "price": 3.33,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/higiene.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cepillo Dental Slim Soft Black Single Suave Colgate",
+    "slug": "cepillo-dental-slim-soft-black-single-suave-colgate",
+    "price": 5.26,
+    "category": "Higiene Bucal",
+    "image_path": "/images/catalog/higiene-y-belleza/cepillo-dental-slim-soft-black-single-suave-colgate.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tonico Facial de Tomate Anti-Acne Yesto 118ml",
+    "slug": "tonico-facial-de-tomate-anti-acne-yesto-118ml",
+    "price": 7.14,
+    "category": "Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/tonico-facial-de-tomate-anti-acne-yesto-118ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabon en Barra Serum Mucina Disaar 100g",
+    "slug": "jabon-en-barra-serum-mucina-disaar-100g",
+    "price": 4.29,
+    "category": "Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/jabon-en-barra-serum-mucina-disaar-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabón en Barra Ultra Hidratante Aloe Vera Juice Dalan 270g 3 Und",
+    "slug": "jabon-en-barra-ultra-hidratante-aloe-vera-juice-dalan-270g-3-und",
+    "price": 4.16,
+    "category": "Jabón",
+    "image_path": "/images/catalog/higiene-y-belleza/jabon-en-barra-ultra-hidratante-aloe-vera-juice-dalan-270g-3-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallitas Húmedas Premium Aloe Vera Oki Baby 90 Und",
+    "slug": "toallitas-humedas-premium-aloe-vera-oki-baby-90-und",
+    "price": 2.85,
+    "category": "Higiene",
+    "image_path": "/images/catalog/higiene-y-belleza/toallitas-humedas-premium-aloe-vera-oki-baby-90-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Protector Solar Facial y Corporal con Vitamina B5 75 SPF Disaar 180ml",
+    "slug": "protector-solar-facial-y-corporal-con-vitamina-b5-75-spf-disaar-180ml",
+    "price": 7.14,
+    "category": "Cremas, Protectores y Repelentes, Limpieza",
+    "image_path": "/images/catalog/carnes-y-proteinas/protector-solar-facial-y-corporal-con-vitamina-b5-75-spf-disaar-180ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabon en Barra Anti-Acne de Romero y Centella Disaar 100g",
+    "slug": "jabon-en-barra-anti-acne-de-romero-y-centella-disaar-100g",
+    "price": 4.83,
+    "category": "Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/jabon-en-barra-anti-acne-de-romero-y-centella-disaar-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Plancha con Placas de Aleación de Titanio Pro 480 BellaLiss",
+    "slug": "plancha-con-placas-de-aleacion-de-titanio-pro-480-bellaliss",
+    "price": 78.75,
+    "category": "Cuidado y Belleza",
+    "image_path": "/images/catalog/higiene-y-belleza/plancha-con-placas-de-aleacion-de-titanio-pro-480-bellaliss.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Enjuague Bucal Ice Infinity Plax Colgate 500ml",
+    "slug": "enjuague-bucal-ice-infinity-plax-colgate-500ml",
+    "price": 9.47,
+    "category": "Higiene Bucal",
+    "image_path": "/images/catalog/higiene-y-belleza/enjuague-bucal-ice-infinity-plax-colgate-500ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Shampoo Nutritivo de Colágeno Pro-V Miracles Pantene 300ml",
+    "slug": "shampoo-nutritivo-de-colageno-pro-v-miracles-pantene-300ml",
+    "price": 11.75,
+    "category": "Shampoo y Acondicionador",
+    "image_path": "/images/catalog/higiene-y-belleza/shampoo-nutritivo-de-colageno-pro-v-miracles-pantene-300ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desodorante en Barra Active Emotion Rexona 45g",
+    "slug": "desodorante-en-barra-active-emotion-rexona-45g",
+    "price": 7.82,
+    "category": "Desodorantes",
+    "image_path": "/images/catalog/higiene-y-belleza/desodorante-en-barra-active-emotion-rexona-45g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Crema Corporal Japonesa Cherry Blossom Nuvel 236ml",
+    "slug": "crema-corporal-japonesa-cherry-blossom-nuvel-236ml",
+    "price": 6.61,
+    "category": "Cremas, Protectores y Repelentes",
+    "image_path": "/images/catalog/carnes-y-proteinas/crema-corporal-japonesa-cherry-blossom-nuvel-236ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Afeitado y Depilación, Cuidado Personal Importado",
+    "slug": "afeitado-y-depilacion-cuidado-personal-importado",
+    "price": 8.66,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/afeitado-y-depilacion-cuidado-personal-importado.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Acondicionador 3 Minutos Miracles Restauración Pro-V Pantene 170g",
+    "slug": "acondicionador-3-minutos-miracles-restauracion-pro-v-pantene-170g",
+    "price": 15.57,
+    "category": "Shampoo y Acondicionador",
+    "image_path": "/images/catalog/higiene-y-belleza/acondicionador-3-minutos-miracles-restauracion-pro-v-pantene-170g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Afeitadora Prestobarba3 Carbono Gillette 2 Und",
+    "slug": "afeitadora-prestobarba3-carbono-gillette-2-und",
+    "price": 5.59,
+    "category": "Afeitado y Depilación",
+    "image_path": "/images/catalog/higiene-y-belleza/afeitadora-prestobarba3-carbono-gillette-2-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desodorante Cool Wave en Roll-On Gillette 60g",
+    "slug": "desodorante-cool-wave-en-roll-on-gillette-60g",
+    "price": 3.82,
+    "category": "Desodorantes",
+    "image_path": "/images/catalog/higiene-y-belleza/desodorante-cool-wave-en-roll-on-gillette-60g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallitas Húmedas con Extracto de Manzanilla Alea 72 Und",
+    "slug": "toallitas-humedas-con-extracto-de-manzanilla-alea-72-und",
+    "price": 2.05,
+    "category": "Higiene",
+    "image_path": "/images/catalog/higiene-y-belleza/toallitas-humedas-con-extracto-de-manzanilla-alea-72-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabón Intimo con fragancia a Floral Intylact 220ml",
+    "slug": "jabon-intimo-con-fragancia-a-floral-intylact-220ml",
+    "price": 12.0,
+    "category": "Jabón",
+    "image_path": "/images/catalog/higiene-y-belleza/jabon-intimo-con-fragancia-a-floral-intylact-220ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desodorante Antitranspirante con Coco Dove 40g",
+    "slug": "desodorante-antitranspirante-con-coco-dove-40g",
+    "price": 7.72,
+    "category": "Desodorantes",
+    "image_path": "/images/catalog/higiene-y-belleza/desodorante-antitranspirante-con-coco-dove-40g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Loción Limpiadora de Rostro y Cuerpo Dia-B Skin Brucen 250ml",
+    "slug": "locion-limpiadora-de-rostro-y-cuerpo-dia-b-skin-brucen-250ml",
+    "price": 11.3,
+    "category": "Cremas, Protectores y Repelentes, Limpieza",
+    "image_path": "/images/catalog/carnes-y-proteinas/locion-limpiadora-de-rostro-y-cuerpo-dia-b-skin-brucen-250ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Crema Dental Triple Acción Colgate 150ml",
+    "slug": "crema-dental-triple-accion-colgate-150ml",
+    "price": 6.44,
+    "category": "Higiene Bucal",
+    "image_path": "/images/catalog/higiene-y-belleza/crema-dental-triple-accion-colgate-150ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallitas Húmedas Premium Loción de Bebé Oki Baby 64 Und",
+    "slug": "toallitas-humedas-premium-locion-de-bebe-oki-baby-64-und",
+    "price": 2.24,
+    "category": "Higiene",
+    "image_path": "/images/catalog/higiene-y-belleza/toallitas-humedas-premium-locion-de-bebe-oki-baby-64-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Shampoo Anti Caída Bambú Pro-V Pantene 200ml",
+    "slug": "shampoo-anti-caida-bambu-pro-v-pantene-200ml",
+    "price": 7.03,
+    "category": "Shampoo y Acondicionador",
+    "image_path": "/images/catalog/higiene-y-belleza/shampoo-anti-caida-bambu-pro-v-pantene-200ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Ácido Folico 10mg x 30 Tabletas Calox",
+    "slug": "acido-folico-10mg-x-30-tabletas-calox",
+    "price": 1.73,
+    "category": "Vitaminas",
+    "image_path": "/images/catalog/higiene-y-belleza/acido-folico-10mg-x-30-tabletas-calox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Betagen 12mg/3ml 1 Ampolla Biotech",
+    "slug": "betagen-12mg3ml-1-ampolla-biotech",
+    "price": 7.28,
+    "category": "Anti Inflamatorio, Esteroides",
+    "image_path": "/images/catalog/medicamentos/betagen-12mg3ml-1-ampolla-biotech.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alkaseltzer x 12 Tabletas Bayer",
+    "slug": "alkaseltzer-x-12-tabletas-bayer",
+    "price": 7.48,
+    "category": "Antiácidos",
+    "image_path": "/images/catalog/varios/alkaseltzer-x-12-tabletas-bayer.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Loratadina 10mg x 10 Tabletas Kimiceg",
+    "slug": "loratadina-10mg-x-10-tabletas-kimiceg",
+    "price": 1.83,
+    "category": "Antialérgicos",
+    "image_path": "/images/catalog/medicamentos/loratadina-10mg-x-10-tabletas-kimiceg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Omeprazol 40mg Drotafarma 10 Cápsulas",
+    "slug": "omeprazol-40mg-drotafarma-10-capsulas",
+    "price": 1.69,
+    "category": "Protector Gástrico",
+    "image_path": "/images/catalog/medicamentos/omeprazol-40mg-drotafarma-10-capsulas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Amoxicilina 500mg x 12 Cápsulas Calox",
+    "slug": "amoxicilina-500mg-x-12-capsulas-calox",
+    "price": 3.94,
+    "category": "Antibióticos",
+    "image_path": "/images/catalog/medicamentos/amoxicilina-500mg-x-12-capsulas-calox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jeringa 5ml/cc Con Aguja 21G x 1 ½”",
+    "slug": "jeringa-5mlcc-con-aguja-21g-x-1",
+    "price": 0.09,
+    "category": "Insumos Médicos, Primeros Auxilios",
+    "image_path": "/images/catalog/medicamentos/jeringa-5mlcc-con-aguja-21g-x-1.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alcohol Antiséptico 70% con Dispensador El Guardian 60ml",
+    "slug": "alcohol-antiseptico-70-con-dispensador-el-guardian-60ml",
+    "price": 1.41,
+    "category": "Insumos Médicos, Primeros Auxilios",
+    "image_path": "/images/catalog/medicamentos/alcohol-antiseptico-70-con-dispensador-el-guardian-60ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Acetaminofén 650mg La Sante 10 Tabletas",
+    "slug": "acetaminofen-650mg-la-sante-10-tabletas",
+    "price": 0.89,
+    "category": "Analgésicos, Antipiréticos",
+    "image_path": "/images/catalog/medicamentos/acetaminofen-650mg-la-sante-10-tabletas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tapaboca Protector Descartable Negro Gilox 50 und",
+    "slug": "tapaboca-protector-descartable-negro-gilox-50-und",
+    "price": 3.03,
+    "category": "Insumos Médicos",
+    "image_path": "/images/catalog/medicamentos/tapaboca-protector-descartable-negro-gilox-50-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Gasa Parafinada Estéril Con Clorhexidina 10 x 10cm 1 Unidad",
+    "slug": "gasa-parafinada-esteril-con-clorhexidina-10-x-10cm-1-unidad",
+    "price": 1.4,
+    "category": "Antisépticos y Desinfectantes, Primeros Auxilios",
+    "image_path": "/images/catalog/aseo-del-hogar/gasa-parafinada-esteril-con-clorhexidina-10-x-10cm-1-unidad.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Adhesivo de Papel Blanco 3\" x 5 ITM 1 Und",
+    "slug": "adhesivo-de-papel-blanco-3-x-5-itm-1-und",
+    "price": 1.97,
+    "category": "Insumos Médicos, Primeros Auxilios",
+    "image_path": "/images/catalog/medicamentos/adhesivo-de-papel-blanco-3-x-5-itm-1-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Solucion Dextrosa ITM 500ml",
+    "slug": "solucion-dextrosa-itm-500ml",
+    "price": 2.61,
+    "category": "Soluciones",
+    "image_path": "/images/catalog/medicamentos/solucion-dextrosa-itm-500ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Migren 650mg x 10 Comprimidos Leti",
+    "slug": "migren-650mg-x-10-comprimidos-leti",
+    "price": 2.72,
+    "category": "Antimigrañosos",
+    "image_path": "/images/catalog/granos-pastas-y-harinas/migren-650mg-x-10-comprimidos-leti.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Vick Vaporub con Alcanfor, Mentol y Eucalyptus 12g",
+    "slug": "vick-vaporub-con-alcanfor-mentol-y-eucalyptus-12g",
+    "price": 3.18,
+    "category": "Descongestionantes Nasales",
+    "image_path": "/images/catalog/medicamentos/vick-vaporub-con-alcanfor-mentol-y-eucalyptus-12g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Antisépticos y Desinfectantes, Primeros Auxilios",
+    "slug": "antisepticos-y-desinfectantes-primeros-auxilios",
+    "price": 0.7,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/antisepticos-y-desinfectantes-primeros-auxilios.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Insumos Médicos, Primeros Auxilios",
+    "slug": "insumos-medicos-primeros-auxilios",
+    "price": 0.96,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/insumos-medicos-primeros-auxilios.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Adhesivo de Papel Blanco 2\" x 5 ITM 1 Und",
+    "slug": "adhesivo-de-papel-blanco-2-x-5-itm-1-und",
+    "price": 1.46,
+    "category": "Insumos Médicos, Primeros Auxilios",
+    "image_path": "/images/catalog/medicamentos/adhesivo-de-papel-blanco-2-x-5-itm-1-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Losartán Potásico 50mg Teuto x 30 Tabletas Recubiertas",
+    "slug": "losartan-potasico-50mg-teuto-x-30-tabletas-recubiertas",
+    "price": 2.02,
+    "category": "Antihipertensivos",
+    "image_path": "/images/catalog/medicamentos/losartan-potasico-50mg-teuto-x-30-tabletas-recubiertas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Gasa Esteril 4\"x4\" (10cm x 10cm) 2 Und",
+    "slug": "gasa-esteril-4x4-10cm-x-10cm-2-und",
+    "price": 0.31,
+    "category": "Insumos Médicos, Primeros Auxilios",
+    "image_path": "/images/catalog/medicamentos/gasa-esteril-4x4-10cm-x-10cm-2-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Analgésicos, Anti Inflamatorio, Relajantes muscular",
+    "slug": "analgesicos-anti-inflamatorio-relajantes-muscular",
+    "price": 2.47,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/analgesicos-anti-inflamatorio-relajantes-muscular.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Guantes de Nitrilo Color Negro Descartables Talla S Gilox 100 Und",
+    "slug": "guantes-de-nitrilo-color-negro-descartables-talla-s-gilox-100-und",
+    "price": 8.57,
+    "category": "Insumos Médicos, Primeros Auxilios",
+    "image_path": "/images/catalog/medicamentos/guantes-de-nitrilo-color-negro-descartables-talla-s-gilox-100-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pañales para Adultos 88cm x 152cm Prosec Talla G 8 Und",
+    "slug": "panales-para-adultos-88cm-x-152cm-prosec-talla-g-8-und",
+    "price": 12.92,
+    "category": "Cuidado Intimo",
+    "image_path": "/images/catalog/higiene-y-belleza/panales-para-adultos-88cm-x-152cm-prosec-talla-g-8-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Suerolito - Solución Electrolitica Sabor a Fresa 400ml",
+    "slug": "suerolito-solucion-electrolitica-sabor-a-fresa-400ml",
+    "price": 1.95,
+    "category": "Antidiarreicos",
+    "image_path": "/images/catalog/medicamentos/suerolito-solucion-electrolitica-sabor-a-fresa-400ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Acetaminofén 500mg Laproff Blíster 10 tabletas",
+    "slug": "acetaminofen-500mg-laproff-blister-10-tabletas",
+    "price": 0.64,
+    "category": "Analgésicos, Antipiréticos",
+    "image_path": "/images/catalog/medicamentos/acetaminofen-500mg-laproff-blister-10-tabletas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Fluoxetina 20 mg Laproff 10 Tabletas",
+    "slug": "fluoxetina-20-mg-laproff-10-tabletas",
+    "price": 1.48,
+    "category": "Antidepresivos",
+    "image_path": "/images/catalog/carnes-y-proteinas/fluoxetina-20-mg-laproff-10-tabletas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Arcoval 90mg Valmorca 10 Tabletas Recubiertas",
+    "slug": "arcoval-90mg-valmorca-10-tabletas-recubiertas",
+    "price": 10.28,
+    "category": "Analgésicos, Anti Inflamatorio",
+    "image_path": "/images/catalog/medicamentos/arcoval-90mg-valmorca-10-tabletas-recubiertas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "PoliMais Kids Sabor a Banana 240ml",
+    "slug": "polimais-kids-sabor-a-banana-240ml",
+    "price": 8.93,
+    "category": "Vitaminas",
+    "image_path": "/images/catalog/higiene-y-belleza/polimais-kids-sabor-a-banana-240ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tempiren Dia FC Pharma 10 Cápsulas Blandas",
+    "slug": "tempiren-dia-fc-pharma-10-capsulas-blandas",
+    "price": 6.66,
+    "category": "Antigripales",
+    "image_path": "/images/catalog/medicamentos/tempiren-dia-fc-pharma-10-capsulas-blandas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Deca Lentermina Complex Kit 3 Ampollas I.M + jeringas Biotech",
+    "slug": "deca-lentermina-complex-kit-3-ampollas-im-jeringas-biotech",
+    "price": 2.81,
+    "category": "Relajantes muscular, Vitaminas",
+    "image_path": "/images/catalog/higiene-y-belleza/deca-lentermina-complex-kit-3-ampollas-im-jeringas-biotech.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Simeticona 125mg SaludX 10 Capsulas",
+    "slug": "simeticona-125mg-saludx-10-capsulas",
+    "price": 4.6,
+    "category": "Anti Flatulentos",
+    "image_path": "/images/catalog/varios/simeticona-125mg-saludx-10-capsulas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Centella Asiática x 60 Cápsulas Bioinfinity",
+    "slug": "centella-asiatica-x-60-capsulas-bioinfinity",
+    "price": 11.43,
+    "category": "Diuréticos",
+    "image_path": "/images/catalog/medicamentos/centella-asiatica-x-60-capsulas-bioinfinity.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Magnesio Life 500mg Walife 60 Cápsulas",
+    "slug": "magnesio-life-500mg-walife-60-capsulas",
+    "price": 9.32,
+    "category": "Vitaminas",
+    "image_path": "/images/catalog/higiene-y-belleza/magnesio-life-500mg-walife-60-capsulas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Ciprofloxacina 200mg I.V 1 Ampolla 100ml Distrilab",
+    "slug": "ciprofloxacina-200mg-iv-1-ampolla-100ml-distrilab",
+    "price": 1.95,
+    "category": "Antibióticos",
+    "image_path": "/images/catalog/medicamentos/ciprofloxacina-200mg-iv-1-ampolla-100ml-distrilab.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Ninazo Gotas Nasales Adulto 15ml",
+    "slug": "ninazo-gotas-nasales-adulto-15ml",
+    "price": 2.78,
+    "category": "Descongestionantes Nasales",
+    "image_path": "/images/catalog/medicamentos/ninazo-gotas-nasales-adulto-15ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Clarasol 0,12mg/ml Solución Oftálmica 15ml Oftalmi",
+    "slug": "clarasol-012mgml-solucion-oftalmica-15ml-oftalmi",
+    "price": 4.38,
+    "category": "Cuidado de la Vista y Lentes",
+    "image_path": "/images/catalog/medicamentos/clarasol-012mgml-solucion-oftalmica-15ml-oftalmi.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Miovit Compositum con Lidocaina Kit 3 Ampollas 3ml Cofasa",
+    "slug": "miovit-compositum-con-lidocaina-kit-3-ampollas-3ml-cofasa",
+    "price": 5.6,
+    "category": "Vitaminas",
+    "image_path": "/images/catalog/higiene-y-belleza/miovit-compositum-con-lidocaina-kit-3-ampollas-3ml-cofasa.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Atamel Forte 650mg 10 Tabletas",
+    "slug": "atamel-forte-650mg-10-tabletas",
+    "price": 3.21,
+    "category": "Analgésicos, Antipiréticos",
+    "image_path": "/images/catalog/medicamentos/atamel-forte-650mg-10-tabletas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Azitromicina 500mg Calox 5 Tabletas Recubiertas",
+    "slug": "azitromicina-500mg-calox-5-tabletas-recubiertas",
+    "price": 2.26,
+    "category": "Antibióticos",
+    "image_path": "/images/catalog/medicamentos/azitromicina-500mg-calox-5-tabletas-recubiertas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Metformina 500mg Quim Far x 30 Tabletas",
+    "slug": "metformina-500mg-quim-far-x-30-tabletas",
+    "price": 2.11,
+    "category": "Diabetes",
+    "image_path": "/images/catalog/medicamentos/metformina-500mg-quim-far-x-30-tabletas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Acetaminofén 650mg 10 Tabletas Genven",
+    "slug": "acetaminofen-650mg-10-tabletas-genven",
+    "price": 0.65,
+    "category": "Analgésicos, Antipiréticos",
+    "image_path": "/images/catalog/medicamentos/acetaminofen-650mg-10-tabletas-genven.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Colon Detox Storefit 60 Capsulas + Sobre de Jabón Íntimo intylact de Obsequio",
+    "slug": "colon-detox-storefit-60-capsulas-sobre-de-jabon-intimo-intylact-de-obsequio",
+    "price": 54.67,
+    "category": "Digestivos, Duchas y Jabones",
+    "image_path": "/images/catalog/higiene-y-belleza/colon-detox-storefit-60-capsulas-sobre-de-jabon-intimo-intylact-de-obsequio.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Calcio 1200mg Member´s Marks 600 Tabletas",
+    "slug": "calcio-1200mg-members-marks-600-tabletas",
+    "price": 29.69,
+    "category": "Medicinas Importadas, Vitaminas",
+    "image_path": "/images/catalog/higiene-y-belleza/calcio-1200mg-members-marks-600-tabletas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "AziviC Vitamina C 1000mg Triple Acción 30 Capsulas",
+    "slug": "azivic-vitamina-c-1000mg-triple-accion-30-capsulas",
+    "price": 11.63,
+    "category": "Vitaminas",
+    "image_path": "/images/catalog/higiene-y-belleza/azivic-vitamina-c-1000mg-triple-accion-30-capsulas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Carne Molida 85% Libre De Grasa 1Kg",
+    "slug": "carne-molida-85-libre-de-grasa-1kg",
+    "price": 10.49,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/carne-molida-85-libre-de-grasa-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Hamburguesa Especial Tipo Americano Premium 2 Und 180g c/u",
+    "slug": "hamburguesa-especial-tipo-americano-premium-2-und-180g-cu",
+    "price": 4.62,
+    "category": "Parrillera, Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/hamburguesa-especial-tipo-americano-premium-2-und-180g-cu.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Carne Molida Magra 98% 1kg",
+    "slug": "carne-molida-magra-98-1kg",
+    "price": 13.38,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/carne-molida-magra-98-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chuleta de Res Parrillera 500g",
+    "slug": "chuleta-de-res-parrillera-500g",
+    "price": 5.58,
+    "category": "Parrillera, Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/chuleta-de-res-parrillera-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Lagarto Sin Hueso 500g Aprox",
+    "slug": "lagarto-sin-hueso-500g-aprox",
+    "price": 5.36,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/lagarto-sin-hueso-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Carne Molida Magra 98% 500gr",
+    "slug": "carne-molida-magra-98-500gr",
+    "price": 6.8,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/carne-molida-magra-98-500gr.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Carne Guisar 500g",
+    "slug": "carne-guisar-500g",
+    "price": 6.43,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/carne-guisar-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pechuga de Pollo C-Hueso Sin Piel Que Pollo 750g aprox",
+    "slug": "pechuga-de-pollo-c-hueso-sin-piel-que-pollo-750g-aprox",
+    "price": 5.66,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/pechuga-de-pollo-c-hueso-sin-piel-que-pollo-750g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Filet de Merluza Empacado al Vacio Bottega Di Mare 250g",
+    "slug": "filet-de-merluza-empacado-al-vacio-bottega-di-mare-250g",
+    "price": 7.14,
+    "category": "Pescaderia Italiana, Pescados y Mariscos",
+    "image_path": "/images/catalog/carnes-y-proteinas/filet-de-merluza-empacado-al-vacio-bottega-di-mare-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mini Carne de Hamburguesa La Hierra 60g 6 Und",
+    "slug": "mini-carne-de-hamburguesa-la-hierra-60g-6-und",
+    "price": 6.45,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/mini-carne-de-hamburguesa-la-hierra-60g-6-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Carne Para Mechar 700gr",
+    "slug": "carne-para-mechar-700gr",
+    "price": 9.04,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/carne-para-mechar-700gr.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chuleta Res 500g a 550g",
+    "slug": "chuleta-res-500g-a-550g",
+    "price": 5.9,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/chuleta-res-500g-a-550g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bistec de Pulpa Negra 700g Aprox",
+    "slug": "bistec-de-pulpa-negra-700g-aprox",
+    "price": 8.58,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/bistec-de-pulpa-negra-700g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Nuggets de Pollo Ricci 500g",
+    "slug": "nuggets-de-pollo-ricci-500g",
+    "price": 5.22,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/nuggets-de-pollo-ricci-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Costilla De Cerdo 500g",
+    "slug": "costilla-de-cerdo-500g",
+    "price": 5.57,
+    "category": "Cerdo, Parrillera",
+    "image_path": "/images/catalog/carnes-y-proteinas/costilla-de-cerdo-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Brochetas Alitas de Pollo 4 Und 3 Pzas c/u",
+    "slug": "brochetas-alitas-de-pollo-4-und-3-pzas-cu",
+    "price": 2.73,
+    "category": "Parrillera, Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/brochetas-alitas-de-pollo-4-und-3-pzas-cu.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Brochetas de Pollo 3 Und 170g c/u aprox",
+    "slug": "brochetas-de-pollo-3-und-170g-cu-aprox",
+    "price": 6.23,
+    "category": "Parrillera",
+    "image_path": "/images/catalog/carnes-y-proteinas/brochetas-de-pollo-3-und-170g-cu-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Camaron Limpio 500g Aprox",
+    "slug": "camaron-limpio-500g-aprox",
+    "price": 13.33,
+    "category": "Pescados y Mariscos",
+    "image_path": "/images/catalog/carnes-y-proteinas/camaron-limpio-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pechuga C- Hueso Entero Que Pollo 850g a 900g",
+    "slug": "pechuga-c-hueso-entero-que-pollo-850g-a-900g",
+    "price": 6.57,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/pechuga-c-hueso-entero-que-pollo-850g-a-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Strogonoff Tipo A1 500g",
+    "slug": "strogonoff-tipo-a1-500g",
+    "price": 6.0,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/strogonoff-tipo-a1-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Milanesa Molida Que Pollo 500g",
+    "slug": "milanesa-molida-que-pollo-500g",
+    "price": 5.36,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/milanesa-molida-que-pollo-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Muchacho Redondo1 Pieza de1.5Kg Aprox",
+    "slug": "muchacho-redondo1-pieza-de15kg-aprox",
+    "price": 21.22,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/muchacho-redondo1-pieza-de15kg-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cuadril o Contramuslo de Pollo Sin Piel Que Pollo 600 a 700g",
+    "slug": "cuadril-o-contramuslo-de-pollo-sin-piel-que-pollo-600-a-700g",
+    "price": 4.86,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/cuadril-o-contramuslo-de-pollo-sin-piel-que-pollo-600-a-700g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Trocitos de Carne de Res para Pepito 500g",
+    "slug": "trocitos-de-carne-de-res-para-pepito-500g",
+    "price": 6.33,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/trocitos-de-carne-de-res-para-pepito-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alitas de Pollo Que Pollo 1Kg",
+    "slug": "alitas-de-pollo-que-pollo-1kg",
+    "price": 3.34,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/alitas-de-pollo-que-pollo-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cuero de Cerdo con Tocino para Chicharrón 500g",
+    "slug": "cuero-de-cerdo-con-tocino-para-chicharron-500g",
+    "price": 2.0,
+    "category": "Cerdo",
+    "image_path": "/images/catalog/carnes-y-proteinas/cuero-de-cerdo-con-tocino-para-chicharron-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Carapachito de Pollo 1Kg Aprox",
+    "slug": "carapachito-de-pollo-1kg-aprox",
+    "price": 3.51,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/carapachito-de-pollo-1kg-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pierna Bate de Pollo Que Pollo 500 a 600g",
+    "slug": "pierna-bate-de-pollo-que-pollo-500-a-600g",
+    "price": 3.9,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/pierna-bate-de-pollo-que-pollo-500-a-600g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Churrascos de Muslo de Pollo C-Piel 650 a 730g aprox",
+    "slug": "churrascos-de-muslo-de-pollo-c-piel-650-a-730g-aprox",
+    "price": 5.26,
+    "category": "Parrillera, Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/churrascos-de-muslo-de-pollo-c-piel-650-a-730g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tenderloins de Pollo Empanizado 300g a 350g",
+    "slug": "tenderloins-de-pollo-empanizado-300g-a-350g",
+    "price": 3.92,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/tenderloins-de-pollo-empanizado-300g-a-350g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Lagarto con Hueso 500g Aprox",
+    "slug": "lagarto-con-hueso-500g-aprox",
+    "price": 3.9,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/lagarto-con-hueso-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Muslo de Pollo Sin Piel 800g Aprox",
+    "slug": "muslo-de-pollo-sin-piel-800g-aprox",
+    "price": 5.11,
+    "category": "Pollo",
+    "image_path": "/images/catalog/carnes-y-proteinas/muslo-de-pollo-sin-piel-800g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Hueso Rojo Con Carne 600g Aprox",
+    "slug": "hueso-rojo-con-carne-600g-aprox",
+    "price": 3.47,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/hueso-rojo-con-carne-600g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Asado De Tiras AA Especial Para Parrilla 550g aprox",
+    "slug": "asado-de-tiras-aa-especial-para-parrilla-550g-aprox",
+    "price": 7.46,
+    "category": "Parrillera, Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/asado-de-tiras-aa-especial-para-parrilla-550g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Osobuco de Res 1Kg",
+    "slug": "osobuco-de-res-1kg",
+    "price": 8.26,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/osobuco-de-res-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chuleta de Solomo de Res 500g a 550g",
+    "slug": "chuleta-de-solomo-de-res-500g-a-550g",
+    "price": 5.72,
+    "category": "Parrillera, Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/chuleta-de-solomo-de-res-500g-a-550g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Rueda de Carite Bottega Di Mare 500g",
+    "slug": "rueda-de-carite-bottega-di-mare-500g",
+    "price": 10.0,
+    "category": "Pescados y Mariscos",
+    "image_path": "/images/catalog/carnes-y-proteinas/rueda-de-carite-bottega-di-mare-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bistec Tipo A 700g Aprox",
+    "slug": "bistec-tipo-a-700g-aprox",
+    "price": 8.94,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/bistec-tipo-a-700g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chuleta de Cerdo Rebanada 670g a 780g Plumrose",
+    "slug": "chuleta-de-cerdo-rebanada-670g-a-780g-plumrose",
+    "price": 11.22,
+    "category": "Cerdo",
+    "image_path": "/images/catalog/carnes-y-proteinas/chuleta-de-cerdo-rebanada-670g-a-780g-plumrose.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cerdo en Trocitos para Guisar 550g",
+    "slug": "cerdo-en-trocitos-para-guisar-550g",
+    "price": 6.29,
+    "category": "Cerdo, Sabores de Navidad",
+    "image_path": "/images/catalog/carnes-y-proteinas/cerdo-en-trocitos-para-guisar-550g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Trocitos de Pechuga Pollo para Pepito 500g",
+    "slug": "trocitos-de-pechuga-pollo-para-pepito-500g",
+    "price": 5.03,
+    "category": "Pollo, Sabores de Navidad",
+    "image_path": "/images/catalog/carnes-y-proteinas/trocitos-de-pechuga-pollo-para-pepito-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Hamburguesa Especial Tipo Americano Premium 2 Und 115g c/u",
+    "slug": "hamburguesa-especial-tipo-americano-premium-2-und-115g-cu",
+    "price": 2.99,
+    "category": "Res",
+    "image_path": "/images/catalog/carnes-y-proteinas/hamburguesa-especial-tipo-americano-premium-2-und-115g-cu.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tocineta Ahumada Alimex 200g",
+    "slug": "tocineta-ahumada-alimex-200g",
+    "price": 4.29,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/tocineta-ahumada-alimex-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mortadela Especial Don Diego 500g",
+    "slug": "mortadela-especial-don-diego-500g",
+    "price": 1.86,
+    "category": "Salchichas y Chorizos",
+    "image_path": "/images/catalog/carnes-y-proteinas/mortadela-especial-don-diego-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Delicatessen, Jamón y Tocinetas",
+    "slug": "delicatessen-jamon-y-tocinetas",
+    "price": 2.95,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/delicatessen-jamon-y-tocinetas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Super Jamón Ricci 200g",
+    "slug": "super-jamon-ricci-200g",
+    "price": 1.96,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/super-jamon-ricci-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamon De Espalda Alimex 200g",
+    "slug": "jamon-de-espalda-alimex-200g",
+    "price": 2.89,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-de-espalda-alimex-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Amarillo Maribo Paisa 200g",
+    "slug": "queso-amarillo-maribo-paisa-200g",
+    "price": 6.38,
+    "category": "Amarillos",
+    "image_path": "/images/catalog/viveres-y-despensa/queso-amarillo-maribo-paisa-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamon de Pierna Superior Alinieve 200g",
+    "slug": "jamon-de-pierna-superior-alinieve-200g",
+    "price": 2.02,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-de-pierna-superior-alinieve-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mortadela de Pollo Especial Del Corral 1 Kg",
+    "slug": "mortadela-de-pollo-especial-del-corral-1-kg",
+    "price": 5.16,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/mortadela-de-pollo-especial-del-corral-1-kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamon de Pierna Estándar Ricci 200g",
+    "slug": "jamon-de-pierna-estandar-ricci-200g",
+    "price": 2.44,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-de-pierna-estandar-ricci-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tocineta Ahumada Ricci 200g",
+    "slug": "tocineta-ahumada-ricci-200g",
+    "price": 3.83,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/tocineta-ahumada-ricci-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Amarillo Pirineo Los Frailes 200g",
+    "slug": "queso-amarillo-pirineo-los-frailes-200g",
+    "price": 6.83,
+    "category": "Amarillos",
+    "image_path": "/images/catalog/viveres-y-despensa/queso-amarillo-pirineo-los-frailes-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamón Cocido Estándar Don Diego 200g",
+    "slug": "jamon-cocido-estandar-don-diego-200g",
+    "price": 2.17,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-cocido-estandar-don-diego-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamon Serrano Reserva 7 Hermanos 150g",
+    "slug": "jamon-serrano-reserva-7-hermanos-150g",
+    "price": 10.31,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-serrano-reserva-7-hermanos-150g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Crema de Leche Natísima Criolla 250g",
+    "slug": "crema-de-leche-natisima-criolla-250g",
+    "price": 4.26,
+    "category": "Leches y Huevos",
+    "image_path": "/images/catalog/lacteos-y-huevos/crema-de-leche-natisima-criolla-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Roast Beef de Cerdo en Cubo Ricci 250g",
+    "slug": "roast-beef-de-cerdo-en-cubo-ricci-250g",
+    "price": 3.74,
+    "category": "Delicatessen, Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/roast-beef-de-cerdo-en-cubo-ricci-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Crema Gaby 250g",
+    "slug": "queso-crema-gaby-250g",
+    "price": 7.92,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-crema-gaby-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pan Tipo Deli de Batata Pan de Tata 4und",
+    "slug": "pan-tipo-deli-de-batata-pan-de-tata-4und",
+    "price": 3.25,
+    "category": "Panes",
+    "image_path": "/images/catalog/viveres-y-despensa/pan-tipo-deli-de-batata-pan-de-tata-4und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tequeños de Queso Blanco Tipo Pasapalos 6cm Tequeflix 20 Und",
+    "slug": "tequenos-de-queso-blanco-tipo-pasapalos-6cm-tequeflix-20-und",
+    "price": 7.63,
+    "category": "Masas y Pasapalos",
+    "image_path": "/images/catalog/viveres-y-despensa/tequenos-de-queso-blanco-tipo-pasapalos-6cm-tequeflix-20-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Telita Camila 500g a 550g",
+    "slug": "queso-telita-camila-500g-a-550g",
+    "price": 4.47,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-telita-camila-500g-a-550g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamon Pierna Alimex 98% L-Grasa 200g",
+    "slug": "jamon-pierna-alimex-98-l-grasa-200g",
+    "price": 2.92,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-pierna-alimex-98-l-grasa-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Mozzarella Queseria Camila 200g",
+    "slug": "queso-mozzarella-queseria-camila-200g",
+    "price": 3.37,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-mozzarella-queseria-camila-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Amarillo Tipo Gouda Ricci 200g",
+    "slug": "queso-amarillo-tipo-gouda-ricci-200g",
+    "price": 4.03,
+    "category": "Amarillos",
+    "image_path": "/images/catalog/viveres-y-despensa/queso-amarillo-tipo-gouda-ricci-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chorizo Carupanero Ricci 200g a 250g",
+    "slug": "chorizo-carupanero-ricci-200g-a-250g",
+    "price": 2.74,
+    "category": "Salchichas y Chorizos",
+    "image_path": "/images/catalog/carnes-y-proteinas/chorizo-carupanero-ricci-200g-a-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Chuleta de Cerdo Fresca Ricci 500g",
+    "slug": "chuleta-de-cerdo-fresca-ricci-500g",
+    "price": 5.9,
+    "category": "Cerdo",
+    "image_path": "/images/catalog/carnes-y-proteinas/chuleta-de-cerdo-fresca-ricci-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Parmesano Rallado 10 Meses Grana Padano 200g",
+    "slug": "queso-parmesano-rallado-10-meses-grana-padano-200g",
+    "price": 9.48,
+    "category": "Charcuteria Italiana, Madurados",
+    "image_path": "/images/catalog/carnes-y-proteinas/queso-parmesano-rallado-10-meses-grana-padano-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pechuga de Pavo Importada Ditachino 200g",
+    "slug": "pechuga-de-pavo-importada-ditachino-200g",
+    "price": 8.28,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/pechuga-de-pavo-importada-ditachino-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Blanco Pasteurizado de Bufala Quesera Camila 200g",
+    "slug": "queso-blanco-pasteurizado-de-bufala-quesera-camila-200g",
+    "price": 3.17,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-blanco-pasteurizado-de-bufala-quesera-camila-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Amarillo Tipo Edam Quesera Camila 200g",
+    "slug": "queso-amarillo-tipo-edam-quesera-camila-200g",
+    "price": 5.26,
+    "category": "Amarillos",
+    "image_path": "/images/catalog/viveres-y-despensa/queso-amarillo-tipo-edam-quesera-camila-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Mozzarella Napolitana Rebanado Flor De Aragua 200g.",
+    "slug": "queso-mozzarella-napolitana-rebanado-flor-de-aragua-200g",
+    "price": 4.67,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-mozzarella-napolitana-rebanado-flor-de-aragua-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Salchichas de Pollo Ahumadas Fiesta 10 Und",
+    "slug": "salchichas-de-pollo-ahumadas-fiesta-10-und",
+    "price": 9.54,
+    "category": "Salchichas y Chorizos",
+    "image_path": "/images/catalog/carnes-y-proteinas/salchichas-de-pollo-ahumadas-fiesta-10-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamón Gran Viscottu Ricci 200g",
+    "slug": "jamon-gran-viscottu-ricci-200g",
+    "price": 2.92,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-gran-viscottu-ricci-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Parmesano Rallado Madurado 14 Meses Nostrale 200g",
+    "slug": "queso-parmesano-rallado-madurado-14-meses-nostrale-200g",
+    "price": 6.27,
+    "category": "Charcuteria Italiana, Madurados",
+    "image_path": "/images/catalog/carnes-y-proteinas/queso-parmesano-rallado-madurado-14-meses-nostrale-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mantequilla sin Sal Maracay 100g",
+    "slug": "mantequilla-sin-sal-maracay-100g",
+    "price": 5.95,
+    "category": "Mantequillas y Margarinas",
+    "image_path": "/images/catalog/lacteos-y-huevos/mantequilla-sin-sal-maracay-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tocineta Ahumada Rebanada Italsalimi 200g",
+    "slug": "tocineta-ahumada-rebanada-italsalimi-200g",
+    "price": 4.19,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/tocineta-ahumada-rebanada-italsalimi-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pan Sandwich de Batata Pan De Tata 575g",
+    "slug": "pan-sandwich-de-batata-pan-de-tata-575g",
+    "price": 3.51,
+    "category": "Panes",
+    "image_path": "/images/catalog/viveres-y-despensa/pan-sandwich-de-batata-pan-de-tata-575g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pan de Perros de Batata Pan de Tata 8und",
+    "slug": "pan-de-perros-de-batata-pan-de-tata-8und",
+    "price": 4.16,
+    "category": "Panes",
+    "image_path": "/images/catalog/viveres-y-despensa/pan-de-perros-de-batata-pan-de-tata-8und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso de Cabra 100% Aprisco 500g",
+    "slug": "queso-de-cabra-100-aprisco-500g",
+    "price": 14.29,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-de-cabra-100-aprisco-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Charcuteria Italiana, Salchichas y Chorizos",
+    "slug": "charcuteria-italiana-salchichas-y-chorizos",
+    "price": 4.08,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/charcuteria-italiana-salchichas-y-chorizos.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Ricotta Con Sal Paisa 250g",
+    "slug": "ricotta-con-sal-paisa-250g",
+    "price": 5.63,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/ricotta-con-sal-paisa-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Leches y Huevos, Tortas y más",
+    "slug": "leches-y-huevos-tortas-y-mas",
+    "price": 5.54,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/leches-y-huevos-tortas-y-mas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Maasdam Tierno Cuña Kroon 170 a 200g Aprox",
+    "slug": "queso-maasdam-tierno-cuna-kroon-170-a-200g-aprox",
+    "price": 8.52,
+    "category": "Amarillos",
+    "image_path": "/images/catalog/viveres-y-despensa/queso-maasdam-tierno-cuna-kroon-170-a-200g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Amarillo Gouda Rebanado Paisa 200g",
+    "slug": "queso-amarillo-gouda-rebanado-paisa-200g",
+    "price": 6.6,
+    "category": "Amarillos",
+    "image_path": "/images/catalog/viveres-y-despensa/queso-amarillo-gouda-rebanado-paisa-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Amarillo Tipo Munster Paisa 200g",
+    "slug": "queso-amarillo-tipo-munster-paisa-200g",
+    "price": 6.65,
+    "category": "Amarillos",
+    "image_path": "/images/catalog/viveres-y-despensa/queso-amarillo-tipo-munster-paisa-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamon De Espalda Ahumada Shoulder Arepero Ricci 200g",
+    "slug": "jamon-de-espalda-ahumada-shoulder-arepero-ricci-200g",
+    "price": 2.22,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-de-espalda-ahumada-shoulder-arepero-ricci-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Trozos de Pechuga de Pavo y Pollo 400g",
+    "slug": "trozos-de-pechuga-de-pavo-y-pollo-400g",
+    "price": 2.22,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/trozos-de-pechuga-de-pavo-y-pollo-400g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mortadela Superior en Cuadritos 250g",
+    "slug": "mortadela-superior-en-cuadritos-250g",
+    "price": 1.0,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/mortadela-superior-en-cuadritos-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Crema de Cabra 100% Aprisco 400g",
+    "slug": "queso-crema-de-cabra-100-aprisco-400g",
+    "price": 14.81,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-crema-de-cabra-100-aprisco-400g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Premium con Vitamina A/D Paisa 200g",
+    "slug": "queso-premium-con-vitamina-ad-paisa-200g",
+    "price": 4.07,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-premium-con-vitamina-ad-paisa-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pechuga de Pavo Plumrose 200g",
+    "slug": "pechuga-de-pavo-plumrose-200g",
+    "price": 4.04,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/pechuga-de-pavo-plumrose-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Blanco Especial Paisa 200g",
+    "slug": "queso-blanco-especial-paisa-200g",
+    "price": 4.67,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-blanco-especial-paisa-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso Mozzarella Rebanado Paisa 200g.",
+    "slug": "queso-mozzarella-rebanado-paisa-200g",
+    "price": 5.33,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-mozzarella-rebanado-paisa-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Queso de Cabra Pasteurizado Purísima 500g a 600g aprox",
+    "slug": "queso-de-cabra-pasteurizado-purisima-500g-a-600g-aprox",
+    "price": 11.68,
+    "category": "Blancos y para untar",
+    "image_path": "/images/catalog/lacteos-y-huevos/queso-de-cabra-pasteurizado-purisima-500g-a-600g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Salchichas Tipo Viena Alimex 24 Und",
+    "slug": "salchichas-tipo-viena-alimex-24-und",
+    "price": 12.15,
+    "category": "Salchichas y Chorizos",
+    "image_path": "/images/catalog/carnes-y-proteinas/salchichas-tipo-viena-alimex-24-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mortadela Super M Ricci 500g",
+    "slug": "mortadela-super-m-ricci-500g",
+    "price": 2.13,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/mortadela-super-m-ricci-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pan Blanco de Sandwich Panino 800g.",
+    "slug": "pan-blanco-de-sandwich-panino-800g",
+    "price": 2.37,
+    "category": "Panes",
+    "image_path": "/images/catalog/viveres-y-despensa/pan-blanco-de-sandwich-panino-800g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamon de Espalda Plumrose 200g",
+    "slug": "jamon-de-espalda-plumrose-200g",
+    "price": 3.26,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-de-espalda-plumrose-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jamón de Espalda Cocida Ahumada Tipo Arepero Don Diego 200g",
+    "slug": "jamon-de-espalda-cocida-ahumada-tipo-arepero-don-diego-200g",
+    "price": 2.58,
+    "category": "Jamón y Tocinetas",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-de-espalda-cocida-ahumada-tipo-arepero-don-diego-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Vegetales y Verduras",
+    "slug": "vegetales-y-verduras",
+    "price": 1.35,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/vegetales-y-verduras.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pulpa de Fresa 500g",
+    "slug": "pulpa-de-fresa-500g",
+    "price": 2.04,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/pulpa-de-fresa-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Ajo Importado 90g a 100g Aprox",
+    "slug": "ajo-importado-90g-a-100g-aprox",
+    "price": 1.0,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/ajo-importado-90g-a-100g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mix de Papa y Zanahoria 500g",
+    "slug": "mix-de-papa-y-zanahoria-500g",
+    "price": 3.51,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/mix-de-papa-y-zanahoria-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Lechuga Romana 700g a 1kg",
+    "slug": "lechuga-romana-700g-a-1kg",
+    "price": 1.38,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/lechuga-romana-700g-a-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Aguacate Mediano de 700g a 900g",
+    "slug": "aguacate-mediano-de-700g-a-900g",
+    "price": 2.02,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/aguacate-mediano-de-700g-a-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Papa Amarilla Lavada 1Kg Aprox",
+    "slug": "papa-amarilla-lavada-1kg-aprox",
+    "price": 2.85,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/papa-amarilla-lavada-1kg-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tomates Perita 500g Aprox",
+    "slug": "tomates-perita-500g-aprox",
+    "price": 1.08,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/tomates-perita-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pimenton Redondo Mixtos 450g a 550g Aprox",
+    "slug": "pimenton-redondo-mixtos-450g-a-550g-aprox",
+    "price": 1.47,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/pimenton-redondo-mixtos-450g-a-550g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Limon de 5-7 und 500g Aprox",
+    "slug": "limon-de-5-7-und-500g-aprox",
+    "price": 0.94,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/limon-de-5-7-und-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Melon de 800g a 900g",
+    "slug": "melon-de-800g-a-900g",
+    "price": 1.63,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/melon-de-800g-a-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mamon Chino 200g",
+    "slug": "mamon-chino-200g",
+    "price": 4.75,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/mamon-chino-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Guayaba 500g Aprox",
+    "slug": "guayaba-500g-aprox",
+    "price": 0.67,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/guayaba-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Piña en Trozos Congelada 400g",
+    "slug": "pina-en-trozos-congelada-400g",
+    "price": 1.21,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/pina-en-trozos-congelada-400g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cambur Manzano Maduro 1 Kg",
+    "slug": "cambur-manzano-maduro-1-kg",
+    "price": 1.86,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/cambur-manzano-maduro-1-kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Lechuga Americana de 500g a 600g",
+    "slug": "lechuga-americana-de-500g-a-600g",
+    "price": 0.78,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/lechuga-americana-de-500g-a-600g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Piña Pelada en Ruedas",
+    "slug": "pina-pelada-en-ruedas",
+    "price": 2.05,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/pina-pelada-en-ruedas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Coco Seco Pelado en Trozos 1 Und",
+    "slug": "coco-seco-pelado-en-trozos-1-und",
+    "price": 1.6,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/coco-seco-pelado-en-trozos-1-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Platano Dulce 1 Kg a 1.2 Kg",
+    "slug": "platano-dulce-1-kg-a-12-kg",
+    "price": 1.71,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/platano-dulce-1-kg-a-12-kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Kiwi 500 a 600g Aprox",
+    "slug": "kiwi-500-a-600g-aprox",
+    "price": 6.79,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/kiwi-500-a-600g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Aguacate Maduro 850g a 1.1Kg",
+    "slug": "aguacate-maduro-850g-a-11kg",
+    "price": 2.27,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/aguacate-maduro-850g-a-11kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Fresa Fresca Congeladas 1Kg",
+    "slug": "fresa-fresca-congeladas-1kg",
+    "price": 5.19,
+    "category": "Fruta y Verdura",
+    "image_path": "/images/catalog/frutas-y-verduras/fresa-fresca-congeladas-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Eucalipto Colonia Tovar 200g",
+    "slug": "eucalipto-colonia-tovar-200g",
+    "price": 2.87,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/eucalipto-colonia-tovar-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Uvas Verdes Importadas Sin Semillas 500g",
+    "slug": "uvas-verdes-importadas-sin-semillas-500g",
+    "price": 8.22,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/uvas-verdes-importadas-sin-semillas-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Flores Estrella de Belen Colonia Tovar",
+    "slug": "flores-estrella-de-belen-colonia-tovar",
+    "price": 5.38,
+    "category": "Colonia Tovar, Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/flores-estrella-de-belen-colonia-tovar.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Aguacate Pequeño de 500g a 700g",
+    "slug": "aguacate-pequeno-de-500g-a-700g",
+    "price": 1.52,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/aguacate-pequeno-de-500g-a-700g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Parchita 500g Aprox",
+    "slug": "parchita-500g-aprox",
+    "price": 1.9,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/parchita-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Patilla Porción de 2Kg A 2.5Kg",
+    "slug": "patilla-porcion-de-2kg-a-25kg",
+    "price": 2.92,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/patilla-porcion-de-2kg-a-25kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Repollo Morado Trozo 500g",
+    "slug": "repollo-morado-trozo-500g",
+    "price": 1.17,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/repollo-morado-trozo-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mandarina de 500g a 600g",
+    "slug": "mandarina-de-500g-a-600g",
+    "price": 2.13,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/mandarina-de-500g-a-600g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cambur Manzano 1Kg",
+    "slug": "cambur-manzano-1kg",
+    "price": 2.0,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/cambur-manzano-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Calabacin de 900g a 1Kg Aprox",
+    "slug": "calabacin-de-900g-a-1kg-aprox",
+    "price": 1.1,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/calabacin-de-900g-a-1kg-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Aguacate Maduro 600g a 800g 1 a 2 Und",
+    "slug": "aguacate-maduro-600g-a-800g-1-a-2-und",
+    "price": 1.71,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/aguacate-maduro-600g-a-800g-1-a-2-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Limón en Jugo Concentrado 250ml",
+    "slug": "limon-en-jugo-concentrado-250ml",
+    "price": 2.12,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/limon-en-jugo-concentrado-250ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cebolla Blanca Limpia Sin Conchas 300g a 400g",
+    "slug": "cebolla-blanca-limpia-sin-conchas-300g-a-400g",
+    "price": 1.0,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/cebolla-blanca-limpia-sin-conchas-300g-a-400g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Aguacate Grande de 900g a 1.1Kg",
+    "slug": "aguacate-grande-de-900g-a-11kg",
+    "price": 2.4,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/aguacate-grande-de-900g-a-11kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Papa Amarilla Lavada 500g a 600g",
+    "slug": "papa-amarilla-lavada-500g-a-600g",
+    "price": 1.57,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/papa-amarilla-lavada-500g-a-600g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Ajo porro de 500g a 700g",
+    "slug": "ajo-porro-de-500g-a-700g",
+    "price": 1.61,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/ajo-porro-de-500g-a-700g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Arándanos Colonia Tovar 150g",
+    "slug": "arandanos-colonia-tovar-150g",
+    "price": 3.09,
+    "category": "Colonia Tovar",
+    "image_path": "/images/catalog/varios/arandanos-colonia-tovar-150g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pulpa de Parchita 400g",
+    "slug": "pulpa-de-parchita-400g",
+    "price": 5.09,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/pulpa-de-parchita-400g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Brócoli Limpio sin Tallo 500 a 700g Aprox",
+    "slug": "brocoli-limpio-sin-tallo-500-a-700g-aprox",
+    "price": 2.88,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/brocoli-limpio-sin-tallo-500-a-700g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Durazno 500g a 600g Aprox",
+    "slug": "durazno-500g-a-600g-aprox",
+    "price": 2.16,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/durazno-500g-a-600g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Platano Amarillo 900g a 1.1Kg",
+    "slug": "platano-amarillo-900g-a-11kg",
+    "price": 2.12,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/platano-amarillo-900g-a-11kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Coco por Unidad",
+    "slug": "coco-por-unidad",
+    "price": 1.55,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/coco-por-unidad.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Celery Apio España 300g",
+    "slug": "celery-apio-espana-300g",
+    "price": 0.87,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/celery-apio-espana-300g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pimenton Largo 2und de 450g y 500g Aprox",
+    "slug": "pimenton-largo-2und-de-450g-y-500g-aprox",
+    "price": 2.22,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/pimenton-largo-2und-de-450g-y-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Lechuga Criolla 700Gr",
+    "slug": "lechuga-criolla-700gr",
+    "price": 1.1,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/lechuga-criolla-700gr.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tomates con Detalles 1kg",
+    "slug": "tomates-con-detalles-1kg",
+    "price": 1.62,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/tomates-con-detalles-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Platano Maduro 1.2Kg a 1.3Kg",
+    "slug": "platano-maduro-12kg-a-13kg",
+    "price": 2.3,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/platano-maduro-12kg-a-13kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mandarina Jumbo 900g a 1 Kg",
+    "slug": "mandarina-jumbo-900g-a-1-kg",
+    "price": 3.75,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/mandarina-jumbo-900g-a-1-kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Tallitos de Cebollín 250g",
+    "slug": "tallitos-de-cebollin-250g",
+    "price": 0.56,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/tallitos-de-cebollin-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Platano Amarillo 1.2Kg a 1.3Kg",
+    "slug": "platano-amarillo-12kg-a-13kg",
+    "price": 2.65,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/platano-amarillo-12kg-a-13kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Piña Mediana Entera Por Unidad",
+    "slug": "pina-mediana-entera-por-unidad",
+    "price": 1.83,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/pina-mediana-entera-por-unidad.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mangostino 300g a 350g",
+    "slug": "mangostino-300g-a-350g",
+    "price": 7.88,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/mangostino-300g-a-350g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Brócoli con Tallo 500 a 700g Aprox",
+    "slug": "brocoli-con-tallo-500-a-700g-aprox",
+    "price": 2.67,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/brocoli-con-tallo-500-a-700g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Frutas, Jugos, Tés y Energizantes",
+    "slug": "frutas-jugos-tes-y-energizantes",
+    "price": 7.04,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/frutas-jugos-tes-y-energizantes.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jugo 3 en 1 Naranja/Zanahoria/Remolacha 1Lts",
+    "slug": "jugo-3-en-1-naranjazanahoriaremolacha-1lts",
+    "price": 4.46,
+    "category": "Frutas, Jugos, Tés y Energizantes",
+    "image_path": "/images/catalog/frutas-y-verduras/jugo-3-en-1-naranjazanahoriaremolacha-1lts.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Uchuva con Concha Colonia Tovar 250g",
+    "slug": "uchuva-con-concha-colonia-tovar-250g",
+    "price": 2.11,
+    "category": "Colonia Tovar, Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/uchuva-con-concha-colonia-tovar-250g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toronja Blanca 1Kg",
+    "slug": "toronja-blanca-1kg",
+    "price": 3.48,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/toronja-blanca-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Calabacin de 695g a 795g Aprox",
+    "slug": "calabacin-de-695g-a-795g-aprox",
+    "price": 0.86,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/calabacin-de-695g-a-795g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Manzana Royal Gala 6 Und",
+    "slug": "manzana-royal-gala-6-und",
+    "price": 4.81,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/manzana-royal-gala-6-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cambur Seleccionado Pintón Tipo AA 1 Kg Aprox",
+    "slug": "cambur-seleccionado-pinton-tipo-aa-1-kg-aprox",
+    "price": 1.6,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/cambur-seleccionado-pinton-tipo-aa-1-kg-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Coliflor Limpio sin Tallo de 500g a 700g Aprox",
+    "slug": "coliflor-limpio-sin-tallo-de-500g-a-700g-aprox",
+    "price": 2.49,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/coliflor-limpio-sin-tallo-de-500g-a-700g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Melon De 1.2Kg a 1.6Kg",
+    "slug": "melon-de-12kg-a-16kg",
+    "price": 2.68,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/melon-de-12kg-a-16kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Fruta y Verdura, Vegetales y Verduras",
+    "slug": "fruta-y-verdura-vegetales-y-verduras",
+    "price": 1.99,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/fruta-y-verdura-vegetales-y-verduras.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Champiñones Blancos Colonia Tovar 200g",
+    "slug": "champinones-blancos-colonia-tovar-200g",
+    "price": 5.16,
+    "category": "Colonia Tovar, Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/champinones-blancos-colonia-tovar-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Berenjena Morada de 1 a 3 und 650 a 800g",
+    "slug": "berenjena-morada-de-1-a-3-und-650-a-800g",
+    "price": 1.04,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/berenjena-morada-de-1-a-3-und-650-a-800g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Remolacha de 3-4 und 500g Aprox",
+    "slug": "remolacha-de-3-4-und-500g-aprox",
+    "price": 0.49,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/remolacha-de-3-4-und-500g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Acelga Sin Tallo 200g",
+    "slug": "acelga-sin-tallo-200g",
+    "price": 0.51,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/acelga-sin-tallo-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Aliños Picados para Sofrito 300g Aprox",
+    "slug": "alinos-picados-para-sofrito-300g-aprox",
+    "price": 1.44,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/alinos-picados-para-sofrito-300g-aprox.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Naranja Para Jugo 1Kg",
+    "slug": "naranja-para-jugo-1kg",
+    "price": 2.43,
+    "category": "Frutas",
+    "image_path": "/images/catalog/frutas-y-verduras/naranja-para-jugo-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Batata Anaranjada De 1Kg A 1.3Kg",
+    "slug": "batata-anaranjada-de-1kg-a-13kg",
+    "price": 3.73,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/batata-anaranjada-de-1kg-a-13kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Papa Criolla Con Detalle 1kg",
+    "slug": "papa-criolla-con-detalle-1kg",
+    "price": 2.62,
+    "category": "Vegetales y Verduras",
+    "image_path": "/images/catalog/frutas-y-verduras/papa-criolla-con-detalle-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Merey Tostado y Salado Seed The Sun 400g",
+    "slug": "merey-tostado-y-salado-seed-the-sun-400g",
+    "price": 17.93,
+    "category": "Frutos Secos",
+    "image_path": "/images/catalog/viveres-y-despensa/merey-tostado-y-salado-seed-the-sun-400g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Granola Mixta Horneada Ey Granola 45g",
+    "slug": "granola-mixta-horneada-ey-granola-45g",
+    "price": 1.08,
+    "category": "Frutos Secos, Snack y Frutos Secos",
+    "image_path": "/images/catalog/viveres-y-despensa/granola-mixta-horneada-ey-granola-45g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Frutos Secos, Snacks Importados",
+    "slug": "frutos-secos-snacks-importados",
+    "price": 0.87,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/frutos-secos-snacks-importados.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Maní Cubierto de Chocolate St Moritz 500g",
+    "slug": "mani-cubierto-de-chocolate-st-moritz-500g",
+    "price": 15.51,
+    "category": "Chocolates",
+    "image_path": "/images/catalog/viveres-y-despensa/mani-cubierto-de-chocolate-st-moritz-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Gotas de Corbetura de Chocolate Blanco St Moritz 500g",
+    "slug": "gotas-de-corbetura-de-chocolate-blanco-st-moritz-500g",
+    "price": 9.21,
+    "category": "Chocolates, Repostería",
+    "image_path": "/images/catalog/viveres-y-despensa/gotas-de-corbetura-de-chocolate-blanco-st-moritz-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Enlatados Saludables, Frutas y Vegetales Enlatados, Sabores de Navidad",
+    "slug": "enlatados-saludables-frutas-y-vegetales-enlatados-sabores-de-navidad",
+    "price": 1.57,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/enlatados-saludables-frutas-y-vegetales-enlatados-sabores-de-navidad.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Maní Salado 200g",
+    "slug": "mani-salado-200g",
+    "price": 2.09,
+    "category": "Frutos Secos",
+    "image_path": "/images/catalog/viveres-y-despensa/mani-salado-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Crema Saludable de Pistacho con Chocolate Pura Nuez 200g",
+    "slug": "crema-saludable-de-pistacho-con-chocolate-pura-nuez-200g",
+    "price": 14.37,
+    "category": "Para untar, Untables Saludables",
+    "image_path": "/images/catalog/lacteos-y-huevos/crema-saludable-de-pistacho-con-chocolate-pura-nuez-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Crema Saludable de Maní con Chocolate Pura Nuez 200g",
+    "slug": "crema-saludable-de-mani-con-chocolate-pura-nuez-200g",
+    "price": 7.18,
+    "category": "Para untar, Untables Saludables",
+    "image_path": "/images/catalog/lacteos-y-huevos/crema-saludable-de-mani-con-chocolate-pura-nuez-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Maní Surtido 200g",
+    "slug": "mani-surtido-200g",
+    "price": 1.96,
+    "category": "Frutos Secos",
+    "image_path": "/images/catalog/viveres-y-despensa/mani-surtido-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Merey Brasileño Tostado 100g",
+    "slug": "merey-brasileno-tostado-100g",
+    "price": 3.48,
+    "category": "Frutos Secos",
+    "image_path": "/images/catalog/viveres-y-despensa/merey-brasileno-tostado-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Nueces Peladas Premium 100g",
+    "slug": "nueces-peladas-premium-100g",
+    "price": 3.64,
+    "category": "Frutos Secos",
+    "image_path": "/images/catalog/viveres-y-despensa/nueces-peladas-premium-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Almendras Enteras 100g",
+    "slug": "almendras-enteras-100g",
+    "price": 3.69,
+    "category": "Frutos Secos",
+    "image_path": "/images/catalog/viveres-y-despensa/almendras-enteras-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Mani Garrapiñado 200g",
+    "slug": "mani-garrapinado-200g",
+    "price": 1.56,
+    "category": "Frutos Secos",
+    "image_path": "/images/catalog/viveres-y-despensa/mani-garrapinado-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Maní con Ajonjolí 200g",
+    "slug": "mani-con-ajonjoli-200g",
+    "price": 1.56,
+    "category": "Frutos Secos",
+    "image_path": "/images/catalog/viveres-y-despensa/mani-con-ajonjoli-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Frutas y Vegetales Enlatados",
+    "slug": "frutas-y-vegetales-enlatados",
+    "price": 2.08,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/frutas-y-vegetales-enlatados.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Fruta Confitada 200g",
+    "slug": "fruta-confitada-200g",
+    "price": 1.53,
+    "category": "Sabores de Navidad",
+    "image_path": "/images/catalog/carnes-y-proteinas/fruta-confitada-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Esponja Doble Uso Blindac 3 Und",
+    "slug": "esponja-doble-uso-blindac-3-und",
+    "price": 1.79,
+    "category": "Utensilios para Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/esponja-doble-uso-blindac-3-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bolsa para Basura Grande Bons 50L 30 Und",
+    "slug": "bolsa-para-basura-grande-bons-50l-30-und",
+    "price": 7.86,
+    "category": "Bolsas y Descartables",
+    "image_path": "/images/catalog/aseo-del-hogar/bolsa-para-basura-grande-bons-50l-30-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabón en Polvo Las Llaves Bebe 900g",
+    "slug": "jabon-en-polvo-las-llaves-bebe-900g",
+    "price": 4.05,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/jabon-en-polvo-las-llaves-bebe-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pilas Energizer Max AAA 4und",
+    "slug": "pilas-energizer-max-aaa-4und",
+    "price": 5.82,
+    "category": "Iluminación y Pilas",
+    "image_path": "/images/catalog/electricidad-y-pilas/pilas-energizer-max-aaa-4und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Suavitel Suavizante de Telas Complete Fresca Primavera 700ml",
+    "slug": "suavitel-suavizante-de-telas-complete-fresca-primavera-700ml",
+    "price": 5.99,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/suavitel-suavizante-de-telas-complete-fresca-primavera-700ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Paño de Microfibra Multiuso 33cm x 33cm Colores Variados ML 1 Und",
+    "slug": "pano-de-microfibra-multiuso-33cm-x-33cm-colores-variados-ml-1-und",
+    "price": 1.96,
+    "category": "Utensilios para Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/pano-de-microfibra-multiuso-33cm-x-33cm-colores-variados-ml-1-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Papel Higienico Rosal Plus 4 Und 600 Hojas",
+    "slug": "papel-higienico-rosal-plus-4-und-600-hojas",
+    "price": 4.01,
+    "category": "Papel",
+    "image_path": "/images/catalog/higiene-y-belleza/papel-higienico-rosal-plus-4-und-600-hojas.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallin Mega Absorb 45 Hojas Scott",
+    "slug": "toallin-mega-absorb-45-hojas-scott",
+    "price": 2.71,
+    "category": "Papel",
+    "image_path": "/images/catalog/higiene-y-belleza/toallin-mega-absorb-45-hojas-scott.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Detergente en Polvo Brisa de Lavanda Peros 900g",
+    "slug": "detergente-en-polvo-brisa-de-lavanda-peros-900g",
+    "price": 2.56,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/detergente-en-polvo-brisa-de-lavanda-peros-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Paño de Microfibra Multiusos 4 en 1 El Titan 4 Und",
+    "slug": "pano-de-microfibra-multiusos-4-en-1-el-titan-4-und",
+    "price": 2.73,
+    "category": "Utensilios para Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/pano-de-microfibra-multiusos-4-en-1-el-titan-4-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Paño Ultra Absorvente 43x32cm Matrix 1 Und",
+    "slug": "pano-ultra-absorvente-43x32cm-matrix-1-und",
+    "price": 4.16,
+    "category": "Cocina y Baño",
+    "image_path": "/images/catalog/varios/pano-ultra-absorvente-43x32cm-matrix-1-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bolsas Plásticas para la Basura Negras ML 30 Kg 8 Und",
+    "slug": "bolsas-plasticas-para-la-basura-negras-ml-30-kg-8-und",
+    "price": 2.72,
+    "category": "Bolsas y Descartables",
+    "image_path": "/images/catalog/aseo-del-hogar/bolsas-plasticas-para-la-basura-negras-ml-30-kg-8-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallas Desinfectantes Vinagre Activo XL Vale 50 Und",
+    "slug": "toallas-desinfectantes-vinagre-activo-xl-vale-50-und",
+    "price": 6.07,
+    "category": "Utensilios para Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/toallas-desinfectantes-vinagre-activo-xl-vale-50-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabon en Polvo Ariel 2Kg",
+    "slug": "jabon-en-polvo-ariel-2kg",
+    "price": 12.63,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/jabon-en-polvo-ariel-2kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Velas El Titan 5 Und",
+    "slug": "velas-el-titan-5-und",
+    "price": 1.71,
+    "category": "Iluminación y Pilas",
+    "image_path": "/images/catalog/electricidad-y-pilas/velas-el-titan-5-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pastilla Limpiadora para Sanitarios Vale 2 Und 96g",
+    "slug": "pastilla-limpiadora-para-sanitarios-vale-2-und-96g",
+    "price": 3.36,
+    "category": "Desinfectantes y Multiusos",
+    "image_path": "/images/catalog/aseo-del-hogar/pastilla-limpiadora-para-sanitarios-vale-2-und-96g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallas Desinfectantes Fresh Power Vale 45 Und",
+    "slug": "toallas-desinfectantes-fresh-power-vale-45-und",
+    "price": 5.61,
+    "category": "Utensilios para Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/toallas-desinfectantes-fresh-power-vale-45-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desinfectante Multiuso Sueños De Lavanda Vale 1L",
+    "slug": "desinfectante-multiuso-suenos-de-lavanda-vale-1l",
+    "price": 4.22,
+    "category": "Desinfectantes y Multiusos",
+    "image_path": "/images/catalog/aseo-del-hogar/desinfectante-multiuso-suenos-de-lavanda-vale-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Pañito Amarillo Multiusos 65cm x 42cm x 0.2cm",
+    "slug": "panito-amarillo-multiusos-65cm-x-42cm-x-02cm",
+    "price": 2.4,
+    "category": "Cocina y Baño",
+    "image_path": "/images/catalog/varios/panito-amarillo-multiusos-65cm-x-42cm-x-02cm.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Esponja con Alambre de Plata Colores Variados Wynwood 2 Und",
+    "slug": "esponja-con-alambre-de-plata-colores-variados-wynwood-2-und",
+    "price": 1.07,
+    "category": "Utensilios para Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/esponja-con-alambre-de-plata-colores-variados-wynwood-2-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Detergente en Polvo Máximo Poder Vale 400g",
+    "slug": "detergente-en-polvo-maximo-poder-vale-400g",
+    "price": 1.67,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/detergente-en-polvo-maximo-poder-vale-400g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Servilletas Extra Suave Tisuf Vale 100 Und",
+    "slug": "servilletas-extra-suave-tisuf-vale-100-und",
+    "price": 3.45,
+    "category": "Papel",
+    "image_path": "/images/catalog/higiene-y-belleza/servilletas-extra-suave-tisuf-vale-100-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallas Desinfectantes Lemon Essence Vale 45 Und",
+    "slug": "toallas-desinfectantes-lemon-essence-vale-45-und",
+    "price": 5.61,
+    "category": "Utensilios para Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/toallas-desinfectantes-lemon-essence-vale-45-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Papel Higienico 3 Hojas Ti-suf 4 Und",
+    "slug": "papel-higienico-3-hojas-ti-suf-4-und",
+    "price": 4.74,
+    "category": "Papel",
+    "image_path": "/images/catalog/higiene-y-belleza/papel-higienico-3-hojas-ti-suf-4-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desinfectante Multiuso Poder Bicarbonato Vale 1L",
+    "slug": "desinfectante-multiuso-poder-bicarbonato-vale-1l",
+    "price": 4.22,
+    "category": "Desinfectantes y Multiusos",
+    "image_path": "/images/catalog/aseo-del-hogar/desinfectante-multiuso-poder-bicarbonato-vale-1l.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Ambientadores e Insecticidas, Asia",
+    "slug": "ambientadores-e-insecticidas-asia",
+    "price": 2.4,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/ambientadores-e-insecticidas-asia.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Desinfectantes y Multiusos",
+    "slug": "desinfectantes-y-multiusos",
+    "price": 6.71,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/desinfectantes-y-multiusos.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Suavizante Concentrado Aroma Floral Downy 700ml",
+    "slug": "suavizante-concentrado-aroma-floral-downy-700ml",
+    "price": 5.63,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/suavizante-concentrado-aroma-floral-downy-700ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Velas Lamparin 3N 10 Und",
+    "slug": "velas-lamparin-3n-10-und",
+    "price": 4.41,
+    "category": "Iluminación y Pilas",
+    "image_path": "/images/catalog/electricidad-y-pilas/velas-lamparin-3n-10-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Toallin Duramax Reutilizable 52 Hojas Scott",
+    "slug": "toallin-duramax-reutilizable-52-hojas-scott",
+    "price": 5.28,
+    "category": "Papel",
+    "image_path": "/images/catalog/higiene-y-belleza/toallin-duramax-reutilizable-52-hojas-scott.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Limpia Vidrios 3X Vale 750ml",
+    "slug": "limpia-vidrios-3x-vale-750ml",
+    "price": 4.84,
+    "category": "Desinfectantes y Multiusos",
+    "image_path": "/images/catalog/aseo-del-hogar/limpia-vidrios-3x-vale-750ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cocina y Baño, Utensilios para Limpieza",
+    "slug": "cocina-y-bano-utensilios-para-limpieza",
+    "price": 3.57,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/cocina-y-bano-utensilios-para-limpieza.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Lavaplatos en Crema Vale 500g",
+    "slug": "lavaplatos-en-crema-vale-500g",
+    "price": 3.94,
+    "category": "Lavaplatos",
+    "image_path": "/images/catalog/aseo-del-hogar/lavaplatos-en-crema-vale-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Detergente en Polvo Caricia de Bebe Vale 900g",
+    "slug": "detergente-en-polvo-caricia-de-bebe-vale-900g",
+    "price": 3.02,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/detergente-en-polvo-caricia-de-bebe-vale-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bolsa para Basura con Aroma Colores Variados Ekono House 35L 10 Und",
+    "slug": "bolsa-para-basura-con-aroma-colores-variados-ekono-house-35l-10-und",
+    "price": 4.4,
+    "category": "Bolsas y Descartables",
+    "image_path": "/images/catalog/aseo-del-hogar/bolsa-para-basura-con-aroma-colores-variados-ekono-house-35l-10-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Bombillo Led de Emergencia 12W E27 Luz Blanca RCA",
+    "slug": "bombillo-led-de-emergencia-12w-e27-luz-blanca-rca",
+    "price": 9.51,
+    "category": "Electricidad",
+    "image_path": "/images/catalog/electricidad-y-pilas/bombillo-led-de-emergencia-12w-e27-luz-blanca-rca.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Lavaplatos Liquido Fragancia Citrica Vale 750ml",
+    "slug": "lavaplatos-liquido-fragancia-citrica-vale-750ml",
+    "price": 4.57,
+    "category": "Lavaplatos",
+    "image_path": "/images/catalog/aseo-del-hogar/lavaplatos-liquido-fragancia-citrica-vale-750ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Detergente en Polvo Fragancia Lavanda Multi Accion El Famoso 900g",
+    "slug": "detergente-en-polvo-fragancia-lavanda-multi-accion-el-famoso-900g",
+    "price": 4.29,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/detergente-en-polvo-fragancia-lavanda-multi-accion-el-famoso-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Baygon Insectos Voladores 360cm³",
+    "slug": "baygon-insectos-voladores-360cm",
+    "price": 9.56,
+    "category": "Ambientadores e Insecticidas",
+    "image_path": "/images/catalog/carnes-y-proteinas/baygon-insectos-voladores-360cm.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Jabón Liquido Multiusos Original Fresh Bonclor 790ml",
+    "slug": "jabon-liquido-multiusos-original-fresh-bonclor-790ml",
+    "price": 7.46,
+    "category": "Lavaplatos",
+    "image_path": "/images/catalog/aseo-del-hogar/jabon-liquido-multiusos-original-fresh-bonclor-790ml.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Detergente en Polvo Máximo Poder Vale 900g",
+    "slug": "detergente-en-polvo-maximo-poder-vale-900g",
+    "price": 3.02,
+    "category": "Lavado de Ropa",
+    "image_path": "/images/catalog/aseo-del-hogar/detergente-en-polvo-maximo-poder-vale-900g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Cepillo para Mascota Redondo Doble Cerdas Pets Kingdom Color Negro Talla U",
+    "slug": "cepillo-para-mascota-redondo-doble-cerdas-pets-kingdom-color-negro-talla-u",
+    "price": 8.57,
+    "category": "Cuidado y Accesorios",
+    "image_path": "/images/catalog/higiene-y-belleza/cepillo-para-mascota-redondo-doble-cerdas-pets-kingdom-color-negro-talla-u.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Arena para Gatos con Aroma a Lavanda Perfect Cats 10 Libras",
+    "slug": "arena-para-gatos-con-aroma-a-lavanda-perfect-cats-10-libras",
+    "price": 19.38,
+    "category": "Cuidado y Accesorios",
+    "image_path": "/images/catalog/higiene-y-belleza/arena-para-gatos-con-aroma-a-lavanda-perfect-cats-10-libras.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Rascador Pequeño para Gatos de Madera Guao",
+    "slug": "rascador-pequeno-para-gatos-de-madera-guao",
+    "price": 59.45,
+    "category": "Cuidado y Accesorios",
+    "image_path": "/images/catalog/higiene-y-belleza/rascador-pequeno-para-gatos-de-madera-guao.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alimento para Cachorro Sabor a Carne Extra Life Dog Chow Purina 100g",
+    "slug": "alimento-para-cachorro-sabor-a-carne-extra-life-dog-chow-purina-100g",
+    "price": 2.27,
+    "category": "Alimento",
+    "image_path": "/images/catalog/varios/alimento-para-cachorro-sabor-a-carne-extra-life-dog-chow-purina-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alimento para Gatos Adultos Cuidado Total Don Kat 1.1Kg",
+    "slug": "alimento-para-gatos-adultos-cuidado-total-don-kat-11kg",
+    "price": 9.01,
+    "category": "Alimento",
+    "image_path": "/images/catalog/varios/alimento-para-gatos-adultos-cuidado-total-don-kat-11kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alimento Humedo parra Gatos Adultos Sabor a Pescado Purina Cat Chow 85g",
+    "slug": "alimento-humedo-parra-gatos-adultos-sabor-a-pescado-purina-cat-chow-85g",
+    "price": 2.39,
+    "category": "Alimento",
+    "image_path": "/images/catalog/varios/alimento-humedo-parra-gatos-adultos-sabor-a-pescado-purina-cat-chow-85g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Arena para Gatos con Bentonita Aroma a Café Neo Clean 4.15 Kg",
+    "slug": "arena-para-gatos-con-bentonita-aroma-a-cafe-neo-clean-415-kg",
+    "price": 6.4,
+    "category": "Cuidado y Accesorios",
+    "image_path": "/images/catalog/higiene-y-belleza/arena-para-gatos-con-bentonita-aroma-a-cafe-neo-clean-415-kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alimento Humedo para Perros Sabor Bisteck Porterhouse Cesar 100g",
+    "slug": "alimento-humedo-para-perros-sabor-bisteck-porterhouse-cesar-100g",
+    "price": 3.18,
+    "category": "Alimento, Mascotas Importados",
+    "image_path": "/images/catalog/mascotas/alimento-humedo-para-perros-sabor-bisteck-porterhouse-cesar-100g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alimento Para Perros Super Adultos Can Carne 2Kg",
+    "slug": "alimento-para-perros-super-adultos-can-carne-2kg",
+    "price": 8.94,
+    "category": "Alimento",
+    "image_path": "/images/catalog/varios/alimento-para-perros-super-adultos-can-carne-2kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alimentos Barf para Perros Pollo Res y Vegetales 600g (3 Porciones de 200g)",
+    "slug": "alimentos-barf-para-perros-pollo-res-y-vegetales-600g-3-porciones-de-200g",
+    "price": 3.49,
+    "category": "Alimento",
+    "image_path": "/images/catalog/varios/alimentos-barf-para-perros-pollo-res-y-vegetales-600g-3-porciones-de-200g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alimentos Barf de Res y Vegetales 1Kg (2 Porciones de 500g)",
+    "slug": "alimentos-barf-de-res-y-vegetales-1kg-2-porciones-de-500g",
+    "price": 6.72,
+    "category": "Alimento",
+    "image_path": "/images/catalog/varios/alimentos-barf-de-res-y-vegetales-1kg-2-porciones-de-500g.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Franela para Perros Seleccion de Colombia Fashion Pet Talla M",
+    "slug": "franela-para-perros-seleccion-de-colombia-fashion-pet-talla-m",
+    "price": 14.08,
+    "category": "Cuidado y Accesorios",
+    "image_path": "/images/catalog/higiene-y-belleza/franela-para-perros-seleccion-de-colombia-fashion-pet-talla-m.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Orejas de Cerdo Deshidratadas Wild Pets 1 Und",
+    "slug": "orejas-de-cerdo-deshidratadas-wild-pets-1-und",
+    "price": 2.83,
+    "category": "Juguetes y Snacks",
+    "image_path": "/images/catalog/viveres-y-despensa/orejas-de-cerdo-deshidratadas-wild-pets-1-und.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Juguete de Peluche para Mascotas Botella Pups Puppy & Co",
+    "slug": "juguete-de-peluche-para-mascotas-botella-pups-puppy-co",
+    "price": 6.91,
+    "category": "Juguetes y Snacks",
+    "image_path": "/images/catalog/viveres-y-despensa/juguete-de-peluche-para-mascotas-botella-pups-puppy-co.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Alimento para Gatos Sabor Carnes Whiskas 1Kg",
+    "slug": "alimento-para-gatos-sabor-carnes-whiskas-1kg",
+    "price": 14.37,
+    "category": "Alimento",
+    "image_path": "/images/catalog/varios/alimento-para-gatos-sabor-carnes-whiskas-1kg.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Juguete para Gatos Diseños Variados Guao",
+    "slug": "juguete-para-gatos-disenos-variados-guao",
+    "price": 5.59,
+    "category": "Juguetes y Snacks",
+    "image_path": "/images/catalog/viveres-y-despensa/juguete-para-gatos-disenos-variados-guao.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "Harina PAN 1kg",
+    "slug": "harina-pan-1kg",
+    "price": 1.48,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/harina-pan-1kg.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Mayonesa Mavesa 500g",
+    "slug": "mayonesa-mavesa-500g",
+    "price": 2.39,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/mayonesa-mavesa-500g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Salsa de Tomate Pampero 397g",
+    "slug": "salsa-de-tomate-pampero-397g",
+    "price": 1.32,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/salsa-de-tomate-pampero-397g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Jamon De Pierna La Montserratina 200g",
+    "slug": "jamon-de-pierna-la-montserratina-200g",
+    "price": 2.26,
+    "category": "Charcutería",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-de-pierna-la-montserratina-200g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Detergente Ariel regular 1kg",
+    "slug": "detergente-ariel-regular-1kg",
+    "price": 1.7,
+    "category": "Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/detergente-ariel-regular-1kg.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "7up 2l",
+    "slug": "7up-2l",
+    "price": 3.57,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/7up-2l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "7up Fria 1l",
+    "slug": "7up-fria-1l",
+    "price": 1.95,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/7up-fria-1l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Abrelatas Multiuso Colores Variados Excalibur",
+    "slug": "abrelatas-multiuso-colores-variados-excalibur",
+    "price": 2.92,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/abrelatas-multiuso-colores-variados-excalibur.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Abrillantador De Vajilla Jet Dry Finish 1124ml",
+    "slug": "abrillantador-de-vajilla-jet-dry-finish-1124ml",
+    "price": 3.72,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/abrillantador-de-vajilla-jet-dry-finish-1124ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Abrillantador Liquido Arun 500ml",
+    "slug": "abrillantador-liquido-arun-500ml",
+    "price": 1.43,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/abrillantador-liquido-arun-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Ace Detergente En Polvo 400g",
+    "slug": "ace-detergente-en-polvo-400g",
+    "price": 3.99,
+    "category": "Limpieza",
+    "image_path": "/images/catalog/aseo-del-hogar/ace-detergente-en-polvo-400g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Aromatico Lily Flower Hankey 10ml",
+    "slug": "aceite-aromatico-lily-flower-hankey-10ml",
+    "price": 3.49,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-aromatico-lily-flower-hankey-10ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Aromatico Rose Hankey 10ml",
+    "slug": "aceite-aromatico-rose-hankey-10ml",
+    "price": 3.44,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-aromatico-rose-hankey-10ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Corporal De Coco Orchid 118ml",
+    "slug": "aceite-corporal-de-coco-orchid-118ml",
+    "price": 2.71,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-corporal-de-coco-orchid-118ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Aguacate En Spray Wellsley Farms 207ml",
+    "slug": "aceite-de-aguacate-en-spray-wellsley-farms-207ml",
+    "price": 2.25,
+    "category": "Bebidas",
+    "image_path": "/images/catalog/viveres-y-despensa/aceite-de-aguacate-en-spray-wellsley-farms-207ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Aguacate Organico Superfood Kaldini 250ml",
+    "slug": "aceite-de-aguacate-organico-superfood-kaldini-250ml",
+    "price": 3.02,
+    "category": "Bebidas",
+    "image_path": "/images/catalog/viveres-y-despensa/aceite-de-aguacate-organico-superfood-kaldini-250ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Aguacate Visciano 250ml",
+    "slug": "aceite-de-aguacate-visciano-250ml",
+    "price": 2.98,
+    "category": "Bebidas",
+    "image_path": "/images/catalog/viveres-y-despensa/aceite-de-aguacate-visciano-250ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Bebe Dulces Noche Aroma A Lavanda Johnsons 300ml",
+    "slug": "aceite-de-bebe-dulces-noche-aroma-a-lavanda-johnsons-300ml",
+    "price": 3.49,
+    "category": "Golosinas",
+    "image_path": "/images/catalog/viveres-y-despensa/aceite-de-bebe-dulces-noche-aroma-a-lavanda-johnsons-300ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Coco En Spray Visciano 100ml",
+    "slug": "aceite-de-coco-en-spray-visciano-100ml",
+    "price": 3.12,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-coco-en-spray-visciano-100ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Coco Organico Virgen Kaldini 500ml",
+    "slug": "aceite-de-coco-organico-virgen-kaldini-500ml",
+    "price": 2.96,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-coco-organico-virgen-kaldini-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Eucalipto Para Aromaterapia Twelve Branches 10ml 1 Und",
+    "slug": "aceite-de-eucalipto-para-aromaterapia-twelve-branches-10ml-1-und",
+    "price": 2.29,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-eucalipto-para-aromaterapia-twelve-branches-10ml-1-und.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Motor Mineral 20w50 Eco Classic Chronus 946ml",
+    "slug": "aceite-de-motor-mineral-20w50-eco-classic-chronus-946ml",
+    "price": 2.81,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-motor-mineral-20w50-eco-classic-chronus-946ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva En Spray Members Mark 198g",
+    "slug": "aceite-de-oliva-en-spray-members-mark-198g",
+    "price": 3.05,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-en-spray-members-mark-198g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Auro 750ml",
+    "slug": "aceite-de-oliva-extra-virgen-auro-750ml",
+    "price": 3.02,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-auro-750ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Carbonell 250ml",
+    "slug": "aceite-de-oliva-extra-virgen-carbonell-250ml",
+    "price": 2.64,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-carbonell-250ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Cazorliva 1l",
+    "slug": "aceite-de-oliva-extra-virgen-cazorliva-1l",
+    "price": 3.51,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-cazorliva-1l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen En Spray Carbonell 200ml",
+    "slug": "aceite-de-oliva-extra-virgen-en-spray-carbonell-200ml",
+    "price": 3.22,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-en-spray-carbonell-200ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Kaldini 1l",
+    "slug": "aceite-de-oliva-extra-virgen-kaldini-1l",
+    "price": 2.91,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-kaldini-1l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Reserva Gallo 500ml",
+    "slug": "aceite-de-oliva-extra-virgen-reserva-gallo-500ml",
+    "price": 3.26,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-reserva-gallo-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Subtil Gallo 750ml",
+    "slug": "aceite-de-oliva-subtil-gallo-750ml",
+    "price": 2.54,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-subtil-gallo-750ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Jamon De Pierna Ricci 250 Gr",
+    "slug": "jamon-de-pierna-ricci-250-gr",
+    "price": 4.6,
+    "category": "Charcutería",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-de-pierna-ricci-250-gr.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Jamon Espalda Ahumada Tipo Shoulder Ricci 200g",
+    "slug": "jamon-espalda-ahumada-tipo-shoulder-ricci-200g",
+    "price": 2.32,
+    "category": "Charcutería",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-espalda-ahumada-tipo-shoulder-ricci-200g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Jamon Serrano Prosciutto 24 Meses Di Parma Monastero 150g",
+    "slug": "jamon-serrano-prosciutto-24-meses-di-parma-monastero-150g",
+    "price": 3.4,
+    "category": "Charcutería",
+    "image_path": "/images/catalog/carnes-y-proteinas/jamon-serrano-prosciutto-24-meses-di-parma-monastero-150g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Jugo 2 En 1 1l",
+    "slug": "jugo-2-en-1-1l",
+    "price": 1.03,
+    "category": "Bebidas",
+    "image_path": "/images/catalog/viveres-y-despensa/jugo-2-en-1-1l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Jugo Clarificado De Manzana Natulac 250ml",
+    "slug": "jugo-clarificado-de-manzana-natulac-250ml",
+    "price": 1,
+    "category": "Bebidas",
+    "image_path": "/images/catalog/viveres-y-despensa/jugo-clarificado-de-manzana-natulac-250ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Capilar De Rizos Para Ninos Alea 120ml",
+    "slug": "aceite-capilar-de-rizos-para-ninos-alea-120ml",
+    "price": 2.95,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-capilar-de-rizos-para-ninos-alea-120ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Capilar De Rosemary Mint Kiss Beauty 50ml",
+    "slug": "aceite-capilar-de-rosemary-mint-kiss-beauty-50ml",
+    "price": 3.6,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-capilar-de-rosemary-mint-kiss-beauty-50ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Corporal De Rosa Mosqueta Instituto Espanol 400ml",
+    "slug": "aceite-corporal-de-rosa-mosqueta-instituto-espanol-400ml",
+    "price": 2.75,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-corporal-de-rosa-mosqueta-instituto-espanol-400ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Almendra Para El Cabello Y La Piel Disaar 200ml",
+    "slug": "aceite-de-almendra-para-el-cabello-y-la-piel-disaar-200ml",
+    "price": 2.65,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-almendra-para-el-cabello-y-la-piel-disaar-200ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Argan De Marruecos Ogx 100ml",
+    "slug": "aceite-de-argan-de-marruecos-ogx-100ml",
+    "price": 2.84,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-argan-de-marruecos-ogx-100ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Canola En Spray Pam 340g",
+    "slug": "aceite-de-canola-en-spray-pam-340g",
+    "price": 2.96,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-canola-en-spray-pam-340g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Coco Extra Virgen Grado Cosmetico Cocay 100ml",
+    "slug": "aceite-de-coco-extra-virgen-grado-cosmetico-cocay-100ml",
+    "price": 3.12,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-coco-extra-virgen-grado-cosmetico-cocay-100ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Coco Extra Virgen Prensado Al Frio Cocay 500ml",
+    "slug": "aceite-de-coco-extra-virgen-prensado-al-frio-cocay-500ml",
+    "price": 2.91,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-coco-extra-virgen-prensado-al-frio-cocay-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Coco Para El Cabello Y La Piel Disaar 200ml",
+    "slug": "aceite-de-coco-para-el-cabello-y-la-piel-disaar-200ml",
+    "price": 2.83,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-coco-para-el-cabello-y-la-piel-disaar-200ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Girasol Y Oliva Extra Virgen Campania D Oro 1l",
+    "slug": "aceite-de-girasol-y-oliva-extra-virgen-campania-d-oro-1l",
+    "price": 3.52,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-girasol-y-oliva-extra-virgen-campania-d-oro-1l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Limon Para Aromaterapia Twelve Branches 10ml 1 Und",
+    "slug": "aceite-de-limon-para-aromaterapia-twelve-branches-10ml-1-und",
+    "price": 3.51,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-limon-para-aromaterapia-twelve-branches-10ml-1-und.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva En Spray Carbonell 200ml",
+    "slug": "aceite-de-oliva-en-spray-carbonell-200ml",
+    "price": 2.78,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-en-spray-carbonell-200ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Premium Al Amir 250ml",
+    "slug": "aceite-de-oliva-extra-premium-al-amir-250ml",
+    "price": 2.41,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-premium-al-amir-250ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Capri 500 Ml",
+    "slug": "aceite-de-oliva-extra-virgen-capri-500-ml",
+    "price": 2.57,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-capri-500-ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Carbonell 500ml",
+    "slug": "aceite-de-oliva-extra-virgen-carbonell-500ml",
+    "price": 2.52,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-carbonell-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Cazorliva 250ml",
+    "slug": "aceite-de-oliva-extra-virgen-cazorliva-250ml",
+    "price": 2.57,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-cazorliva-250ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Filippo Berio 750ml",
+    "slug": "aceite-de-oliva-extra-virgen-filippo-berio-750ml",
+    "price": 2.96,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-filippo-berio-750ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Kaldini 500ml",
+    "slug": "aceite-de-oliva-extra-virgen-kaldini-500ml",
+    "price": 2.8,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-kaldini-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Smooth Pompeian 2l",
+    "slug": "aceite-de-oliva-extra-virgen-smooth-pompeian-2l",
+    "price": 2.86,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-smooth-pompeian-2l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Leche Descremada Mi Vaca Carabobo 1l",
+    "slug": "leche-descremada-mi-vaca-carabobo-1l",
+    "price": 2.22,
+    "category": "Lácteos",
+    "image_path": "/images/catalog/lacteos-y-huevos/leche-descremada-mi-vaca-carabobo-1l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Corporal Esencia De Argan Instituto Espanol 400ml",
+    "slug": "aceite-corporal-esencia-de-argan-instituto-espanol-400ml",
+    "price": 2.76,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-corporal-esencia-de-argan-instituto-espanol-400ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Almendras En Spray Arteza Cosmetic 100ml",
+    "slug": "aceite-de-almendras-en-spray-arteza-cosmetic-100ml",
+    "price": 2.34,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-almendras-en-spray-arteza-cosmetic-100ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Bebe Care Studio 192ml",
+    "slug": "aceite-de-bebe-care-studio-192ml",
+    "price": 2.83,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-bebe-care-studio-192ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Coco En Spray Arteza Cosmetic 100ml",
+    "slug": "aceite-de-coco-en-spray-arteza-cosmetic-100ml",
+    "price": 2.31,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-coco-en-spray-arteza-cosmetic-100ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Coco Extra Virgen Prensado Al Frio Cocay 200ml",
+    "slug": "aceite-de-coco-extra-virgen-prensado-al-frio-cocay-200ml",
+    "price": 3.25,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-coco-extra-virgen-prensado-al-frio-cocay-200ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Coco Organic Coconut Oil Members Mark 1 66l",
+    "slug": "aceite-de-coco-organic-coconut-oil-members-mark-1-66l",
+    "price": 3.44,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-coco-organic-coconut-oil-members-mark-1-66l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Cocoa Butter Para El Cabello Y La Piel Disaar 120ml",
+    "slug": "aceite-de-cocoa-butter-para-el-cabello-y-la-piel-disaar-120ml",
+    "price": 2.62,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-cocoa-butter-para-el-cabello-y-la-piel-disaar-120ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Girasol Y De Oliva Extra Virgen Carbonell 1l",
+    "slug": "aceite-de-girasol-y-de-oliva-extra-virgen-carbonell-1l",
+    "price": 2.73,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-girasol-y-de-oliva-extra-virgen-carbonell-1l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Hilton Para Aromaterapia Twelve Branches 10ml 1 Und",
+    "slug": "aceite-de-hilton-para-aromaterapia-twelve-branches-10ml-1-und",
+    "price": 3.39,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-hilton-para-aromaterapia-twelve-branches-10ml-1-und.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Maiz Mazeite 1 Lt",
+    "slug": "aceite-de-maiz-mazeite-1-lt",
+    "price": 2.27,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-maiz-mazeite-1-lt.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva En Spray Carlini 198g",
+    "slug": "aceite-de-oliva-en-spray-carlini-198g",
+    "price": 2.59,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-en-spray-carlini-198g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Premium Al Amir 500ml",
+    "slug": "aceite-de-oliva-extra-premium-al-amir-500ml",
+    "price": 3.04,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-premium-al-amir-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Capri 5l",
+    "slug": "aceite-de-oliva-extra-virgen-capri-5l",
+    "price": 2.52,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-capri-5l.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Carbonell 750ml",
+    "slug": "aceite-de-oliva-extra-virgen-carbonell-750ml",
+    "price": 3.15,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-carbonell-750ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Cazorliva 500ml",
+    "slug": "aceite-de-oliva-extra-virgen-cazorliva-500ml",
+    "price": 2.29,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-cazorliva-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Frescarini 500ml",
+    "slug": "aceite-de-oliva-extra-virgen-frescarini-500ml",
+    "price": 2.89,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-frescarini-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Extra Virgen Ouro Da Terra Mirazeite 250ml",
+    "slug": "aceite-de-oliva-extra-virgen-ouro-da-terra-mirazeite-250ml",
+    "price": 3.43,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-extra-virgen-ouro-da-terra-mirazeite-250ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Oliva Subtil En Lata Gallo 500ml",
+    "slug": "aceite-de-oliva-subtil-en-lata-gallo-500ml",
+    "price": 3.37,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-oliva-subtil-en-lata-gallo-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Orujo De Oliva Kaldini 500ml",
+    "slug": "aceite-de-orujo-de-oliva-kaldini-500ml",
+    "price": 2.32,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-orujo-de-oliva-kaldini-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Palma Frito Listo 800ml",
+    "slug": "aceite-de-palma-frito-listo-800ml",
+    "price": 2.95,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-palma-frito-listo-800ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Pina Para Aromaterapia Twelve Branches 10ml 1 Und",
+    "slug": "aceite-de-pina-para-aromaterapia-twelve-branches-10ml-1-und",
+    "price": 3.49,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-pina-para-aromaterapia-twelve-branches-10ml-1-und.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Sesamo 145ml",
+    "slug": "aceite-de-sesamo-145ml",
+    "price": 2.95,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-sesamo-145ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Sesamo Puro Lee Kum Kee 207ml",
+    "slug": "aceite-de-sesamo-puro-lee-kum-kee-207ml",
+    "price": 2.75,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-sesamo-puro-lee-kum-kee-207ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Soya Innova 828ml",
+    "slug": "aceite-de-soya-innova-828ml",
+    "price": 3.33,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-soya-innova-828ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Soya Naturoil 850 Ml",
+    "slug": "aceite-de-soya-naturoil-850-ml",
+    "price": 3.4,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-soya-naturoil-850-ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite De Zen Para Aromaterapia Twelve Branches 10ml 1 Und",
+    "slug": "aceite-de-zen-para-aromaterapia-twelve-branches-10ml-1-und",
+    "price": 3.42,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-de-zen-para-aromaterapia-twelve-branches-10ml-1-und.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Esencial Mist Be Sleep Olivia 120ml",
+    "slug": "aceite-esencial-mist-be-sleep-olivia-120ml",
+    "price": 3.21,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-esencial-mist-be-sleep-olivia-120ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Esencial Multiproposito De Bergamota Sadoer 10ml",
+    "slug": "aceite-esencial-multiproposito-de-bergamota-sadoer-10ml",
+    "price": 3.55,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-esencial-multiproposito-de-bergamota-sadoer-10ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Esencial Multiproposito De Lavanda Sadoer 10ml",
+    "slug": "aceite-esencial-multiproposito-de-lavanda-sadoer-10ml",
+    "price": 3.03,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-esencial-multiproposito-de-lavanda-sadoer-10ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Esencial Roll On Be Relax Olivia 10ml",
+    "slug": "aceite-esencial-roll-on-be-relax-olivia-10ml",
+    "price": 2.71,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-esencial-roll-on-be-relax-olivia-10ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Labial Hidratante Kitty Karite 6ml",
+    "slug": "aceite-labial-hidratante-kitty-karite-6ml",
+    "price": 3.06,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-labial-hidratante-kitty-karite-6ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Para Ninos Qlitos Arnamar 120g",
+    "slug": "aceite-para-ninos-qlitos-arnamar-120g",
+    "price": 2.77,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-para-ninos-qlitos-arnamar-120g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Renovador De Madera Y Cuero Cereza Pledge 500ml",
+    "slug": "aceite-renovador-de-madera-y-cuero-cereza-pledge-500ml",
+    "price": 3.61,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-renovador-de-madera-y-cuero-cereza-pledge-500ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aceite Vegetal Coposa 850ml",
+    "slug": "aceite-vegetal-coposa-850ml",
+    "price": 2.82,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aceite-vegetal-coposa-850ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Aclarador Para Lavavajillas 3 En 1 Cascade 250ml",
+    "slug": "aclarador-para-lavavajillas-3-en-1-cascade-250ml",
+    "price": 4.22,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/aclarador-para-lavavajillas-3-en-1-cascade-250ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Agua Gasificada De Coco Palauano Petrichor 355ml",
+    "slug": "agua-gasificada-de-coco-palauano-petrichor-355ml",
+    "price": 1.91,
+    "category": "Bebidas",
+    "image_path": "/images/catalog/viveres-y-despensa/agua-gasificada-de-coco-palauano-petrichor-355ml.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Ajillo Mix Ajo Con Perejil Iberia 30g",
+    "slug": "ajillo-mix-ajo-con-perejil-iberia-30g",
+    "price": 2.27,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/ajillo-mix-ajo-con-perejil-iberia-30g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Ajo Criollo Especial Aa 100g",
+    "slug": "ajo-criollo-especial-aa-100g",
+    "price": 2.02,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/ajo-criollo-especial-aa-100g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Ajo Puro En Polvo Iberia 90g",
+    "slug": "ajo-puro-en-polvo-iberia-90g",
+    "price": 1.15,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/ajo-puro-en-polvo-iberia-90g.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Alimento Completo Para Gatos Adultos Rufia 1 5kg",
+    "slug": "alimento-completo-para-gatos-adultos-rufia-1-5kg",
+    "price": 3.83,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/alimento-completo-para-gatos-adultos-rufia-1-5kg.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Alimento Para Cachorro De Razas Pequena Pollo Y Arroz Nutri Source 1 8kg",
+    "slug": "alimento-para-cachorro-de-razas-pequena-pollo-y-arroz-nutri-source-1-8kg",
+    "price": 1.09,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/alimento-para-cachorro-de-razas-pequena-pollo-y-arroz-nutri-source-1-8kg.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Alimento Para Cachorros De Cordero Arroz Y Salmon Chunky 1 5 Kg",
+    "slug": "alimento-para-cachorros-de-cordero-arroz-y-salmon-chunky-1-5-kg",
+    "price": 0.89,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/alimento-para-cachorros-de-cordero-arroz-y-salmon-chunky-1-5-kg.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "Alimento Para Gatos Adultos Carne Arroz Y Maiz Gatsy Purina 3kg",
+    "slug": "alimento-para-gatos-adultos-carne-arroz-y-maiz-gatsy-purina-3kg",
+    "price": 0.92,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/alimento-para-gatos-adultos-carne-arroz-y-maiz-gatsy-purina-3kg.webp",
+    "source_store": "Backup Storage"
+  },
+  {
+    "name": "TRIFOGON",
+    "slug": "trifogon",
+    "price": 0.0608,
+    "category": "Varios",
+    "image_path": "/images/catalog/trifogon.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "TOM  GUAYABANA",
+    "slug": "tom-guayabana",
+    "price": 0.133,
+    "category": "Varios",
+    "image_path": "/images/catalog/tom-guayabana.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "TOM  PLATANO",
+    "slug": "tom-platano",
+    "price": 0.133,
+    "category": "Varios",
+    "image_path": "/images/catalog/tom-platano.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "ALISOFT PAPEL",
+    "slug": "alisoft-papel",
+    "price": 0.9,
+    "category": "Varios",
+    "image_path": "/images/catalog/alisoft-papel.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "EURO",
+    "slug": "euro",
+    "price": 0.8458,
+    "category": "Varios",
+    "image_path": "/images/catalog/euro.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "BAMBOO 4 ROLLO",
+    "slug": "bamboo-4-rollo",
+    "price": 0.6907,
+    "category": "Varios",
+    "image_path": "/images/catalog/bamboo-4-rollo.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "BAMBOO UNIDA",
+    "slug": "bamboo-unida",
+    "price": 0.1465,
+    "category": "Varios",
+    "image_path": "/images/catalog/bamboo-unida.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "LA PAMPA",
+    "slug": "la-pampa",
+    "price": 2.9723,
+    "category": "Varios",
+    "image_path": "/images/catalog/la-pampa.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "AURORA SOYA",
+    "slug": "aurora-soya",
+    "price": 2.4722,
+    "category": "Víveres",
+    "image_path": "/images/catalog/aurora-soya.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "DOÑA TITA VINAGRE",
+    "slug": "dona-tita-vinagre",
+    "price": 0.8417,
+    "category": "Víveres",
+    "image_path": "/images/catalog/dona-tita-vinagre.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "CAPRI SALSA",
+    "slug": "capri-salsa",
+    "price": 1.9814,
+    "category": "Víveres",
+    "image_path": "/images/catalog/capri-salsa.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "KETCHUP",
+    "slug": "ketchup",
+    "price": 1.6629,
+    "category": "Víveres",
+    "image_path": "/images/catalog/ketchup.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "PAZCUM SALSA",
+    "slug": "pazcum-salsa",
+    "price": 1.6218,
+    "category": "Víveres",
+    "image_path": "/images/catalog/pazcum-salsa.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "SARDINES  OIL",
+    "slug": "sardines-oil",
+    "price": 0.702,
+    "category": "Víveres",
+    "image_path": "/images/catalog/sardines-oil.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "TWISTI",
+    "slug": "twisti",
+    "price": 4.3245,
+    "category": "Varios",
+    "image_path": "/images/catalog/twisti.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "MARGARINA ATUN",
+    "slug": "margarina-atun",
+    "price": 3.4684,
+    "category": "Víveres",
+    "image_path": "/images/catalog/margarina-atun.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "DIABLITO UNDER",
+    "slug": "diablito-under",
+    "price": 2.0363,
+    "category": "Varios",
+    "image_path": "/images/catalog/varios/diablito-under.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "BLANCA FLOR LEUDANTE",
+    "slug": "blanca-flor-leudante",
+    "price": 1.5937,
+    "category": "Varios",
+    "image_path": "/images/catalog/blanca-flor-leudante.webp",
+    "source_store": "Caraota Market"
+  },
+  {
+    "name": "BLANCA FLOR TODO",
+    "slug": "blanca-flor-todo",
+    "price": 1.4526,
+    "category": "Varios",
+    "image_path": "/images/catalog/blanca-flor-todo.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "KONFIT AZUCAR",
+    "slug": "konfit-azucar",
+    "price": 1.8765,
+    "category": "Varios",
+    "image_path": "/images/catalog/varios/konfit-azucar.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "RONCO CORTA PLUMA 500 GR",
+    "slug": "ronco-corta-pluma-500-gr",
+    "price": 1.1917,
+    "category": "Víveres",
+    "image_path": "/images/catalog/ronco-corta-pluma-500-gr.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "MARY PASTA PLUMA 500 GR",
+    "slug": "mary-pasta-pluma-500-gr",
+    "price": 1.6792,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/mary-pasta-pluma-500-gr.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "SAN SIMON LECHE 400GR",
+    "slug": "san-simon-leche-400gr",
+    "price": 3.5279,
+    "category": "Víveres",
+    "image_path": "/images/catalog/san-simon-leche-400gr.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "ARROZ MARY SUPERIOR",
+    "slug": "arroz-mary-superior",
+    "price": 1.6126,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/arroz-mary-superior.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "ARROZ MARY PREMIUM",
+    "slug": "arroz-mary-premium",
+    "price": 1.8187,
+    "category": "Víveres",
+    "image_path": "/images/catalog/carnes-y-proteinas/arroz-mary-premium.webp",
+    "source_store": "TuzonaMarket"
+  },
+  {
+    "name": "DOÑA BELEN",
+    "slug": "dona-belen",
+    "price": 1.1567,
+    "category": "Víveres",
+    "image_path": "/images/catalog/dona-belen.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "PRIMOR PASTA LARGA",
+    "slug": "primor-pasta-larga",
+    "price": 3.0983,
+    "category": "Víveres",
+    "image_path": "/images/catalog/primor-pasta-larga.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "MARY PASTA LARGA PREMIUM 500G",
+    "slug": "mary-pasta-larga-premium-500g",
+    "price": 1.5492,
+    "category": "Víveres",
+    "image_path": "/images/catalog/mary-pasta-larga-premium-500g.webp",
+    "source_store": "InstaMarket"
+  },
+  {
+    "name": "Afeitadora Dorco 2 hojillas azul",
+    "slug": "afeitadora-dorco-2-hojillas-azul",
+    "price": 0.0,
+    "category": "Aseo Personal",
+    "image_path": "/images/catalog/higiene-y-belleza/afeitadora-dorco-2-hojillas-azul.webp",
+    "source_store": "Coco Mercado"
+  }
+]
