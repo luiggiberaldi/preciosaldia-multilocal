@@ -1,0 +1,17 @@
+{
+  "tables": "select n.nspname as schema, c.relname as table_name, c.relrowsecurity as rls, c.relforcerowsecurity as force_rls, c.reltuples::bigint as estimated_rows, pg_total_relation_size(c.oid) as bytes from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','storage') and c.relkind='r' order by 1,2",
+  "columns": "select table_schema, table_name, column_name, data_type, is_nullable, column_default from information_schema.columns where table_schema='public' order by table_name,ordinal_position",
+  "policies": "select schemaname,tablename,policyname,permissive,roles,cmd,qual,with_check from pg_policies where schemaname in ('public','storage') order by 1,2,3",
+  "functions": "select p.proname, pg_get_function_identity_arguments(p.oid) as args, p.prosecdef as security_definer, p.proconfig, p.proacl, pg_get_functiondef(p.oid) as definition from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prokind='f' order by 1,2",
+  "grants": "select table_name,grantee,privilege_type from information_schema.role_table_grants where table_schema='public' and grantee in ('anon','authenticated','PUBLIC') order by 1,2,3",
+  "indexes": "select schemaname,tablename,indexname,indexdef from pg_indexes where schemaname='public' order by 2,3",
+  "constraints": "select c.relname as table_name, con.conname, pg_get_constraintdef(con.oid) as definition from pg_constraint con join pg_class c on c.oid=con.conrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' order by 1,2",
+  "triggers": "select event_object_table,trigger_name,action_timing,event_manipulation,action_statement from information_schema.triggers where trigger_schema='public' order by 1,2",
+  "publications": "select pubname,schemaname,tablename from pg_publication_tables order by 1,2,3",
+  "buckets": "select id,name,public,file_size_limit,allowed_mime_types from storage.buckets order by id",
+  "auth_summary": "select count(*) as users_total, count(*) filter (where is_anonymous) as anonymous_users, count(*) filter (where email_confirmed_at is not null) as email_confirmed_users, count(*) filter (where last_sign_in_at > now()-interval '7 days') as signed_in_7d from auth.users",
+  "mfa_summary": "select factor_type,status,count(*) from auth.mfa_factors group by 1,2",
+  "migrations": "select table_schema,table_name from information_schema.tables where table_schema in ('supabase_migrations','public') and table_name in ('schema_migrations','schema_version') order by 1,2",
+  "connections": "select state,count(*) from pg_stat_activity where datname=current_database() group by state",
+  "db_stats": "select datname,xact_commit,xact_rollback,deadlocks,temp_bytes,blk_read_time,blk_write_time from pg_stat_database where datname=current_database()"
+}

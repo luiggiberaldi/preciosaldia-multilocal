@@ -78,7 +78,7 @@ export function isMasterPinSetup() {
  * @returns {Promise<{ ok: boolean, error?: string }>}
  */
 export async function setMasterPin(pin) {
-    const err = validatePin(pin);
+    const err = validatePin(pin, 'DUENO');
     if (err) return { ok: false, error: err };
     try {
         const hash = await hashPin(pin);
@@ -124,7 +124,7 @@ export async function verifyMasterPin(pin) {
         stored = localStorage.getItem(DUENO_PIN_KEY);
     } catch { /* noop */ }
     let valid = false;
-    if (stored) {
+    if (stored && !validatePin(pin, 'DUENO')) {
         try {
             const res = await verifyPin(pin, stored);
             valid = res.valid === true;

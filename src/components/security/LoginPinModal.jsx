@@ -4,7 +4,7 @@ import LoginAvatar from './LoginAvatar';
 import { pinLengthForRole } from '../../utils/securityConstants';
 
 export default function LoginPinModal({ isOpen, onClose, user, onSubmit }) {
-  // Política por rol (2026-06): CAJERO = 4 dígitos, ADMIN = 6 dígitos.
+  // Política por rol: CAJERO = 4 dígitos, DUENO/ADMIN = 6 dígitos.
   const pinLength = pinLengthForRole(user?.rol);
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);

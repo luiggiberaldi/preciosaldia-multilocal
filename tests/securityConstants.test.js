@@ -3,6 +3,7 @@
 import { describe, it, expect } from "vitest";
 import {
   validatePin,
+  pinLengthForRole,
   PIN_POLICY,
   LOGIN_RATE_LIMIT,
   FINANCIAL_EPSILON,
@@ -20,6 +21,20 @@ describe("validatePin", () => {
     // Política vigente (decisión de negocio): 4-6 dígitos válidos sin rol.
     expect(validatePin("1234")).toBeNull();
     expect(validatePin("12345")).toBeNull();
+  });
+
+  it("exige 6 dígitos para DUENO y ADMIN", () => {
+    for (const role of ["DUENO", "ADMIN"]) {
+      expect(pinLengthForRole(role)).toBe(6);
+      expect(validatePin("2468", role)).toMatch(/debe tener 6 dígitos/);
+      expect(validatePin("246810", role)).toBeNull();
+    }
+  });
+
+  it("mantiene 4 dígitos para CAJERO", () => {
+    expect(pinLengthForRole("CAJERO")).toBe(4);
+    expect(validatePin("2468", "CAJERO")).toBeNull();
+    expect(validatePin("246810", "CAJERO")).toMatch(/debe tener 4 dígitos/);
   });
 
   it("acepta PIN válido de 6 dígitos (no en blacklist)", () => {

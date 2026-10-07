@@ -7,7 +7,7 @@ import LoginPinModal from './LoginPinModal';
 import EmergencyPinResetModal from './EmergencyPinResetModal';
 import { isMasterPinSetup } from '../../utils/duenoAuth';
 
-const DUENO_PSEUDO_USER = { id: 'dueno', nombre: 'Dueño' };
+const DUENO_PSEUDO_USER = { id: 'dueno', nombre: 'Dueño', rol: 'DUENO' };
 
 export default function LockScreen({ installPrompt, onInstall, showIOSButton, onShowIOSInstall, onOpenRemotion, onCancel }) {
   const { usuarios, login, loginDirect, requireCajeroPin, requireAdminPin, resetPinEmergency, loginAsDueno } = useAuthStore();
@@ -308,7 +308,7 @@ export default function LockScreen({ installPrompt, onInstall, showIOSButton, on
       <LoginPinModal
         isOpen={showNegocioPin}
         onClose={() => { setShowNegocioPin(false); setPendingNegocioId(null); }}
-        user={{ id: 'dueno', nombre: 'Dueño (cambio de sede)' }}
+        user={{ id: 'dueno', nombre: 'Dueño (cambio de sede)', rol: 'DUENO' }}
         onSubmit={handleNegocioPinSubmit}
       />
 

@@ -1,0 +1,160 @@
+# Inteligencia — PreciosAlDía Multilocal
+
+Aprendizajes reutilizables del proyecto. Lo operativo del día a día va en `bitacora.md`.
+
+---
+
+## 2026-10-01 — QUOTA-003: deltas diarios en vez de snapshots para egress
+- Patrón: cuando un documento sincronizado crece con el tiempo (ventas,
+  ledger), el push no debe re-subir el snapshot completo. Un doc diario
+  (`prefijo_YYYY-MM-DD`) con solo lo nuevo + fusión idempotente por id en el
+  receptor (`mergeSales`) convierte O(ventana) en O(delta). El snapshot
+  completo pasa a ser nocturno/bajo demanda.
+- La key dinámica no cabe en una allowlist exacta: validar por
+  prefijo+formato (`isSalesDeltaKey`) tanto en el contrato como en el
+  receptor. El validador del payload va por su propio contrato
+  (`isValidSalesDelta`), no por la tabla de validadores estáticos.
+- E2E contra Supabase real: el RLS de `sync_documents` exige (1) JWT del
+  usuario Auth (no basta la anon key) y (2) dispositivo registrado en
+  `device_sessions` ANTES de cualquier DELETE (el DELETE con RLS que filtra
+  devuelve 200 con 0 filas, no error — silencioso). Para aislamiento entre
+  corridas, device IDs únicos por run (`E2E-...-${Date.now().toString(36)}`)
+  en vez de confiar en la limpieza.
+- PostgREST upsert por REST necesita `Prefer: resolution=merge-duplicates`
+  además de `on_conflict`; sin eso el segundo POST da 409.
+
+## 2026-09-30 — CloudGate: un solo build, N proyectos Supabase por cliente
+- Patrón que funcionó: cliente Supabase perezoso vía `Proxy` — todo el código
+  existente sigue usando `supabaseCloud.from(...)` / `.auth...` sin cambios;
+  si se toca antes de resolver el proyecto lanza un error claro en vez de
+  fallar en silencio. La auditoría de "usos antes del gate" se hace buscando
+  accesos a nivel de módulo (los imports solos no disparan el Proxy).
+- Directorio central mínimo: la Estación solo expone `lookup_customer_project`
+  (código → url + anon key) con RLS; el email del dueño nunca sale del
+  directorio. El cliente del directorio es separado, sin `persistSession`.
+- Orden de gates en `main.jsx`: recovery-url → CloudGate → App(PIN). El
+  listener de `PASSWORD_RECOVERY` solo se ata con proyecto recordado; en
+  primera activación no hay sesión que escuchar todavía.
+- Lección de fechas: `date -u` puede decir 2026-10-01 mientras en Caracas
+  (tz de luigi) sigue siendo 2026-09-30. Las entradas de bitácora usan la
+  fecha local de luigi; verificar con `TZ=America/Caracas date` antes de
+  fechar. (Casi se fechó mal esta entrada por mirar el reloj UTC.)
+- `npm run build` no detecta imports rotos en archivos que nadie importa:
+  `CloudGate.jsx` tenía `../config` en vez de `../../config` y el build
+  pasaba igual porque aún no estaba conectado. Integrar primero, compilar
+  después.
+
+---
+
+## 2026-09-29 — Multi-negocio: router de storage con clave lógica vs física
+- Patrón que funcionó: UNA función (`routeStorageKey`) decide el prefijo; el resto
+  de la app sigue hablando en claves lógicas. Eventos, colas y circuit breakers
+  usan la lógica; solo el acceso físico (localforage/localStorage) usa la enrutada.
+  Idempotencia obligatoria: enrutar dos veces no debe duplicar el prefijo.
+- Cambiar de tenant con `window.location.reload()` es la forma más segura de
+  rehidratar N stores zustand + contextos React sin dejar estado cruzado.
+  Documentarlo como decisión intencional, no como parche.
+- El boot/migración debe correr ANTES del primer render y ser idempotente:
+  si el registro existe, no toca nada. "Mover, no copiar": escribir destino,
+  verificar, y recién borrar origen.
+- Espejo de compatibilidad: cuando mucho código legacy lee `business_*`, no
+  reescribirlo todo — mantener un espejo sincronizado con el tenant activo y
+  declarar el registro como fuente de verdad.
+- Auth por tenant: el adapter de persistencia de zustand puede enrutar el nombre
+  de la clave dinámicamente en cada operación (no hace falta recrear el store).
+- En tests con jsdom, mockear `localforage` con un Map cubre la lógica de
+  migración sin necesidad de fake-indexeddb.
+- `persist.clearStorage()` de zustand BORRA el estado persistido — nunca usarlo
+  como "limpiar caché" antes de un rehydrate.
+
+## 2026-09-29 — Verificar nombres de iconos lucide contra la versión instalada
+`ReceiptX` no existe en la versión de lucide-react del repo y rompió el build
+(vite-plugin-pwa/rollup falla con "not exported"). Antes de usar un icono
+nuevo, verificar con `node -e "import('lucide-react').then(l => console.log(typeof l.Icono))"`.
+
+## 2026-09-29 — Los 404 de la consola no se silencian, se evitan
+Chrome pinta `GET url 404 (Not Found)` por cada fetch fallido y desde JS no
+hay forma de suprimirlo (no es un `console.error` del código). Cuando un
+backend opcional no existe (tablas/RPCs sin crear), la solución no es bajar el
+volumen del log sino dejar de hacer las peticiones: detectar el primer 404
+(códigos PGRST2xx = objeto no existe en el schema cache), cachear el estado
+"no implementado" con TTL (localStorage) y saltear las llamadas. Distinguir
+de errores de red/401/500, que NO deben marcar como caído. Al crear el
+backend después, el TTL expira y todo se reactiva solo, sin deploy.
+
+## 2026-09-30 — Sync delta en documentos JSON (patrón anti-cuota)
+
+Cuando un documento JSON completo se sincroniza por upsert en cada cambio,
+separar lo volátil de lo estable ahorra órdenes de magnitud: un mapa liviano
+(`{id: campo}`) para lo que cambia en cada operación + el documento completo
+solo cuando cambia lo estructural, detectado por hash que ignora los campos
+volátiles. Al recibir, FUSIONAR (merge por id / aplicar mapa sobre el array
+local), nunca reemplazar: así se puede podar la ventana enviada sin perder
+historial. Regla de oro: el receptor nunca debe poder borrar datos con un
+snapshot parcial. (Caso: `bodega_stock_v1` ~40KB vs catálogo ~3MB por venta;
+ventas podadas a 90 días con `mergeSales`.)
+
+## 2026-09-30 — Multi-dispositivo con Supabase Auth + RLS (patrón anti-egress)
+
+Patrón para sincronizar N dispositivos de un mismo dueño sin polling y sin quemar la cuota gratis:
+1. **Raíz de confianza = cuenta Auth del dueño**, no el device_id. Tabla `account_devices(user_id, device_id, revoked)`; el dispositivo se auto-registra al entrar o al canjear código.
+2. **Vinculación de caja sin escribir la contraseña:** tabla `pairing_codes(code 6 dígitos, user_id, expires_at, used)` + RPC `redeem_pairing_code` que valida expiración/uso único y registra el dispositivo en una sola llamada. La caja opera con sesión anónima (`is_anonymous`) y descubre a sus hermanos con un RPC `SECURITY DEFINER` (`my_account_device_ids()`) que solo devuelve device_ids — nunca datos de otros usuarios.
+3. **RLS:** políticas "owner gestiona sus device_ids" + "dispositivo lee `sync_documents` donde `device_id` ∈ sus device_ids". Sin service_role en el cliente.
+4. **Pull con watermark por cuenta** (`gt('updated_at', watermark)` en localStorage, orden ascendente, límite) en vez de traer todo en cada arranque. La corrección NO depende del watermark: el applier ignora lo que no sea más nuevo que la metadata local por documento (idempotente).
+5. **Lección de edición:** al insertar una rama nueva en un hook largo, verificar con `node --check`/esbuild + correr la suite ANTES de seguir: un bloque pegado en la rama equivocada deja un `else` inalcanzable que solo se ve revisando el flujo. Hacer backup del archivo antes de ediciones quirúrgicas con python (`cp` a /tmp).
+
+## 2026-09-30 — Tope de equipos por cuenta aplicado en el servidor
+
+Lección reutilizable del límite de 6 equipos:
+1. **El tope vive en un RPC `SECURITY DEFINER`, nunca en el cliente.** `register_account_device` cuenta los equipos activos del dueño (`auth.uid()`) sin contar el que se registra y falla con `LIMIT_REACHED` si ya hay 6. El cliente solo mapea ese token a UI (banner de límite). Así ningún cliente viejo o modificado puede saltarse el cupo.
+2. **Re-vincular no consume cupo** (upsert idempotente); un equipo revocado que vuelve a entrar con la contraseña sí pasa por el conteo — si la cuenta está llena, se rechaza igual que uno nuevo.
+3. **Ante el límite, no dejar sesiones a medias:** si el login es válido pero el equipo no se pudo vincular, se cierra la sesión de inmediato. Una sesión "conectada" que no sincroniza es peor que un error claro.
+4. **En modo cuenta, el pull multi-dispositivo mezcla `doc_id` de hermanos:** cualquier lógica de "¿ya existe en la nube?" debe filtrar por `device_id` propio (traerlo en el `select`), o un hermano suprime el push propio.
+
+## 2026-09-30 — `vi.unmock` también se eleva (hoisting) en Vitest
+
+Lección del plan de tests CloudGate: llamar `vi.unmock('...')` dentro de un
+`it()` desactivó el `vi.mock` de **todo el archivo** (los tests anteriores
+empezaron a cargar el módulo real y fallaron con "[CloudGate] Proyecto sin
+resolver"). El unmock no es solo "para lo que sigue": el registro de mocks
+se evalúa elevado. Regla: si un archivo necesita el mock y otro caso necesita
+el módulo real, van en **archivos de test separados** (`cloudGateFlows`
+mockeado vs `cloudGateRealConfig` sin mock), no con unmock a mitad de archivo.
+
+## 2026-10-01 — Lecciones de Fase 3 (sync multi-equipo)
+- Las guardas de los tests que verifican texto fuente (`supervisorLifecycle.test.js`) se rompen en cada refactor del hook: al renombrar `subscriptionRef` → `subscriptionsRef` el test falló. Actualizar el guardrail junto con el refactor (la intención —"sin duplicar el canal"— sigue viva, solo cambió la forma).
+- En reconciliación LWW, el "updatedAt más nuevo gana" es insuficiente para estados terminales (anulaciones): agregar una regla de dominancia explícita (ANULADA gana siempre) antes de comparar timestamps.
+- Para mapas absolutos compartidos (stock), reconciliar por delta contra el último valor conocido de cada fuente es barato y evita el pisoteo de ventas concurrentes; la primera observación de cada fuente conserva asignación absoluta como semilla.
+- Conflictos LWW silenciosos: detectar es barato (comparar hash del descartado vs el confirmado, o hash local vs último confirmado antes de sobrescribir) y el aviso en UI (badge ámbar en el indicador de sync) convierte una pérdida silenciosa en algo revisable.
+
+## 2026-10-01 — Lecciones de Fase 4 (barcode, restore, backup)
+- **Restaurar = validar + comparar fechas + confirmar, nunca borrar a ciegas.** El flujo de dos pasos (primero `validateBackupJson` + estado `restoreConfirm` con `backupDate`/`lastSaleDate`, después `confirmRestore` destructivo) es el patrón para cualquier operación irreversible sobre datos del usuario.
+- **Detección de duplicados donde el daño ocurre:** el POS matchea por código escaneado (first-match), así que la validación de duplicados en el formulario debe resolver el código *igual que el escáner* (`normalizeBarcode` con des-shifteo ES/LATAM), no comparar el string crudo. Extraer el predicado a función pura (`findBarcodeCollision`) lo hace testeable sin montar el componente.
+- **Las listas canónicas de backup se pudren si nadie las audita.** Hacer el test que exige orden alfabético + la comparación contra las claves reales usadas en el código (`localStorage.getItem('x')` / `storageService`) es lo que detectó `bodega_pending_holds_v1` faltante. Regla: cada vez que se agregue una clave persistente nueva, agregarla a `backupKeys.js` en el mismo commit.
+- **Secretos fuera del backup exportable:** `pda_emergency_pin` vive en localStorage pero nunca entra en `LS_KEYS` — un backup es un archivo JSON que el usuario comparte/mueve; todo secreto queda excluido por diseño, no por olvido.
+- **Flags de confirmación con vida corta:** si un flag (`confirm_bulk_delete_catalog_flag`) solo se consume cuando el disyuntor se dispara, setearlo incondicionalmente deja un flag huérfano que debilita protecciones futuras. Setearlo solo cuando la condición del disyuntor se cumple (ALTO-6, diff preparado).
+
+## 2026-10-01 — Lecciones de Fase 5 (medios)
+- Un "choke point" compartido también lo consumen terceros: endurecer `buildProductPayload` rompió el test del importador Excel ("conserva negativos y los cuenta"). Regla: antes de endurecer un util compartido, grepear TODOS los consumidores incluyendo tests ajenos; si hay comportamiento intencional divergente, el guard va en el caller (formulario), no en el util.
+- `resyncCartItems` (SYNC-CESTA-001) ya resolvía M-5: antes de escribir un loop ad-hoc de reconciliación, buscar el util canónico existente. El fix fue borrar código, no escribirlo.
+- Comportamiento transversal de modales (Escape/scroll-lock/foco) en un hook compartido `useModalBehavior` con pila a nivel módulo: solo el modal superior consume Escape. Aplicarlo son 3 líneas por modal custom (import + hook + ref en el panel + backdrop).
+- Tolerancias fijas en validaciones monetarias son bombas de tiempo con N líneas: escalar con `max(piso, k×tasa×n)` preserva la protección sin bloquear ventas legítimas.
+- Cuidado con `tail -30 docs/bitacora.md || tail -30 bitacora.md`: el `||` oculta que el primer archivo no existe y se termina creando un duplicado al hacer `>>`. Verificar existencia con `ls` antes de redactar.
+
+## 2026-10-01 — Lecciones de Fase 6 (bajos)
+- **Mutex cross-tab barato con localStorage:** en LAN por HTTP no hay `navigator.locks` (sin contexto seguro). Un lease con token + re-lectura de confirmación tras ~10ms elimina la mayoría de colisiones entre pestañas sin SharedWorker. Degradar por niveles: locks nativo → storage → memoria, y nunca bloquear la venta (timeout → degradar).
+- **Reintentos infinitos en silencio = deuda de UX:** todo retry loop necesita tope + superficie del error (`syncError` para reintento manual). Igual para `.catch(() => {})` en pushes: registrar (`recordSyncPushError` + evento) en vez de tragar.
+- **`\w` es ASCII:** cualquier capitalización/normalización de texto en español debe usar `\p{L}` con flag `u`. Extraer a helper puro (`titleCaseUnicode`) lo hace testeable.
+- **Los filtros de reportes no deben depender de que cada llamador filtre:** `calculateSupervisorPaymentBreakdown` ahora excluye ANULADA por sí solo (`isVoidedSale`). Patrón: el predicado puro + el filtro en el agregador, no en la UI.
+- **Settings que se leen con `useState(inicializador)` no reaccionan a cambios:** si otro componente escribe la clave, suscribirse a evento custom + `storage` (mismo tab + otros tabs). Emitir el evento en cada sitio de escritura.
+- **Ack remoto lento + cierre de modal = setState en desmontado:** `useMountedRef` en los 3 modales remotos; además bloquear el cierre durante el envío (`disableClose` en `Modal` base) porque cerrar a mitad del ack dejaba la orden en limbo visual.
+- **No se puede desactivar el último método de pago:** guard de negocio simple en el toggle (el checkout quedaría sin forma de cobrar). Y eliminar método = `ConfirmModal`, no acción directa.
+- **B-3 verificado, no resuelto:** `lookup_customer_project` es un RPC SQL público sin rate-limit; throttlearlo bien requiere Edge Function (la IP no llega confiable al SQL). Se documenta como pendiente server-side, no se finge un fix.
+
+## 2026-10-01 — Lecciones del seguimiento post-auditoría
+
+- **Los eventos sin UI son bugs silenciosos:** `SYNC_PUSH_ERROR_EVENT` existía desde Fase 4 pero nadie lo escuchaba. Al implementar un canal de error, verificar siempre el consumidor en la misma tarea.
+- **Los guards de "último X" deben excluir los X falsos:** el guard B-17 contaba virtuales como métodos activos; el checkout solo ofrece reales. Un guard que protege un recurso debe usar la misma definición que el consumidor del recurso.
+- **No confíes en la primera lectura de un modal:** `TransactionModal` tenía `handleClose` corregido pero el botón X seguía llamando al setter directo. Grepear todos los cierres (X, backdrop, Escape, botones Cancelar) antes de dar por cerrado un B-18.
+- **Monitoreo legacy con product_id ajeno = mina de scoping:** en Pro, cualquier código que consulte `product_id='bodega'` es Lite. Desactivarlo es mejor que guardarlo con flags: los 404 por sesión desaparecen y la mina se elimina. Si se necesita la API, un no-op documentado es más seguro que un guard que "casi siempre" cae.
+- **Documentar el trade-off cuando no se endurece:** el lease de `withLock` sin heartbeat es aceptable para escrituras de ms, pero quedó escrito en el código para que el próximo que lo toque lo sepa.

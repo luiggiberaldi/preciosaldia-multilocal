@@ -45,6 +45,17 @@ describe('isMasterPinSetup / setMasterPin', () => {
         expect(localStorage.getItem(DUENO_PIN_KEY)).toMatch(/^pbkdf2\$/);
     });
 
+    it('rechaza PINs de 4 dígitos y acepta PINs de 6', async () => {
+        const shortPin = await setMasterPin('1234');
+        expect(shortPin.ok).toBe(false);
+        expect(shortPin.error).toMatch(/6 dígitos/);
+        expect(isMasterPinSetup()).toBe(false);
+
+        const validPin = await setMasterPin('246810');
+        expect(validPin.ok).toBe(true);
+        expect(isMasterPinSetup()).toBe(true);
+    });
+
     it('rechaza PINs inválidos (muy corto)', async () => {
         const res = await setMasterPin('123');
         expect(res.ok).toBe(false);
@@ -54,6 +65,13 @@ describe('isMasterPinSetup / setMasterPin', () => {
 });
 
 describe('verifyMasterPin', () => {
+    it('rechaza un PIN maestro de 4 dígitos aunque coincida con el hash', async () => {
+        await setMasterPin('135724');
+        const res = await verifyMasterPin('1357');
+        expect(res.ok).toBe(false);
+        expect(res.error).toMatch(/PIN incorrecto/);
+    });
+
     it('acepta el PIN correcto', async () => {
         await setMasterPin('135724');
         const res = await verifyMasterPin('135724');

@@ -102,12 +102,16 @@ export const ALLOWED_ORIGINS = Object.freeze(
 );
 
 /**
- * Longitud exacta de PIN según el rol (CAJERO 4, ADMIN 6, resto = MIN_LENGTH).
+ * Longitud exacta de PIN según el rol (CAJERO 4, DUENO/ADMIN 6, resto = MIN_LENGTH).
  * @param {string} role
  * @returns {number}
  */
 export function pinLengthForRole(role) {
-  return role === 'ADMIN' ? 6 : role === 'CAJERO' ? 4 : PIN_POLICY.MIN_LENGTH;
+  return role === 'ADMIN' || role === 'DUENO'
+    ? 6
+    : role === 'CAJERO'
+      ? 4
+      : PIN_POLICY.MIN_LENGTH;
 }
 
 /**

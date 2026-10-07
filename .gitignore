@@ -59,8 +59,48 @@ cierre_*.txt
 logo*.png
 logodark*.png
 "logo .png"
-"Manual Completo de Usuario*"
+logo .png
+Manual Completo de Usuario*
+*Manual Completo de Usuario*
 Manual_Usuario_*.md
+tasas al dia*.png
+"tasas al dia*.png"
+
+# ── Entornos, inventarios locales y datos de clientes ──
+estacion-2026/
+inventarios/
+inventario_extraido.*
+prods_tmp.json
+seed_tmp.js
+*_tmp.*
+
+# ── Archivos comprimidos y backups pesados ──
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# ── Multimedia y capturas ──
+imagenes productos/
+screenshots/
+**/__screenshots__/
+evidencias/
+**/evidencias/**
+docs/auditoria-2026-10-04/evidencias/
+
+# ── Herramientas locales y scripts de migración descartables ──
+.claude/
+.tests/
+mockup-lista-inventario.html
+
+# ── Scripts de raspado / parsing raíz auxiliares ──
+check_discrepancies.py
+extract_frames.py
+find_numbers.py
+modularize_settings.py
+parse_pdf.py
+test_harina_pan.py
 
 # ── Docs internos y artefactos de auditoría ──
 PERFORMANCE_AUDIT.md
@@ -86,5 +126,4 @@ test-results-af/
 supabase/.temp/
 .freebuff/
 
-.vercel
 
