@@ -145,14 +145,28 @@ describe("migración automática (primer arranque)", () => {
     expect(localStorage.getItem("business_name")).toBe("Bodega Legacy");
   });
 
-  it("no re-migra si el registro ya existe", async () => {
-    seedLegacy();
-    await bootNegocios();
-    // Segunda corrida: datos ya namespaced + registro existente.
+  it("no re-migra ni agrega sedes si el registro ya existe", async () => {
+    const existingBusinesses = [
+      { id: "neg-1", nombre: "Primera sede" },
+      { id: "neg-2", nombre: "Segunda sede" },
+    ];
+    localStorage.setItem("pda-negocios-registry", JSON.stringify({
+      state: { negocios: existingBusinesses, negocioActivoId: "neg-2" },
+      version: 0,
+    }));
+
     const res = await bootNegocios();
     expect(res.migrated).toBe(false);
-    expect(memStore.get("nb_neg-1:bodega_products_v1")).toEqual([
-      { id: 1, nombre: "Arroz" },
-    ]);
+    const registry = JSON.parse(localStorage.getItem("pda-negocios-registry"));
+    expect(registry.state.negocios).toEqual(existingBusinesses);
+    expect(registry.state.negocioActivoId).toBe("neg-2");
+  });
+
+  it("la migración de primer arranque crea solo una sede", async () => {
+    seedLegacy();
+    await bootNegocios();
+    const registry = JSON.parse(localStorage.getItem("pda-negocios-registry"));
+    expect(registry.state.negocios).toHaveLength(1);
+    expect(registry.state.negocios[0].id).toBe("neg-1");
   });
 });

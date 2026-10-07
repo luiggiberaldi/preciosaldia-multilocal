@@ -4,8 +4,8 @@
  * Fixes de seguridad cubiertos en este archivo:
  *   - SEC-004/HOOK-001: implementada `setAdminCredentials` (sessionStorage, no localStorage).
  *   - SEC-005: PINs por defecto con PBKDF2 + salt aleatorio. En primer arranque sin
- *     usuarios persistidos, se generan PINs aleatorios para Admin/Cajero y se muestran
- *     una sola vez (window.__INITIAL_PINS__). Hashes legacy SHA-256 (64 hex) se migran
+ *     usuarios persistidos, se crean Admin/Cajero y el PIN maestro del dueño en ceros;
+ *     se muestran una sola vez (window.__INITIAL_PINS__). Hashes legacy SHA-256 (64 hex) se migran
  *     automáticamente a PBKDF2 en el primer login exitoso (verifyPin.needsRehash).
  *   - SEC-006: `failedAttempts`, `lockUntil` (timestamp absoluto), `consecutiveLockouts`
  *     persistidos en `partialize`. Backoff exponencial. Reset tras RESET_WINDOW_MS.
@@ -38,6 +38,8 @@ import {
 } from '../../utils/userCatalog';
 import {
     verifyMasterPin,
+    isMasterPinSetup,
+    setMasterPin,
     getDuenoSession,
     setDuenoSession,
     clearDuenoSession,
@@ -49,7 +51,7 @@ import {
     validatePin,
 } from '../../utils/securityConstants';
 
-// ── SEC-005: Generación de PINs aleatorios en primer arranque ────────────────
+// ── SEC-005: Inicialización de PINs en primer arranque ───────────────────────
 
 const SESSION_KEY = 'abasto-device-session';
 export { SESSION_KEY };
@@ -76,15 +78,14 @@ function _generateRandomPin() {
 }
 
 /**
- * Crea los usuarios iniciales con los PINs de fábrica fijos (decisión de negocio,
- * 2026-06): ADMIN = '000000', CAJERO = '0000'. Devuelve `{ usuarios, initialPins }`
+ * Crea los usuarios iniciales con los PINs de fábrica fijos: ADMIN = '000000',
+ * CAJERO = '0000'. Se conserva el nombre exportado por compatibilidad. Devuelve `{ usuarios, initialPins }`
  * para que el caller pueda mostrar los PINs una vez.
  * @returns {Promise<{ usuarios: Array, initialPins: Array<{id,nombre,rol,pin}> }>}
  */
 async function _createDefaultUsersWithRandomPins() {
-    // Decisión de producto: PINs de fábrica en ceros (000000 admin / 0000 cajero)
-    // para que el negocio sepa el PIN inicial sin lectura de hashes. La mitigación
-    // compensatoria sigue activa: rate-limiting con backoff (LOGIN_RATE_LIMIT).
+    // PINs de fábrica en ceros (000000 admin / 0000 cajero), mostrados una vez
+    // durante el arranque inicial. Sigue activo el rate-limiting con backoff.
     const adminPin = '000000';
     const cajeroPin = '0000';
     const adminHash = await hashPin(adminPin);
@@ -103,27 +104,60 @@ async function _createDefaultUsersWithRandomPins() {
 /**
  * Inicializa usuarios por defecto la primera vez (async, post-rehydrate).
  * Si ya hay usuarios persistidos, no hace nada. Si no, crea los defaults con PINs
- * aleatorios seguros y los deja accesibles en `window.__INITIAL_PINS__` para que la UI los muestre.
+ * de fábrica en ceros y los deja accesibles una vez en `window.__INITIAL_PINS__`.
  *
  * @param {object} state - estado actual del store
  * @param {function} set - setter de zustand
  */
+let _defaultUsersInitializationPromise = null;
+
 async function _ensureDefaultUsers(state, set) {
     if (state.usuarios && state.usuarios.length > 0) return;
-    try {
+    if (_defaultUsersInitializationPromise) return _defaultUsersInitializationPromise;
+
+    _defaultUsersInitializationPromise = (async () => {
         const { usuarios, initialPins } = await _createDefaultUsersWithRandomPins();
         set({ usuarios });
+
+        // En una instalación sin usuarios ni PIN maestro, inicializar al dueño
+        // con el PIN de fábrica de seis ceros. Nunca reemplazar uno existente.
+        let pinsToShow = initialPins;
+        if (!isMasterPinSetup()) {
+            const masterPinResult = await setMasterPin('000000');
+            if (masterPinResult.ok) {
+                pinsToShow = [
+                    { id: 'dueno', nombre: 'Dueño', rol: 'DUENO', pin: '000000' },
+                    ...initialPins,
+                ];
+            }
+        }
+
         // Hacemos los PINs iniciales accesibles UNA sola vez para que la UI los muestre.
         if (typeof window !== 'undefined') {
-            window.__INITIAL_PINS__ = initialPins;
-            window.dispatchEvent(new CustomEvent('initial-pins-ready', { detail: initialPins }));
+            window.__INITIAL_PINS__ = pinsToShow;
+            window.dispatchEvent(new CustomEvent('initial-pins-ready', { detail: pinsToShow }));
         }
-        logEvent('AUTH', 'USUARIOS_INICIALES', 'PINs de fabrica generados para primer arranque.', null, { count: initialPins.length });
+        logEvent('AUTH', 'USUARIOS_INICIALES', 'PINs de fabrica generados para primer arranque.', null, { count: pinsToShow.length });
         // Catálogo sync (SEC-002): publica el roster inicial (sin PINs).
         _pushUserCatalog();
-    } catch (err) {
+    })().catch((err) => {
         console.error('[useAuthStore] No se pudieron crear usuarios por defecto:', err);
-    }
+    }).finally(() => {
+        _defaultUsersInitializationPromise = null;
+    });
+
+    return _defaultUsersInitializationPromise;
+}
+
+/**
+ * Espera la inicialización de usuarios por defecto tras rehidratar el store.
+ * Para estados persistidos con usuarios, no modifica nada.
+ */
+export function ensureInitialUsers() {
+    if (_defaultUsersInitializationPromise) return _defaultUsersInitializationPromise;
+    return _ensureDefaultUsers(useAuthStore.getState(), (patch) => {
+        useAuthStore.setState(patch);
+    });
 }
 
 // ── SEC-018: Validación de estructura de sesión persistida ───────────────────
@@ -797,7 +831,7 @@ export const useAuthStore = create(
                 // SEC-018: re-validar sesión persistida (no confiamos en el JSON guardado).
                 state.usuarioActivo = _readPersistedSession();
 
-                // SEC-005: si no hay usuarios persistidos, crear PINs aleatorios en primer arranque.
+                // SEC-005: si no hay usuarios persistidos, crear usuarios iniciales en primer arranque.
                 if (!state.usuarios || state.usuarios.length === 0) {
                     // Lanzar async; el set se aplica cuando termine.
                     _ensureDefaultUsers(state, (patch) => {

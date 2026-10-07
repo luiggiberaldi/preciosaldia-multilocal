@@ -3,9 +3,8 @@ import { KeyRound, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 /**
  * InitialPinsModal — Fase 1 (ALTO-2).
- * Muestra UNA sola vez los PINs iniciales (aleatorios) de Administrador y Cajero
- * para que el dueño los anote. Sin este modal, los PINs aleatorios serían
- * irrecuperables en el primer arranque.
+ * Muestra UNA sola vez los PINs iniciales de Dueño, Administrador y Cajero
+ * para que el dueño los anote durante el primer arranque.
  */
 export function InitialPinsModal({ pins = [], onDone }) {
     return (
@@ -28,8 +27,7 @@ export function InitialPinsModal({ pins = [], onDone }) {
                 <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-3.5 text-xs text-amber-800 dark:text-amber-300 mb-4 flex gap-2.5">
                     <AlertTriangle size={18} className="shrink-0 mt-0.5" />
                     <p>
-                        Por seguridad, cada usuario inicia con un PIN <strong>aleatorio</strong>.
-                        Guárdalos en un lugar seguro antes de continuar.
+                        Guarda estos PINs iniciales en un lugar seguro antes de continuar.
                     </p>
                 </div>
 

@@ -56,6 +56,7 @@ describe('Fase 1: usuarios iniciales seguros', () => {
         // Decisión de producto (2026-06): los PINs de primer arranque son fijos.
         expect(authStore).toContain("const adminPin = '000000'");
         expect(authStore).toContain("const cajeroPin = '0000'");
+        expect(authStore).toContain("setMasterPin('000000')");
         expect(authStore).toContain("requirePin: true");
     });
 

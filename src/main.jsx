@@ -30,10 +30,13 @@ async function startApp() {
     console.error('[bootNegocios] Rehidratación de negocios falló:', e);
   }
   try {
-    const { useAuthStore } = await import('./hooks/store/useAuthStore');
+    const { useAuthStore, ensureInitialUsers } = await import('./hooks/store/useAuthStore');
     // El adapter de persistencia enruta por negocio activo (routeAuthKey),
     // así que la rehidratación lee el usuario/PIN del negocio correcto.
     await useAuthStore.persist.rehydrate();
+    // Rehidratación puede no disparar onRehydrateStorage cuando ya estaba lista;
+    // asegura que el bootstrap inicial termine antes de montar la app.
+    await ensureInitialUsers();
   } catch (e) {
     console.error('[bootNegocios] Rehidratación de auth falló:', e);
   }
