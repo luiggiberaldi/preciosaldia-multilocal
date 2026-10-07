@@ -2,17 +2,31 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const TOKEN = process.env.VERCEL_TOKEN;
+let TOKEN = process.env.VERCEL_TOKEN;
+if (!TOKEN && fs.existsSync('.env')) {
+  const envContent = fs.readFileSync('.env', 'utf8');
+  const match = envContent.match(/^VERCEL_TOKEN\s*=\s*([^\r\n]+)/m);
+  if (match) {
+    TOKEN = match[1].trim().replace(/^['"]|['"]$/g, '');
+  }
+}
+
 if (!TOKEN) {
-  console.error('Error: La variable de entorno VERCEL_TOKEN es requerida.');
+  console.error('Error: La variable de entorno VERCEL_TOKEN no está definida en process.env ni en .env.');
   process.exit(1);
 }
-const TEAM_ID = 'team_OLXRkrH0ePlZ5laXI5zVU9lg';
+
+const TEAM_ID = process.env.VERCEL_TEAM_ID || '';
 const PROJECT_ID = 'prj_SOSo1x1i6YYom5kDrA69IVb6JXaU';
 const PROJECT_NAME = 'preciosaldia-multilocal';
 
+function vercelUrl(endpoint) {
+  const separator = endpoint.includes('?') ? '&' : '?';
+  return TEAM_ID ? `https://api.vercel.com${endpoint}${separator}teamId=${encodeURIComponent(TEAM_ID)}` : `https://api.vercel.com${endpoint}`;
+}
+
 async function uploadFile(buffer, sha1) {
-  const url = `https://api.vercel.com/v2/files?teamId=${TEAM_ID}`;
+  const url = vercelUrl('/v2/files');
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -57,12 +71,13 @@ async function main() {
   const rawFiles = getFiles(distDir);
   console.log(`📦 Encontrados ${rawFiles.length} archivos en dist/`);
 
+  const fileMapBySha = new Map();
   const filesPayload = [];
 
   for (const item of rawFiles) {
     const buffer = fs.readFileSync(item.fullPath);
     const sha1 = crypto.createHash('sha1').update(buffer).digest('hex');
-    await uploadFile(buffer, sha1);
+    fileMapBySha.set(sha1, { fullPath: item.fullPath, buffer });
     filesPayload.push({
       file: item.relPath,
       sha: sha1,
@@ -75,7 +90,7 @@ async function main() {
   if (fs.existsSync(vercelJsonPath)) {
     const buffer = fs.readFileSync(vercelJsonPath);
     const sha1 = crypto.createHash('sha1').update(buffer).digest('hex');
-    await uploadFile(buffer, sha1);
+    fileMapBySha.set(sha1, { fullPath: vercelJsonPath, buffer });
     filesPayload.push({
       file: 'vercel.json',
       sha: sha1,
@@ -83,31 +98,48 @@ async function main() {
     });
   }
 
-  console.log(`✅ ${filesPayload.length} archivos sincronizados con Vercel.`);
-  console.log('📡 Creando despliegue en producción...');
-
-  const deployRes = await fetch(`https://api.vercel.com/v13/deployments?teamId=${TEAM_ID}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      name: PROJECT_NAME,
-      project: PROJECT_ID,
-      target: 'production',
-      files: filesPayload,
-      routes: [
-        { handle: 'filesystem' },
-        { src: '/(.*)', dest: '/index.html' },
-      ],
-      projectSettings: {
-        framework: null,
+  async function createDeployment() {
+    return fetch(vercelUrl('/v13/deployments'), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json',
       },
-    }),
-  });
+      body: JSON.stringify({
+        name: PROJECT_NAME,
+        project: PROJECT_ID,
+        target: 'production',
+        files: filesPayload,
+        routes: [
+          { handle: 'filesystem' },
+          { src: '/(.*)', dest: '/index.html' },
+        ],
+        projectSettings: {
+          framework: null,
+        },
+      }),
+    });
+  }
 
-  const deployData = await deployRes.json();
+  console.log('📡 Verificando estado de sincronización con Vercel...');
+  let deployRes = await createDeployment();
+  let deployData = await deployRes.json();
+
+  if (!deployRes.ok && deployData.error && deployData.error.code === 'missing_files') {
+    const missing = deployData.error.missing || [];
+    console.log(`⚡ Subiendo únicamente ${missing.length} archivo(s) nuevo(s) / modificados a la CDN...`);
+    for (const sha of missing) {
+      const fileInfo = fileMapBySha.get(sha);
+      if (!fileInfo) {
+        throw new Error(`Archivo no encontrado para SHA faltante: ${sha}`);
+      }
+      await uploadFile(fileInfo.buffer, sha);
+    }
+    console.log('✅ Archivos sincronizados. Creando despliegue final...');
+    deployRes = await createDeployment();
+    deployData = await deployRes.json();
+  }
+
   if (!deployRes.ok) {
     console.error('Error al crear despliegue:', deployData);
     process.exit(1);
@@ -120,7 +152,7 @@ async function main() {
   let ready = false;
   for (let i = 0; i < 40; i++) {
     await new Promise((r) => setTimeout(r, 2000));
-    const statusRes = await fetch(`https://api.vercel.com/v13/deployments/${deploymentId}?teamId=${TEAM_ID}`, {
+    const statusRes = await fetch(vercelUrl(`/v13/deployments/${deploymentId}`), {
       headers: { Authorization: `Bearer ${TOKEN}` },
     });
     const statusData = await statusRes.json();
