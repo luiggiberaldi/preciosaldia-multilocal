@@ -21,11 +21,25 @@
  */
 
 // ── Estado compartido entre contextos (la "nube") ──────────────────────────
+const REALTIME_WS_URL =
+  /^(?:wss?:\/\/e2e-local\.invalid|ws:\/\/127\.0\.0\.1:4173)\/realtime\/v1\/websocket/;
+
 export function createMockSupabaseBackend() {
   const syncDocuments = new Map(); // "device_id|collection|doc_id" → fila
   // Membresía: { [userId]: Map<device_id, { revoked:boolean, alias }> }
   const accounts = new Map();
   const pairings = new Map(); // legacy: primary_device_id → monitor_device_id
+  const realtimeClients = new Set();
+  const realtimeSocketUrls = [];
+  const realtimeColumns = [
+    { name: "id", type: "int8" },
+    { name: "device_id", type: "text" },
+    { name: "collection", type: "text" },
+    { name: "doc_id", type: "text" },
+    { name: "data", type: "jsonb" },
+    { name: "payload", type: "jsonb" },
+    { name: "updated_at", type: "timestamptz" },
+  ];
 
   const USER_ID = "e2e-owner-user";
 
@@ -68,6 +82,157 @@ export function createMockSupabaseBackend() {
     );
   }
 
+  function handleRealtime(route) {
+    const channels = new Map();
+    const client = { route, channels };
+    realtimeClients.add(client);
+    route.onMessage((message) => {
+      let decoded;
+      try {
+        decoded = JSON.parse(String(message));
+      } catch {
+        return;
+      }
+      if (
+        (!Array.isArray(decoded) || decoded.length < 5) &&
+        (!decoded || typeof decoded !== "object" || !decoded.event)
+      )
+        return;
+      // Realtime protocol v2 serializes Phoenix frames as
+      // [join_ref, ref, topic, event, payload], but v1 uses object frames.
+      const [joinRef, ref, topic, event, payload] = Array.isArray(decoded)
+        ? decoded
+        : [
+            decoded.join_ref,
+            decoded.ref,
+            decoded.topic,
+            decoded.event,
+            decoded.payload,
+          ];
+      if (event === "phx_join") {
+        const filters = payload?.config?.postgres_changes || [];
+        const accepted = filters.map((filter, index) => ({
+          ...filter,
+          id: String(index + 1),
+        }));
+        channels.set(topic, {
+          joinRef,
+          filters: accepted,
+          protocol: Array.isArray(decoded) ? "array" : "object",
+        });
+        route.send(
+          JSON.stringify(
+            decoded && !Array.isArray(decoded)
+              ? {
+                  join_ref: joinRef,
+                  ref,
+                  topic,
+                  event: "phx_reply",
+                  payload: {
+                    status: "ok",
+                    response: { postgres_changes: accepted },
+                  },
+                }
+              : [
+                  joinRef,
+                  ref,
+                  topic,
+                  "phx_reply",
+                  { status: "ok", response: { postgres_changes: accepted } },
+                ],
+          ),
+        );
+      } else if (event === "heartbeat") {
+        route.send(
+          JSON.stringify(
+            Array.isArray(decoded)
+              ? [
+                  joinRef,
+                  ref,
+                  topic,
+                  "phx_reply",
+                  { status: "ok", response: {} },
+                ]
+              : {
+                  join_ref: joinRef,
+                  ref,
+                  topic,
+                  event: "phx_reply",
+                  payload: { status: "ok", response: {} },
+                },
+          ),
+        );
+      } else if (event === "phx_leave") {
+        channels.delete(topic);
+        route.send(
+          JSON.stringify(
+            Array.isArray(decoded)
+              ? [
+                  joinRef,
+                  ref,
+                  topic,
+                  "phx_reply",
+                  { status: "ok", response: {} },
+                ]
+              : {
+                  join_ref: joinRef,
+                  ref,
+                  topic,
+                  event: "phx_reply",
+                  payload: { status: "ok", response: {} },
+                },
+          ),
+        );
+      }
+    });
+    route.onClose(() => realtimeClients.delete(client));
+  }
+
+  function publishRealtime(row, eventType = "INSERT") {
+    const data = {
+      schema: "public",
+      table: "sync_documents",
+      commit_timestamp: row.updated_at,
+      type: eventType,
+      errors: null,
+      columns: realtimeColumns,
+      record: row,
+      old_record: {},
+    };
+    for (const client of realtimeClients) {
+      for (const [topic, channel] of client.channels) {
+        const ids = channel.filters
+          .filter(
+            (filter) =>
+              filter.schema === "public" &&
+              filter.table === "sync_documents" &&
+              (filter.event === "*" || filter.event === eventType),
+          )
+          .map((filter) => filter.id);
+        if (ids.length === 0) continue;
+        client.route.send(
+          JSON.stringify(
+            channel.protocol === "array"
+              ? [
+                  channel.joinRef,
+                  null,
+                  topic,
+                  "postgres_changes",
+                  { ids, data },
+                ]
+              : {
+                  join_ref: channel.joinRef,
+                  ref: null,
+                  topic,
+                  event: "postgres_changes",
+                  payload: { ids, data },
+                },
+          ),
+        );
+      }
+    }
+  }
+
   function reset({ keepAccounts = true } = {}) {
     syncDocuments.clear();
     if (!keepAccounts) accounts.clear();
@@ -87,6 +252,7 @@ export function createMockSupabaseBackend() {
           "offset",
           "on_conflict",
           "apikey",
+          "or",
         ].includes(key)
       )
         continue;
@@ -140,12 +306,54 @@ export function createMockSupabaseBackend() {
         }
       });
     }
+    const expression = params.get("or");
+    if (expression) {
+      // F2 keyset subset: top-level OR of AND clauses with quoted strings.
+      const split = (value) => {
+        const parts = [];
+        let depth = 0;
+        let quoted = false;
+        let begin = 0;
+        for (let i = 0; i < value.length; i++) {
+          if (value[i] === '"' && value[i - 1] !== "\\") quoted = !quoted;
+          if (quoted) continue;
+          if (value[i] === "(") depth++;
+          if (value[i] === ")") depth--;
+          if (value[i] === "," && depth === 0) {
+            parts.push(value.slice(begin, i));
+            begin = i + 1;
+          }
+        }
+        parts.push(value.slice(begin));
+        return parts;
+      };
+      const match = (row, clause) => {
+        if (clause.startsWith("and("))
+          return split(clause.slice(4, -1)).every((c) => match(row, c));
+        const m = /^([a-z_]+)\.(eq|gt)\.(.+)$/.exec(clause);
+        if (!m) throw new Error("Filtro OR no soportado en mock");
+        const value = m[3].startsWith('"') ? JSON.parse(m[3]) : m[3];
+        return m[2] === "eq"
+          ? String(row[m[1]]) === value
+          : String(row[m[1]]) > value;
+      };
+      out = out.filter((row) =>
+        split(expression.replace(/^\(|\)$/g, "")).some((clause) =>
+          match(row, clause),
+        ),
+      );
+    }
     const order = params.get("order");
     if (order) {
-      const [col, dir] = order.split(".");
+      const columns = order.split(",").map((part) => part.split("."));
       out = [...out].sort((a, b) => {
-        const cmp = String(a[col] ?? "").localeCompare(String(b[col] ?? ""));
-        return dir === "desc" ? -cmp : cmp;
+        for (const [col, dir] of columns) {
+          const left = String(a[col] ?? ""),
+            right = String(b[col] ?? "");
+          const cmp = left < right ? -1 : left > right ? 1 : 0;
+          if (cmp) return dir === "desc" ? -cmp : cmp;
+        }
+        return 0;
       });
     }
     const limit = params.get("limit");
@@ -323,7 +531,16 @@ export function createMockSupabaseBackend() {
             return true;
           }
         }
-        for (const row of rows) syncDocuments.set(rowKey(row), { ...row });
+        for (const row of rows) {
+          const key = rowKey(row);
+          const eventType = syncDocuments.has(key) ? "UPDATE" : "INSERT";
+          const stored = {
+            ...row,
+            id: syncDocuments.get(key)?.id ?? syncDocuments.size + 1,
+          };
+          syncDocuments.set(key, stored);
+          publishRealtime(stored, eventType);
+        }
         await route.fulfill({ status: 201, headers: JSON_HEADERS, body: "[]" });
         return true;
       }
@@ -361,6 +578,12 @@ export function createMockSupabaseBackend() {
     isDeviceActive,
     hasDocFrom,
     docsFrom,
+    handleRealtime,
+    publishRealtime,
+    get realtimeSubscriberCount() {
+      return realtimeClients.size;
+    },
+    realtimeSocketUrls,
     reset,
     handle,
   };
@@ -368,6 +591,18 @@ export function createMockSupabaseBackend() {
 
 /** Registra la ruta que canaliza todo el tráfico del proyecto sintético al backend. */
 export async function routeMockSupabase(page, backend) {
+  await page.routeWebSocket(/.*/, (route) => {
+    backend.realtimeSocketUrls.push(route.url());
+    if (REALTIME_WS_URL.test(route.url())) {
+      backend.handleRealtime(route);
+      return;
+    }
+    if (route.url().startsWith("ws://127.0.0.1:4173/")) {
+      route.connectToServer();
+      return;
+    }
+    route.close({ code: 1000, reason: "Blocked external WebSocket in E2E" });
+  });
   await page.route(/https:\/\/e2e-local\.invalid\//, (route) =>
     backend.handle(route),
   );

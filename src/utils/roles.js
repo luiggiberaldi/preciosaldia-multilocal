@@ -96,6 +96,15 @@ export function canManageUser(managerSession, targetUser) {
 }
 
 /**
+ * ¿Puede registrar un aporte de efectivo a la caja? Solo dueño y administrador.
+ * Sin sesión (modo sin login) se mantiene el acceso legacy, como en `CustomersView`.
+ */
+export function canRegistrarAporteCaja(session) {
+    if (!session) return true;
+    return hasAdminAccess(session);
+}
+
+/**
  * Tabs visibles para la sesión dada.
  * Sin `requireLogin` no hay sesión: acceso total (comportamiento legacy).
  */

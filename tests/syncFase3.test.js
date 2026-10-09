@@ -76,11 +76,13 @@ describe('M-6: applyStockMapDelta reconcilia por deltas', () => {
         expect(nextRemoteMap).toEqual({ p1: 7 });
     });
 
-    it('primera vista de la fuente: asignación absoluta (sin regresión)', () => {
+    it('primera vista de la fuente: solo siembra, no pisa el stock local', () => {
+        // El mapa publicado es stock propio de la fuente; asignarlo pisaría el local.
         const local = [{ id: 'p1', name: 'Harina', stock: 8 }];
-        const { products: out, nextRemoteMap } = applyStockMapDelta(local, { p1: 7 }, null);
-        expect(out[0].stock).toBe(7);
+        const { products: out, nextRemoteMap, deltas } = applyStockMapDelta(local, { p1: 7 }, null);
+        expect(out[0].stock).toBe(8);
         expect(nextRemoteMap).toEqual({ p1: 7 });
+        expect(deltas).toEqual({});
     });
 
     it('delta cero no toca nada y conserva la referencia', () => {

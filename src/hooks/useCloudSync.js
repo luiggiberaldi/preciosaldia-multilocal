@@ -6,6 +6,8 @@ import {
   toCloudDocId,
   parseCloudDocId,
   isDocForKnownBusiness,
+  getNegocioActivoId,
+  isGlobalKey,
 } from "../utils/negocioContext";
 import {
   SUPERVISOR_SYNC_KEYS,
@@ -43,8 +45,11 @@ import {
 import {
   applyStockMapDelta,
   buildSalesDeltaPayload,
-  buildStockMap,
+  buildOwnStockMap,
+  accumulateReceivedStock,
+  preserveLocalStock,
   isSalesDeltaKey,
+  normalizeSalesDeltaPayload,
   isValidSalesDelta,
   isValidStockMap,
   mergeSales,
@@ -52,6 +57,7 @@ import {
   salesDayString,
   salesDeltaKeyForDate,
   salesDeltaTickets,
+  physicalDocId,
 } from "../utils/syncDelta";
 import { RETENTION } from "../utils/retentionPolicy";
 import {
@@ -67,6 +73,16 @@ import {
   isUnconfirmedLocalConflict,
 } from "../utils/syncConflicts";
 import { contentHash } from "../utils/contentHash";
+import {
+  cloudPullScope,
+  fetchCloudPullPage,
+  runCloudPull,
+  publishCloudPullStatus,
+  retainCloudPullFailure,
+  resolveCloudPullFailure,
+  hasPendingCloudKey,
+  getCloudPullStatus,
+} from "../services/cloudPullService";
 
 // Claves con semántica append-only o de fusión: su descarte/merge no es un
 // conflicto a reportar (M-17 solo vigila documentos NO append-only).
@@ -125,6 +141,7 @@ const _localSyncBaselineKey = (docId) => LOCAL_SYNC_BASELINE_PREFIX + docId;
 const syncConflictHash = (key, value) =>
   quickHash(key === "bodega_products_v1" ? catalogFingerprint(value) : value);
 
+
 /* ─── M-6: último mapa de stock visto por fuente (para reconciliar por delta) */
 const lastRemoteStockKey = (docId, sourceDeviceId) =>
   `pda_stock_lastremote_${docId}__${sourceDeviceId || "unknown"}`;
@@ -150,6 +167,27 @@ function writeLastRemoteStockMap(docId, sourceDeviceId, map) {
   }
 }
 
+/* Recibido de otras fuentes por producto (suma de deltas aplicados). Se resta al
+   publicar el stock propio para no re-publicar cambios ajenos (eco). */
+const receivedStockKey = (docId) => `pda_stock_received_${docId}`;
+function readReceivedStockMap(docId) {
+  try {
+    const raw = localStorage.getItem(receivedStockKey(docId));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+function writeReceivedStockMap(docId, map) {
+  try {
+    localStorage.setItem(receivedStockKey(docId), JSON.stringify(map || {}));
+  } catch {
+    /* cuota llena: el próximo pull vuelve a acumular desde el último visto */
+  }
+}
+
 // ─── FASE 1 MULTI-NEGOCIO ──────────────────────────────────────────────────
 // `doc_id = nb_<negocioId>:<clave>` (la columna `collection` ya separa
 // 'store'/'local', así que no se duplica en el doc_id). Las claves globales
@@ -162,9 +200,48 @@ function _confirmedPushKey(key) {
 // ─── Estado Global del Motor ───────────────────────────────────────────────
 let globalSubscription = null;
 let isSyncingFromCloud = false; // true mientras aplicamos cambios de la nube → evita eco
-let pendingPush = {}; // Debounce: { [key]: timeoutId }
+const pendingPush = new Map(); // Debounce por destino físico + instalación.
+let pushSequence = Promise.resolve();
+
+// Una revisión vieja no puede completar su retry DESPUÉS de la revisión nueva.
+// Serializar el ciclo completo (incluidos stock/catálogo/días) evita ese rollback.
+function serializePush(task) {
+  const result = pushSequence.then(task, task);
+  pushSequence = result.catch(() => {
+    /* el caller recibe el error; la cola continúa */
+  });
+  return result;
+}
+
+function capturePushTarget(key) {
+  const docId = toCloudDocId(key);
+  const parsed = parseCloudDocId(docId);
+  return Object.freeze({
+    key: parsed.key,
+    docId,
+    negocioId: parsed.negocioId,
+    deviceId: _currentDeviceId || localStorage.getItem("pda_device_id"),
+  });
+}
+
+const relatedPushTarget = (target, key) =>
+  Object.freeze({
+    ...target,
+    key,
+    docId: isGlobalKey(key) ? key : physicalDocId(target.negocioId, key),
+  });
+const isCurrentPushTarget = (target) =>
+  isCloudSyncActive &&
+  target.deviceId === _currentDeviceId &&
+  target.deviceId === localStorage.getItem("pda_device_id");
+const changedPushSession = () => ({
+  ok: false,
+  skipped: false,
+  error: "La sesión de sincronización cambió; escritura no confirmada",
+});
 let _currentDeviceId = ""; // Device ID activo para pushCloudSync
 let isCloudSyncActive = false; // Evita empujar a la nube si el dispositivo no está autenticado/emparejado
+let pullCoverageIncomplete = true; // No publicar snapshots antes de completar lectura/checkpoint.
 
 /** M-22 (2026-10-01): expone si el sync está activo para bloquear operaciones destructivas. */
 export function isCloudSyncActiveNow() {
@@ -200,24 +277,31 @@ const DEBOUNCE_LIGHT_MS = 300;
 const DEBOUNCE_HEAVY_MS = 3000;
 
 function _debouncePush(key, value) {
-  if (pendingPush[key]) clearTimeout(pendingPush[key]);
+  const target = capturePushTarget(key);
+  const slot = JSON.stringify([target.deviceId, target.docId]);
+  const snapshot = structuredClone(value);
+  if (pendingPush.has(slot)) clearTimeout(pendingPush.get(slot));
+  key = target.key;
   const delay = HEAVY_KEYS.includes(key)
     ? DEBOUNCE_HEAVY_MS
     : DEBOUNCE_LIGHT_MS;
-  pendingPush[key] = setTimeout(() => {
-    delete pendingPush[key];
-    // B-13 (2026-10-01): antes los errores se tragaban con `.catch(() => {})`
-    // y el push fallaba en silencio. Ahora se registran (evento + último
-    // error consultable) para que la UI pueda avisar.
-    pushCloudSync(key, value)
-      .then((res) => {
-        if (res && res.ok === false && !res.skipped)
-          recordSyncPushError(key, res.error);
-      })
-      .catch((err) => {
-        recordSyncPushError(key, err?.message || String(err));
-      });
-  }, delay);
+  pendingPush.set(
+    slot,
+    setTimeout(() => {
+      pendingPush.delete(slot);
+      // B-13 (2026-10-01): antes los errores se tragaban con `.catch(() => {})`
+      // y el push fallaba en silencio. Ahora se registran (evento + último
+      // error consultable) para que la UI pueda avisar.
+      serializePush(() => pushCloudSyncImpl(key, snapshot, false, target))
+        .then((res) => {
+          if (res && res.ok === false && !res.skipped)
+            recordSyncPushError(key, res.error);
+        })
+        .catch((err) => {
+          recordSyncPushError(key, err?.message || String(err));
+        });
+    }, delay),
+  );
 }
 
 /** B-13 (2026-10-01): último error de push (no silencioso). */
@@ -243,6 +327,14 @@ export function getLastSyncPushError() {
 }
 
 export const pushCloudSync = async (key, value, forceUnconditional = false) => {
+  const target = capturePushTarget(key);
+  const snapshot = structuredClone(value);
+  return serializePush(() =>
+    pushCloudSyncImpl(target.key, snapshot, forceUnconditional, target),
+  );
+};
+
+const pushCloudSyncImpl = async (key, value, forceUnconditional, target) => {
   if (!supabaseCloud)
     return { ok: false, skipped: true, error: "Supabase no disponible" };
   if (isSyncingFromCloud)
@@ -266,14 +358,39 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
     };
   }
 
-  const deviceAccess = await validateCurrentDeviceSyncAccess(
-    _currentDeviceId || localStorage.getItem("pda_device_id"),
-  );
+  if (!isCurrentPushTarget(target)) return changedPushSession();
+  const deviceAccess = await validateCurrentDeviceSyncAccess(target.deviceId);
+  if (!isCurrentPushTarget(target)) return changedPushSession();
   if (!deviceAccess.ok) {
     return {
       ok: false,
       skipped: false,
       error: deviceAccess.error || "Equipo sin autorización activa",
+    };
+  }
+
+  if (pullCoverageIncomplete) {
+    return {
+      ok: true,
+      skipped: true,
+      pending: true,
+      reason: "Pull pendiente de completar",
+    };
+  }
+  // Un pendiente remoto de esta clave no debe ser tapado por un snapshot local.
+  // Las otras claves/sedes siguen operativas y los cambios locales se conservan.
+  if (
+    key !== "bodega_sales_v1" &&
+    (await hasPendingCloudKey(
+      cloudPullScope(deviceAccess.context, target.deviceId),
+      target.docId,
+    ))
+  ) {
+    return {
+      ok: true,
+      skipped: true,
+      pending: true,
+      reason: "Documento remoto pendiente de revisión",
     };
   }
 
@@ -286,14 +403,18 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
   // (~40KB) y se omite el catálogo completo (~3MB). El catálogo solo viaja
   // cuando cambia algo estructural (precio, nombre, foto, alta/baja).
   if (key === "bodega_products_v1" && Array.isArray(value)) {
-    const stockResult = await pushCloudSync(
+    const stockResult = await pushCloudSyncImpl(
       "bodega_stock_v1",
-      buildStockMap(value),
+      buildOwnStockMap(
+        value,
+        readReceivedStockMap(relatedPushTarget(target, "bodega_stock_v1").docId),
+      ),
       forceUnconditional,
+      relatedPushTarget(target, "bodega_stock_v1"),
     );
-    if (!stockResult?.ok) return stockResult;
+    if (!stockResult?.ok || stockResult.pending) return stockResult;
     if (!forceUnconditional) {
-      const chKey = `${LAST_PUSH_HASH_PREFIX}catalog:${toCloudDocId(key)}`;
+      const chKey = `${LAST_PUSH_HASH_PREFIX}catalog:${target.docId}`;
       const ch = await quickHash(catalogFingerprint(value));
       if (localStorage.getItem(chKey) === ch) {
         if (!stockResult?.ok) return stockResult;
@@ -310,9 +431,9 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
     // Sigue abajo: empuja el catálogo completo (cambió algo estructural).
   }
 
-  const docId = toCloudDocId(key);
-  const hashKey = _pushHashKey(key);
-  const confirmedHashKey = _confirmedPushHashKey(key);
+  const docId = target.docId;
+  const hashKey = LAST_PUSH_HASH_PREFIX + docId;
+  const confirmedHashKey = CONFIRMED_PUSH_HASH_PREFIX + docId;
   const currentHash = await quickHash(value);
   if (!forceUnconditional && localStorage.getItem(hashKey) === currentHash) {
     if (localStorage.getItem(confirmedHashKey) === currentHash) {
@@ -329,14 +450,14 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
   // QUOTA-003: ventas usan delta idempotente; la ventana completa se sube aparte.
   // Ambos caminos validan dispositivo antes de escribir.
   if (key === "bodega_sales_v1" && Array.isArray(value)) {
-    return await pushSalesDelta(value, forceUnconditional);
+    return await pushSalesDelta(value, forceUnconditional, target);
   }
   const payloadValue = value;
 
   const collectionType = LOCAL_KEYS.includes(key) ? "local" : "store";
   const updatedAt = new Date().toISOString();
   const document = {
-    device_id: _currentDeviceId,
+    device_id: target.deviceId,
     collection: collectionType,
     doc_id: docId,
     data: buildSyncEnvelope(payloadValue, updatedAt),
@@ -345,10 +466,16 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
 
   try {
     const result = await withSyncRetry(async () => {
+      if (!isCurrentPushTarget(target))
+        throw new Error("La sesión de sincronización cambió");
       const response = await supabaseCloud
         .from("sync_documents")
         .upsert(document, { onConflict: "device_id,collection,doc_id" });
       if (response.error) throw response.error;
+      if (!isCurrentPushTarget(target))
+        throw new Error(
+          "La sesión de sincronización cambió; ACK no confirmado",
+        );
       return response;
     });
 
@@ -356,7 +483,10 @@ export const pushCloudSync = async (key, value, forceUnconditional = false) => {
     localStorage.setItem(hashKey, currentHash);
     localStorage.setItem(confirmedHashKey, currentHash);
     if (key === "bodega_products_v1" || key === "bodega_accounts_v2") {
-      localStorage.setItem(_localSyncBaselineKey(docId), await syncConflictHash(key, value));
+      localStorage.setItem(
+        _localSyncBaselineKey(docId),
+        await syncConflictHash(key, value),
+      );
     }
     if (pendingCatalogHash) {
       localStorage.setItem(pendingCatalogHash.chKey, pendingCatalogHash.ch);
@@ -387,10 +517,11 @@ const pushSingleSalesDelta = async (
   salesArray,
   day,
   forceUnconditional = false,
+  target,
 ) => {
-  const deviceAccess = await validateCurrentDeviceSyncAccess(
-    _currentDeviceId || localStorage.getItem("pda_device_id"),
-  );
+  if (!isCurrentPushTarget(target)) return changedPushSession();
+  const deviceAccess = await validateCurrentDeviceSyncAccess(target.deviceId);
+  if (!isCurrentPushTarget(target)) return changedPushSession();
   if (!deviceAccess.ok) {
     return {
       ok: false,
@@ -401,7 +532,20 @@ const pushSingleSalesDelta = async (
   // El delta se escribe en la fila del equipo propio; también es seguro para
   // pairing legacy, cuya política RLS no autoriza leer documentos hermanos.
   const deltaKey = salesDeltaKeyForDate(day);
-  const docId = toCloudDocId(deltaKey);
+  const docId = relatedPushTarget(target, deltaKey).docId;
+  if (
+    pullCoverageIncomplete ||
+    (await hasPendingCloudKey(
+      cloudPullScope(deviceAccess.context, target.deviceId),
+      docId,
+    ))
+  )
+    return {
+      ok: true,
+      skipped: true,
+      pending: true,
+      reason: "Delta de este día pendiente de revisión",
+    };
   const payload = buildSalesDeltaPayload(salesArray, day);
 
   // Hash-gating propio del delta: si los tickets del día no cambiaron, no subir.
@@ -422,7 +566,7 @@ const pushSingleSalesDelta = async (
 
   const updatedAt = new Date().toISOString();
   const document = {
-    device_id: _currentDeviceId,
+    device_id: target.deviceId,
     collection: "store",
     doc_id: docId,
     data: buildSyncEnvelope(payload, updatedAt),
@@ -431,10 +575,16 @@ const pushSingleSalesDelta = async (
 
   try {
     const result = await withSyncRetry(async () => {
+      if (!isCurrentPushTarget(target))
+        throw new Error("La sesión de sincronización cambió");
       const response = await supabaseCloud
         .from("sync_documents")
         .upsert(document, { onConflict: "device_id,collection,doc_id" });
       if (response.error) throw response.error;
+      if (!isCurrentPushTarget(target))
+        throw new Error(
+          "La sesión de sincronización cambió; ACK no confirmado",
+        );
       return response;
     });
     localStorage.setItem(hashKey, currentHash);
@@ -467,12 +617,17 @@ const pushSingleSalesDelta = async (
  * LWW limpio por doc_id: el doc es inmutable salvo anulación (updated_at nuevo).
  */
 export const pushPayrollDoc = async (docKey, value) => {
+  const target = capturePushTarget(docKey);
+  const snapshot = structuredClone(value);
+  return serializePush(() => pushPayrollDocImpl(target.key, snapshot, target));
+};
+const pushPayrollDocImpl = async (docKey, value, target) => {
   if (!supabaseCloud || !isCloudSyncActive || !_currentDeviceId) {
     return { ok: false, skipped: true, error: "Sync no activo" };
   }
-  const deviceAccess = await validateCurrentDeviceSyncAccess(
-    _currentDeviceId || localStorage.getItem("pda_device_id"),
-  );
+  if (!isCurrentPushTarget(target)) return changedPushSession();
+  const deviceAccess = await validateCurrentDeviceSyncAccess(target.deviceId);
+  if (!isCurrentPushTarget(target)) return changedPushSession();
   if (!deviceAccess.ok) {
     return {
       ok: false,
@@ -487,7 +642,7 @@ export const pushPayrollDoc = async (docKey, value) => {
       error: "Nómina requiere una cuenta con membresía activa",
     };
   }
-  const docId = toCloudDocId(docKey);
+  const docId = target.docId;
   const hashKey = LAST_PUSH_HASH_PREFIX + docId;
   const currentHash = await quickHash(value);
   if (
@@ -498,7 +653,7 @@ export const pushPayrollDoc = async (docKey, value) => {
   }
   const updatedAt = new Date().toISOString();
   const document = {
-    device_id: _currentDeviceId,
+    device_id: target.deviceId,
     collection: "store",
     doc_id: docId,
     data: buildSyncEnvelope(value, updatedAt),
@@ -506,10 +661,16 @@ export const pushPayrollDoc = async (docKey, value) => {
   };
   try {
     const response = await withSyncRetry(async () => {
+      if (!isCurrentPushTarget(target))
+        throw new Error("La sesión de sincronización cambió");
       const res = await supabaseCloud
         .from("sync_documents")
         .upsert(document, { onConflict: "device_id,collection,doc_id" });
       if (res.error) throw res.error;
+      if (!isCurrentPushTarget(target))
+        throw new Error(
+          "La sesión de sincronización cambió; ACK no confirmado",
+        );
       return res;
     });
     localStorage.setItem(hashKey, currentHash);
@@ -528,16 +689,19 @@ export const pushPayrollDoc = async (docKey, value) => {
   }
 };
 
-const pushSalesDelta = async (salesArray, forceUnconditional = false) => {
+const pushSalesDelta = async (salesArray, forceUnconditional, target) => {
   const result = await pushSingleSalesDelta(
     salesArray,
     salesDayString(),
     forceUnconditional,
+    target,
   );
   // CRÍTICO-2(a) (2026-10-01): si el equipo estuvo offline días previos, sus
-  // deltas nunca se empujaron. Re-empujar los pendientes (fire-and-forget).
+  // deltas nunca se empujaron. Esperar los ACK, conservando sede e instalación.
   if (result?.ok) {
-    pushPendingSalesDeltas(salesArray).catch(() => {});
+    const previous = await pushPendingSalesDeltas(salesArray, target);
+    if (!previous.ok) return previous;
+    if (previous.pending) return { ...result, pending: true };
   }
   return result;
 };
@@ -551,7 +715,7 @@ const pushSalesDelta = async (salesArray, forceUnconditional = false) => {
 const MAX_PENDING_DELTA_DAYS_PER_CYCLE = 7;
 const SALES_WINDOW_DAILY_KEY = "pda_sales_window_last_push";
 const SALES_WINDOW_DAILY_MS = 24 * 60 * 60 * 1000;
-const pushPendingSalesDeltas = async (salesArray) => {
+const pushPendingSalesDeltas = async (salesArray, target) => {
   if (!supabaseCloud || !isCloudSyncActive || !_currentDeviceId)
     return { ok: false, skipped: true };
   const today = salesDayString();
@@ -566,39 +730,44 @@ const pushPendingSalesDeltas = async (salesArray) => {
   }
   let pushed = 0;
   let checked = 0;
+  let pending = false;
   for (const day of days) {
     if (checked >= MAX_PENDING_DELTA_DAYS_PER_CYCLE) break;
     checked++;
-    const r = await pushSingleSalesDelta(salesArray, day, false);
-    if (r?.ok && !r?.skipped) pushed++;
+    const r = await pushSingleSalesDelta(salesArray, day, false, target);
+    if (!r?.ok) return r;
+    if (r.pending) pending = true;
+    if (!r?.skipped) pushed++;
   }
   if (pushed > 0)
     console.info(`[CloudSync] Deltas de días previos re-empujados: ${pushed}`);
   // CRÍTICO-2(b) (2026-10-01): la ventana de 90 días se sube como respaldo
   // al menos 1 vez al día (además del cierre de caja explícito). Así un
   // supervisor que pida historial siempre tiene de dónde reconstruir.
-  maybePushDailySalesWindow();
-  return { ok: true, pushed, checked };
+  const windowResult = await maybePushDailySalesWindow(target);
+  if (windowResult && !windowResult.ok) return windowResult;
+  if (windowResult?.pending) pending = true;
+  return { ok: true, pushed, checked, pending };
 };
 
 /** Sube la ventana de 90 días si hace más de 24h que no se sube. */
-const maybePushDailySalesWindow = () => {
+const salesWindowDailyKey = (target) =>
+  `${SALES_WINDOW_DAILY_KEY}:${target.docId}`;
+const maybePushDailySalesWindow = async (target) => {
   try {
-    const last = Number(localStorage.getItem(SALES_WINDOW_DAILY_KEY) || 0);
+    const last = Number(localStorage.getItem(salesWindowDailyKey(target)) || 0);
     if (Date.now() - last < SALES_WINDOW_DAILY_MS) return;
   } catch {
     return;
   }
-  pushSalesWindow()
-    .then((r) => {
-      if (r?.ok) {
-        try {
-          localStorage.setItem(SALES_WINDOW_DAILY_KEY, String(Date.now()));
-        } catch {}
-        console.info("[CloudSync] Ventana de ventas diaria subida");
-      }
-    })
-    .catch(() => {});
+  const result = await pushSalesWindowImpl(
+    relatedPushTarget(target, "bodega_sales_v1"),
+  );
+  // Un push explícito puede aportar tickets sin que exista snapshot local.
+  if (result.error === "Sin ventas locales") return;
+  if (result.ok && !result.skipped)
+    console.info("[CloudSync] Ventana de ventas diaria subida");
+  return result;
 };
 
 /**
@@ -607,12 +776,16 @@ const maybePushDailySalesWindow = () => {
  * supervisor pide historial completo. NO se llama en cada venta.
  */
 export const pushSalesWindow = async () => {
+  const target = capturePushTarget("bodega_sales_v1");
+  return serializePush(() => pushSalesWindowImpl(target));
+};
+const pushSalesWindowImpl = async (target) => {
   if (!supabaseCloud || !isCloudSyncActive || !_currentDeviceId) {
     return { ok: false, skipped: true, error: "Sync no activo" };
   }
-  const deviceAccess = await validateCurrentDeviceSyncAccess(
-    _currentDeviceId || localStorage.getItem("pda_device_id"),
-  );
+  if (!isCurrentPushTarget(target)) return changedPushSession();
+  const deviceAccess = await validateCurrentDeviceSyncAccess(target.deviceId);
+  if (!isCurrentPushTarget(target)) return changedPushSession();
   if (!deviceAccess.ok) {
     return {
       ok: false,
@@ -620,34 +793,54 @@ export const pushSalesWindow = async () => {
       error: deviceAccess.error || "Equipo sin autorización activa",
     };
   }
+  // La ventana no puede saltarse el bloqueo de su clave ni el checkpoint.
+  if (
+    pullCoverageIncomplete ||
+    (await hasPendingCloudKey(
+      cloudPullScope(deviceAccess.context, target.deviceId),
+      target.docId,
+    ))
+  )
+    return {
+      ok: true,
+      skipped: true,
+      pending: true,
+      reason: "Ventas pendientes de conciliación remota",
+    };
   // La ventana también es una escritura del device_id propio, protegida por
   // la validación legacy de revocación o por membresía activa de cuenta.
   try {
-    const salesArray = await appForage.getItem("bodega_sales_v1");
+    const salesArray = await appForage.getItem(target.docId);
     if (!Array.isArray(salesArray))
       return { ok: false, error: "Sin ventas locales" };
     const payloadValue = pruneSalesForSync(
       salesArray,
       RETENTION.SALES_SYNC_DAYS,
     );
-    const docId = toCloudDocId("bodega_sales_v1");
+    const docId = target.docId;
     const updatedAt = new Date().toISOString();
     const document = {
-      device_id: _currentDeviceId,
+      device_id: target.deviceId,
       collection: "store",
       doc_id: docId,
       data: buildSyncEnvelope(payloadValue, updatedAt),
       updated_at: updatedAt,
     };
     await withSyncRetry(async () => {
+      if (!isCurrentPushTarget(target))
+        throw new Error("La sesión de sincronización cambió");
       const res = await supabaseCloud
         .from("sync_documents")
         .upsert(document, { onConflict: "device_id,collection,doc_id" });
       if (res.error) throw res.error;
+      if (!isCurrentPushTarget(target))
+        throw new Error(
+          "La sesión de sincronización cambió; ACK no confirmado",
+        );
       return res;
     });
     try {
-      localStorage.setItem(SALES_WINDOW_DAILY_KEY, String(Date.now()));
+      localStorage.setItem(salesWindowDailyKey(target), String(Date.now()));
     } catch {}
     return { ok: true, updatedAt, windowTickets: payloadValue.length };
   } catch (error) {
@@ -670,8 +863,9 @@ export const pushSalesWindow = async () => {
  * @param {any} value
  */
 export const pushLocalSync = (key, value) => {
-  if (!LOCAL_KEYS.includes(key) && !SYNC_KEYS.includes(key)) return;
-  if (key === "abasto-auth-storage") return; // SEC-002
+  const baseKey = parseCloudDocId(key).key;
+  if (!LOCAL_KEYS.includes(baseKey) && !SYNC_KEYS.includes(baseKey)) return;
+  if (baseKey === "abasto-auth-storage") return; // SEC-002
   _debouncePush(key, value);
 };
 
@@ -688,8 +882,9 @@ export const pushLocalSync = (key, value) => {
  * @param {any} value
  */
 export const queueCloudSync = (key, value) => {
-  if (!SYNC_KEYS.includes(key)) return;
-  if (key === "abasto-auth-storage") return; // SEC-002
+  const baseKey = parseCloudDocId(key).key;
+  if (!SYNC_KEYS.includes(baseKey)) return;
+  if (baseKey === "abasto-auth-storage") return; // SEC-002
   _debouncePush(key, value);
 };
 
@@ -735,12 +930,11 @@ export const pullBusinessRegistry = async () => {
       pruneTombstoned,
       readTombstones,
       BUSINESS_REGISTRY_DOC_KEY,
-    } =
-      await import("../utils/businessRegistry.js");
+    } = await import("../utils/businessRegistry.js");
     // Traer las versiones del registro visibles para los dispositivos de la cuenta.
     const { data, error } = await supabaseCloud
       .from("sync_documents")
-      .select("data, updated_at")
+      .select("collection, doc_id, device_id, data, updated_at")
       .in("device_id", deviceAccess.context.deviceIds)
       .eq("doc_id", BUSINESS_REGISTRY_DOC_KEY)
       .order("updated_at", { ascending: false })
@@ -758,13 +952,20 @@ export const pullBusinessRegistry = async () => {
     // V2.1.57: tumbas de eliminación — cualquier documento remoto puede
     // declarar sedes borradas; se respetan aunque filas viejas las traigan.
     let remoteTombstones = [];
+    let invalidRegistries = 0;
+    const validRows = [];
+    const scope = cloudPullScope(deviceAccess.context, activeDeviceId);
     for (const row of data) {
       const payload = row?.data?.payload;
-      if (!isValidBusinessRegistryDoc(payload)) {
-        throw new Error(
-          "El registro remoto de sedes tiene un formato inválido",
-        );
+      if (
+        !readSyncEnvelope(row.data).valid ||
+        !isValidBusinessRegistryDoc(payload)
+      ) {
+        await retainCloudPullFailure(scope, row, "invalid-registry");
+        invalidRegistries++;
+        continue;
       }
+      validRows.push(row);
       remoteCount += payload.businesses.length;
       merged = mergeBusinessRegistry(merged, payload);
       remoteTombstones = mergeTombstones(
@@ -781,7 +982,8 @@ export const pullBusinessRegistry = async () => {
     if (typeof st.aplicarRegistroRemoto !== "function") {
       throw new Error("El store no puede aplicar el registro remoto de sedes");
     }
-    await st.aplicarRegistroRemoto(finalList, tombstones);
+    if (validRows.length) await st.aplicarRegistroRemoto(finalList, tombstones);
+    for (const row of validRows) await resolveCloudPullFailure(scope, row);
     // V2.1.51: actualizar el caché sincronizado para que isDocForKnownBusiness
     // acepte docs de estas sedes inmediatamente (sin esperar a localStorage).
     try {
@@ -797,7 +999,9 @@ export const pullBusinessRegistry = async () => {
     return {
       ok: true,
       count: finalList.length,
-      message: `${finalList.length} sedes`,
+      partial: invalidRegistries > 0,
+      pending: invalidRegistries,
+      message: `${finalList.length} sedes${invalidRegistries ? `; ${invalidRegistries} registros pendientes` : ""}`,
     };
   } catch (e) {
     console.warn("[pullBusinessRegistry] Error:", e?.message ?? e);
@@ -805,7 +1009,58 @@ export const pullBusinessRegistry = async () => {
   }
 };
 
-export const syncNow = async () => {
+async function pullCloudDocuments(access, deviceId, manual = false) {
+  const deviceIds = access.context?.deviceIds || [deviceId];
+  const result = await runCloudPull({
+    scope: cloudPullScope(access.context, deviceId),
+    deviceIds,
+    manual,
+    fetchPage: async (options) => {
+      const current = await validateCurrentDeviceSyncAccess(deviceId);
+      if (!current.ok) throw new Error("Acceso de pull no disponible");
+      const currentIds = current.context?.deviceIds || [deviceId];
+      if (deviceIds.some((id) => !currentIds.includes(id)))
+        throw new Error("Membresía cambió durante el pull");
+      return fetchCloudPullPage(supabaseCloud, deviceIds, options);
+    },
+    classify: (row) => {
+      const { key } = parseCloudDocId(row.doc_id);
+      if (!isSupervisorSyncKey(key)) return "skip";
+      if (!isDocForKnownBusiness(row.doc_id)) return "unknown-business";
+      return null;
+    },
+    apply: async (row) => {
+      if (!isCloudSyncActive || deviceId !== _currentDeviceId)
+        throw new Error("Sesión de pull cambió");
+      return _applyFromCloud(
+        row.doc_id,
+        row.collection,
+        row.data,
+        row.device_id,
+      );
+    },
+  });
+  pullCoverageIncomplete = result.queryFailed;
+  publishCloudPullStatus(deviceId, {
+    ...result,
+    status: result.status === "confirmed" ? "pulling" : result.status,
+  });
+  return result;
+}
+
+let syncCycle = Promise.resolve();
+function serializeSyncCycle(task) {
+  const result = syncCycle.then(task, task);
+  syncCycle = result.catch(() => {
+    /* caller observes failure; allow the next cycle */
+  });
+  return result;
+}
+export const syncNow = (options) => {
+  const target = capturePushTarget("bodega_sales_v1");
+  return serializeSyncCycle(() => syncNowImpl(options, target));
+};
+const syncNowImpl = async ({ manual = true } = {}, cycleTarget) => {
   if (!supabaseCloud) {
     return {
       ok: false,
@@ -834,6 +1089,7 @@ export const syncNow = async () => {
   }
   let pulled = 0;
   let pushed = 0;
+  let pullResult = null;
   try {
     const deviceAccess = await validateCurrentDeviceSyncAccess(activeDeviceId);
     if (!deviceAccess.ok) {
@@ -884,182 +1140,21 @@ export const syncNow = async () => {
       }
     }
 
-    // ── PULL: bajar documentos nuevos de la nube ──
-    // SYNC-MANUAL: ignora el watermark y trae todo lo del negocio activo.
-    // El watermark optimiza los pulls automáticos, pero un sync manual
-    // debe ser determinista: siempre trae lo último, sin depender del
-    // estado del watermark local.
-    if (accountCtx?.userId) {
-      const wmKey = `cloud_pull_watermark_${accountCtx.userId}`;
-      const { data: docs, error: docsError } = await supabaseCloud
-        .from("sync_documents")
-        .select("collection, doc_id, data, updated_at, device_id")
-        .in("device_id", accountCtx.deviceIds)
-        .in("collection", ["store", "local"])
-        .order("updated_at", { ascending: true })
-        .limit(2000);
-      if (docsError) throw docsError;
-      const pullDocs = Array.isArray(docs) ? docs : [];
-
-      // El registro de sedes solo se consulta desde los dispositivos
-      // autorizados de esta cuenta.
-      let pullFailed = false;
-      try {
-        const { data: globalDocs, error: globalError } = await supabaseCloud
-          .from("sync_documents")
-          .select("collection, doc_id, data, updated_at, device_id")
-          .in("device_id", accountCtx.deviceIds)
-          .eq("doc_id", "bodega_businesses_registry_v1")
-          .in("collection", ["store", "local"])
-          .order("updated_at", { ascending: false })
-          .limit(1);
-        if (globalError) throw globalError;
-        if (globalDocs && globalDocs.length > 0) {
-          const gd = globalDocs[0];
-          // Evitar duplicado si ya vino en el pull principal.
-          if (!pullDocs.some((d) => d.doc_id === gd.doc_id)) {
-            pullDocs.push(gd);
-            console.log(
-              `[syncNow] PULL global: registro de sedes de ${gd.device_id}`,
-            );
-          }
-        }
-      } catch (e) {
-        pullFailed = true;
-        console.warn(
-          "[syncNow] No se pudo traer el registro global de sedes:",
-          e?.message,
-        );
-      }
-
-      // Los docs de todas las sedes de la cuenta se consultan solo desde
-      // dispositivos que la membresía activa autoriza.
-      try {
-        const { data: businessDocs, error: businessError } = await supabaseCloud
-          .from("sync_documents")
-          .select("collection, doc_id, data, updated_at, device_id")
-          .in("device_id", accountCtx.deviceIds)
-          .like("doc_id", "nb\\_%")
-          .in("collection", ["store", "local"])
-          .order("updated_at", { ascending: false })
-          .limit(500);
-        if (businessError) throw businessError;
-        if (businessDocs && businessDocs.length > 0) {
-          let added = 0;
-          for (const bd of businessDocs) {
-            if (
-              !pullDocs.some(
-                (d) => d.doc_id === bd.doc_id && d.device_id === bd.device_id,
-              )
-            ) {
-              pullDocs.push(bd);
-              added++;
-            }
-          }
-          if (added > 0)
-            console.log(
-              `[syncNow] PULL: ${added} docs adicionales de sedes autorizadas`,
-            );
-        }
-      } catch (e) {
-        pullFailed = true;
-        console.warn(
-          "[syncNow] No se pudo traer docs globales de sedes:",
-          e?.message,
-        );
-      }
-
-      console.log(`[syncNow] PULL: ${pullDocs.length} documentos de la nube`);
-      let pullFailures = 0;
-      for (const doc of pullDocs) {
-        // V2.1.50: aceptar docs de cualquier sede conocida (para el supervisor).
-        if (!isDocForKnownBusiness(doc.doc_id)) {
-          console.log(`[syncNow] SKIP (no es de sede conocida): ${doc.doc_id}`);
-          continue;
-        }
-        const { key } = parseCloudDocId(doc.doc_id);
-        // Ignorar claves que dejaron de pertenecer al contrato vigente. Esto
-        // permite recuperar sync_documents antiguos sin ocultar payloads
-        // inválidos en documentos permitidos.
-        if (!isSupervisorSyncKey(key)) {
-          console.info(`[syncNow] SKIP (clave obsoleta/no sincronizable): ${doc.doc_id}`);
-          continue;
-        }
-        try {
-          const applied = await _applyFromCloud(
-            doc.doc_id,
-            doc.collection,
-            doc.data,
-            doc.device_id,
-          );
-          console.log(
-            `[syncNow] ${doc.doc_id}: ${applied ? "APLICADO" : "descartado (no es más nuevo)"}`,
-          );
-          if (applied) pulled++;
-        } catch (e) {
-          pullFailures++;
-          console.warn(`[syncNow] Error aplicando ${doc.doc_id}:`, e);
-        }
-      }
-      console.log(
-        `[syncNow] PULL completo: ${pulled} aplicados; ${pullFailures} fallos`,
-      );
-      if (pullFailures > 0 || pullFailed) {
-        return {
-          ok: false,
-          pulled,
-          pushed,
-          message: `Sync parcial: ${pullFailures} documento(s) fallaron al aplicar y${pullFailed ? " una consulta falló" : ""}; se reintentará en el próximo ciclo`,
-        };
-      }
-      const maxTs = pullDocs.reduce(
-        (m, d) => (d.updated_at && d.updated_at > m ? d.updated_at : m),
-        localStorage.getItem(wmKey) || "",
-      );
-      if (maxTs) {
-        try {
-          localStorage.setItem(wmKey, maxTs);
-        } catch {
-          /* noop */
-        }
-      }
-    } else if (deviceAccess.mode === "legacy") {
-      // El pairing legacy solo puede leer la fila del propio equipo según RLS.
-      const { data: docs, error: docsError } = await supabaseCloud
-        .from("sync_documents")
-        .select("collection, doc_id, data, updated_at, device_id")
-        .eq("device_id", activeDeviceId)
-        .in("collection", ["store", "local"])
-        .order("updated_at", { ascending: true })
-        .limit(2000);
-      if (docsError) throw docsError;
-      let pullFailures = 0;
-      for (const doc of Array.isArray(docs) ? docs : []) {
-        if (!isDocForKnownBusiness(doc.doc_id)) continue;
-        try {
-          const applied = await _applyFromCloud(
-            doc.doc_id,
-            doc.collection,
-            doc.data,
-            doc.device_id,
-          );
-          if (applied) pulled++;
-        } catch (error) {
-          pullFailures++;
-          console.warn(
-            `[syncNow] Error aplicando doc propio ${doc.doc_id}:`,
-            error,
-          );
-        }
-      }
-      if (pullFailures > 0) {
-        return {
-          ok: false,
-          pulled,
-          pushed,
-          message: `Sync parcial: ${pullFailures} documento(s) fallaron al aplicar`,
-        };
-      }
+    // Manual re-reads current revisions and explicitly retries retained failures.
+    pullResult = await pullCloudDocuments(deviceAccess, activeDeviceId, manual);
+    pulled = pullResult.applied;
+    // A query/storage failure is not merely a bad document: do not publish
+    // snapshots from a pull whose coverage could not be established.
+    if (pullResult.queryFailed) {
+      return {
+        ok: false,
+        partial: true,
+        pulled,
+        pushed,
+        pending: pullResult.pending,
+        message:
+          "Sync parcial: consulta o almacenamiento incompleto; los pendientes se conservan",
+      };
     }
 
     // ── PUSH: subir cambios locales ──
@@ -1071,9 +1166,10 @@ export const syncNow = async () => {
       "bodega_accounts_v2",
     ];
     for (const key of criticalKeys) {
-      const val = await appForage.getItem(key);
+      const physicalKey = relatedPushTarget(cycleTarget, key).docId;
+      const val = await appForage.getItem(physicalKey);
       if (val !== null) {
-        const res = await pushCloudSync(key, val);
+        const res = await pushCloudSync(physicalKey, val);
         if (res?.ok && !res?.skipped) pushed++;
         else if (!res?.ok)
           throw new Error(res?.error || `Falló el push de ${key}`);
@@ -1088,6 +1184,11 @@ export const syncNow = async () => {
       // pairing legacy; no usar solo el directorio para validar cuentas.
       const finalAccess = await validateCurrentDeviceSyncAccess(activeDeviceId);
       if (!finalAccess.ok) {
+        publishCloudPullStatus(activeDeviceId, {
+          ...pullResult,
+          pushed,
+          status: "partial",
+        });
         return {
           ok: false,
           pulled,
@@ -1097,19 +1198,41 @@ export const syncNow = async () => {
             "No se pudo validar el estado del equipo; sincronización cancelada",
         };
       }
-      localStorage.setItem("cloud_sync_ts", new Date().toISOString());
+      if (pullResult.pending === 0)
+        localStorage.setItem("cloud_sync_ts", new Date().toISOString());
       reportDevicesToDirectory().catch(() => {});
     } catch (e) {
       console.warn(
         "[syncNow] No se pudo validar el estado del equipo:",
         e?.message,
       );
+      publishCloudPullStatus(activeDeviceId, {
+        ...pullResult,
+        pushed,
+        status: "partial",
+      });
       return {
         ok: false,
         pulled,
         pushed,
         message:
           "No se pudo validar el estado del equipo; sincronización cancelada",
+      };
+    }
+    publishCloudPullStatus(activeDeviceId, {
+      ...pullResult,
+      pushed,
+      confirmedSync: pullResult.pending === 0,
+    });
+    if (pullResult.pending > 0) {
+      return {
+        ok: false,
+        partial: true,
+        pulled,
+        pushed,
+        pending: pullResult.pending,
+        skipped: pullResult.skipped,
+        message: `Sync parcial: ${pulled} aplicados, ${pushed} subidos y ${pullResult.pending} pendientes de revisión/reintento`,
       };
     }
     const parts = [];
@@ -1125,6 +1248,12 @@ export const syncNow = async () => {
     };
   } catch (e) {
     console.error("[syncNow] Error:", e);
+    publishCloudPullStatus(activeDeviceId, {
+      ...pullResult,
+      applied: pulled,
+      pushed,
+      status: pulled || pushed || pullResult?.pending ? "partial" : "failed",
+    });
     return {
       ok: false,
       pulled,
@@ -1142,6 +1271,12 @@ export const forceSyncAllPOSData = async (
   overrideDeviceId,
   forceUnconditional = false,
 ) => {
+  const cycleTarget = capturePushTarget("bodega_sales_v1");
+  // Los usuarios/tumbas del store corresponden a la sede en este instante.
+  const userCatalog = buildUserCatalogDoc(
+    useAuthStore.getState().usuarios,
+    readUserTombstones(),
+  );
   if (!supabaseCloud) return { ok: false, error: "Supabase no disponible" };
   const isMonitor = localStorage.getItem("pda_pairing_mode") === "monitor";
   if (isMonitor) return { ok: true, skipped: true };
@@ -1172,20 +1307,24 @@ export const forceSyncAllPOSData = async (
       "bodega_accounts_v2",
     ];
     for (const key of criticalKeys) {
-      const val = await appForage.getItem(key);
+      const physicalKey = relatedPushTarget(cycleTarget, key).docId;
+      const val = await appForage.getItem(physicalKey);
       if (val !== null) {
-        const result = await pushCloudSync(key, val, forceUnconditional);
+        const result = await pushCloudSync(
+          physicalKey,
+          val,
+          forceUnconditional,
+        );
         if (!result?.ok) {
           throw new Error(result?.error || `Falló el push de ${key}`);
         }
       }
     }
     // Catálogo de usuarios sin PINs (SEC-002): vive en el auth store, no en appForage.
-    const { usuarios } = useAuthStore.getState();
-    if (Array.isArray(usuarios) && usuarios.length > 0) {
+    if (userCatalog.users.length > 0) {
       const result = await pushCloudSync(
-        "bodega_users_catalog_v1",
-        buildUserCatalogDoc(usuarios, readUserTombstones()),
+        relatedPushTarget(cycleTarget, "bodega_users_catalog_v1").docId,
+        userCatalog,
         forceUnconditional,
       );
       if (!result?.ok) {
@@ -1255,20 +1394,12 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
     }
     // V2.1.50: si el doc es de una sede NO activa, escribir directo con
     // el namespace correcto, sin pasar por el router (que usa la activa).
-    const { NEGOCIO_KEY_PREFIX, getNegocioActivoId } =
-      await import("../utils/negocioContext.js");
-    const targetNegocioId = negocioId || getNegocioActivoId();
-    const isOtherBusiness = negocioId && negocioId !== getNegocioActivoId();
-    // Helper para leer/escribir en el namespace correcto.
+    // El documento remoto ya tiene sede. Nunca volver a enrutar por la activa
+    // tras un await: tanto lectura como escritura usan el mismo destino físico.
     const { default: localforage } = await import("localforage");
-    const nsKey = (k) =>
-      isOtherBusiness ? `${NEGOCIO_KEY_PREFIX}${targetNegocioId}:${k}` : k;
-    const nsGet = (k) =>
-      isOtherBusiness ? localforage.getItem(nsKey(k)) : appForage.getItem(k);
-    const nsSet = (k, v) =>
-      isOtherBusiness
-        ? localforage.setItem(nsKey(k), v)
-        : appForage.setItem(k, v);
+    const nsKey = (k) => (isGlobalKey(k) ? k : physicalDocId(negocioId, k));
+    const nsGet = (k) => localforage.getItem(nsKey(k));
+    const nsSet = (k, v) => localforage.setItem(nsKey(k), v);
 
     const envelope = readSyncEnvelope(data);
     if (!envelope.valid) {
@@ -1278,8 +1409,18 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
       );
     }
 
-    const { payload } = envelope;
+    // Deltas legados sin `date`: la fecha sale de la clave del documento.
+    const payload = normalizeSalesDeltaPayload(key, envelope.payload);
     let payloadToStore = payload;
+    // Validate before timestamp skipping: an old malformed revision is still
+    // pending evidence, not an already-confirmed document.
+    const validation = validateSupervisorSyncDocument(key, payload);
+    if (
+      !validation.valid ||
+      (STORE_SCHEMAS[key] && !STORE_SCHEMAS[key](payload))
+    ) {
+      throw new Error(`Schema inválido para documento remoto ${docId}`);
+    }
 
     // Las ventas/deltas son fusión append-only: cada equipo aporta una
     // versión independiente y no debe descartarse usando el watermark de otro.
@@ -1304,8 +1445,8 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
     // No usar CONFIRMED_PUSH_HASH_PREFIX: el pull lo actualiza con snapshots
     // de otros equipos y convertía cada fila antigua en un falso conflicto.
     if (
-      (key === "bodega_products_v1" || key === "bodega_accounts_v2")
-      && sourceDeviceId !== _currentDeviceId
+      (key === "bodega_products_v1" || key === "bodega_accounts_v2") &&
+      sourceDeviceId !== _currentDeviceId
     ) {
       try {
         const baseline = localStorage.getItem(_localSyncBaselineKey(docId));
@@ -1324,7 +1465,10 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
           }
         }
       } catch (error) {
-        console.warn("[CloudSync] No se pudo evaluar conflicto local:", error?.message ?? error);
+        console.warn(
+          "[CloudSync] No se pudo evaluar conflicto local:",
+          error?.message ?? error,
+        );
       }
     }
 
@@ -1376,7 +1520,6 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
       if (!validator(dataToValidate)) {
         console.warn(
           `[CloudSync] Schema validation falló para ${key}, ignorando payload remoto.`,
-          payload,
         );
         throw new Error(`Schema inválido para documento remoto ${docId}`);
       }
@@ -1445,17 +1588,31 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
               detail: { key: "bodega_products_v1", source: "remote" },
             }),
           );
-        } else if (Array.isArray(localProducts) && !isOwnDoc) {
+        } else if (
+          Array.isArray(localProducts) &&
+          !isOwnDoc
+        ) {
           const lastRemote = readLastRemoteStockMap(docId, sourceDeviceId);
-          const { products: mergedProducts, nextRemoteMap } =
-            applyStockMapDelta(localProducts, payload, lastRemote);
-          writeLastRemoteStockMap(docId, sourceDeviceId, nextRemoteMap);
+          const {
+            products: mergedProducts,
+            nextRemoteMap,
+            deltas,
+          } = applyStockMapDelta(localProducts, payload, lastRemote);
           if (mergedProducts !== localProducts) {
             await nsSet("bodega_products_v1", mergedProducts);
             window.dispatchEvent(
               new CustomEvent("app_storage_update", {
                 detail: { key: "bodega_products_v1", source: "remote" },
               }),
+            );
+          }
+          // Solo tras persistir el stock: si la escritura falla, el próximo ciclo
+          // reintenta con el mismo "último visto" y no duplica lo recibido.
+          writeLastRemoteStockMap(docId, sourceDeviceId, nextRemoteMap);
+          if (Object.keys(deltas).length > 0) {
+            writeReceivedStockMap(
+              docId,
+              accumulateReceivedStock(readReceivedStockMap(docId), deltas),
             );
           }
         } else if (isOwnDoc) {
@@ -1490,6 +1647,10 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
         !Array.isArray(payload)
       ) {
         try {
+          // El store de auth corresponde solo a la sede activa. No aplicar
+          // personal de otra sede sobre sus usuarios/PINs: retener para retry.
+          if (negocioId !== getNegocioActivoId())
+            throw new Error("Catálogo de usuarios requiere su sede activa");
           const authState = useAuthStore.getState();
           const merged = mergeUserCatalog(authState.usuarios, payload);
           if (typeof authState.aplicarCatalogoRemoto !== "function") {
@@ -1514,7 +1675,10 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
         localStorage.setItem(CONFIRMED_PUSH_HASH_PREFIX + docId, payloadHash);
         if (envelope.updatedAt)
           localStorage.setItem(metadataKey, envelope.updatedAt);
-        localStorage.setItem(_localSyncBaselineKey(docId), await syncConflictHash(key, payload));
+        localStorage.setItem(
+          _localSyncBaselineKey(docId),
+          await syncConflictHash(key, payload),
+        );
         return true;
       }
       // ── Registro de negocios (multi-sede) ───────────────────────────
@@ -1546,7 +1710,9 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
             mergeBusinessRegistry(negState.negocios, payload),
             tombstones,
           );
-          console.log(`[syncNow] ${docId}: fusionados=${merged.length}, tumbas=${tombstones.length}`);
+          console.log(
+            `[syncNow] ${docId}: fusionados=${merged.length}, tumbas=${tombstones.length}`,
+          );
           if (typeof negState.aplicarRegistroRemoto !== "function") {
             throw new Error("El store no puede aplicar el registro de sedes");
           }
@@ -1570,7 +1736,10 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
         localStorage.setItem(CONFIRMED_PUSH_HASH_PREFIX + docId, payloadHash);
         if (envelope.updatedAt)
           localStorage.setItem(metadataKey, envelope.updatedAt);
-        localStorage.setItem(_localSyncBaselineKey(docId), await syncConflictHash(key, payload));
+        localStorage.setItem(
+          _localSyncBaselineKey(docId),
+          await syncConflictHash(key, payload),
+        );
         return true;
       }
       // QUOTA-002: las ventas remotas llegan podadas (90 días); se
@@ -1599,6 +1768,11 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
         if (envelope.updatedAt)
           localStorage.setItem(metadataKey, envelope.updatedAt);
         return true;
+      }
+      // El catálogo remoto trae stock absoluto de otro equipo: conservar el stock
+      // local para no pisar ventas propias ni reintroducir deltas ajenos.
+      if (key === "bodega_products_v1" && Array.isArray(payloadToStore)) {
+        payloadToStore = preserveLocalStock(await nsGet(key), payloadToStore);
       }
       await nsSet(key, payloadToStore);
       if (key === "bodega_customer_ledger_v1") {
@@ -1683,381 +1857,402 @@ export function useCloudSync(deviceId) {
     if (isInitialized.current) return;
 
     _currentDeviceId = deviceId;
+    pullCoverageIncomplete = true;
+    let cancelled = false;
+    let initializationScheduled = false;
+    let realtimePullTimer = null;
+    let realtimeChannel = null;
 
-    const initSync = async () => {
-      try {
-        const { session, error: sessionError } =
-          await ensureSupervisorSession();
-        if (sessionError || !session) {
-          isCloudSyncActive = false;
-          console.warn("[CloudSync] Sesión no disponible para sincronizar", {
-            deviceId: shortCloudSyncId(deviceId),
-            error: sessionError?.message || "sin sesión",
-          });
+    const scheduleRealtimePull = () => {
+      if (realtimePullTimer) clearTimeout(realtimePullTimer);
+      realtimePullTimer = setTimeout(() => {
+        realtimePullTimer = null;
+        if (cancelled || !isCloudSyncActive || deviceId !== _currentDeviceId)
           return;
-        }
-
-        console.info("[CloudSync] Sesión Auth lista", {
-          deviceId: shortCloudSyncId(deviceId),
-          authUserId: shortCloudSyncId(session.user?.id),
-        });
-
-        // Comprobar cuenta/membresía activa desde servidor antes de permitir
-        // lecturas multi-dispositivo. El pairing queda como compatibilidad
-        // restringida al device_id propio según las políticas actuales.
-        let deviceAccess = { ok: false, error: "No se pudo validar el equipo" };
-        try {
-          const registration = await ensureDeviceSessionRegistered(deviceId);
-          if (!registration?.ok) {
-            throw new Error(
-              registration?.error?.message ||
-                registration?.error ||
-                "No se pudo registrar la identidad de este equipo",
-            );
-          }
-          deviceAccess = await validateCurrentDeviceSyncAccess(deviceId);
-        } catch (error) {
-          deviceAccess = {
-            ok: false,
-            error: error?.message || "No se pudo validar el equipo",
-          };
-        }
-        const accountCtx = deviceAccess.context || null;
-        if (!deviceAccess.ok || (isAccountLinkedLocally() && !accountCtx)) {
-          isCloudSyncActive = false;
-          console.warn(
-            "[CloudSync] Cuenta o equipo sin autorización activa; sync pausado",
-            {
-              deviceId: shortCloudSyncId(deviceId),
-              error: deviceAccess.error || null,
-            },
-          );
-          return;
-        }
-
-        let pairedMonitorId = null;
-        if (!accountCtx) {
-          const { data: pairing, error: pairingError } = await supabaseCloud
-            .from("device_pairings")
-            .select("monitor_device_id")
-            .eq("primary_device_id", deviceId)
-            .maybeSingle();
-
-          console.info("[CloudSync] Pairing consultado", {
-            deviceId: shortCloudSyncId(deviceId),
-            paired: Boolean(pairing?.monitor_device_id),
-            monitorDeviceId: shortCloudSyncId(pairing?.monitor_device_id),
-            error: pairingError?.message || null,
-          });
-
-          if (pairingError || !pairing?.monitor_device_id) {
-            isCloudSyncActive = false;
-            console.warn(
-              "[CloudSync] Sincronización pausada hasta completar el pairing",
-              {
-                reason: pairingError?.message || "pairing_sin_monitor",
-                deviceId: shortCloudSyncId(deviceId),
-              },
-            );
-            if (!globalSubscription) {
-              globalSubscription = supabaseCloud
-                .channel(`device_pairings:${deviceId}`)
-                .on(
-                  "postgres_changes",
-                  {
-                    event: "*",
-                    schema: "public",
-                    table: "device_pairings",
-                    filter: `primary_device_id=eq.${deviceId}`,
-                  },
-                  () => {
-                    isInitialized.current = false;
-                    initSync();
-                  },
-                )
-                .subscribe();
-            }
-            return;
-          }
-          pairedMonitorId = pairing.monitor_device_id;
-        } else {
-          console.info("[CloudSync] Modo cuenta activo", {
-            deviceId: shortCloudSyncId(deviceId),
-            mode: accountCtx.mode,
-            devices: accountCtx.deviceIds.length,
-          });
-        }
-
-        isCloudSyncActive = true;
-        isInitialized.current = true;
-        console.info("[CloudSync] Receptor activo", {
-          deviceId: shortCloudSyncId(deviceId),
-          monitorDeviceId: shortCloudSyncId(pairedMonitorId),
-          accountMode: Boolean(accountCtx),
-        });
-
-        // Sincronizar automáticamente todos los datos del POS a la nube en segundo plano (Patrón Donde Juancho)
-        // En modo cuenta el push va con hash-gating (sin forzar): siembra la
-        // cuenta la primera vez y evita re-subir el catálogo en cada arranque.
-        const startInitialSync = () => forceSyncAllPOSData(deviceId, !accountCtx)
+        syncNow({ manual: false })
           .then((result) => {
-            if (result && !result.ok) {
+            if (!result?.ok && !result?.partial) {
               console.warn(
-                "[CloudSync] No se completó la sincronización inicial:",
-                result.error,
+                "[CloudSync] Pull disparado por Realtime no completado; sigue activo el sondeo de respaldo",
               );
             }
-            return result;
           })
           .catch((error) => {
             console.warn(
-              "[CloudSync] Falló la sincronización inicial:",
+              "[CloudSync] Pull disparado por Realtime no completado; sigue activo el sondeo de respaldo",
               error?.message || error,
             );
-            return { ok: false, error };
+          });
+      }, 100);
+    };
+
+    const initSync = () => {
+      if (cancelled || isInitialized.current || initializationScheduled)
+        return Promise.resolve();
+      initializationScheduled = true;
+      return serializeSyncCycle(async () => {
+        if (cancelled || isInitialized.current) return;
+        try {
+          const { session, error: sessionError } =
+            await ensureSupervisorSession();
+          if (cancelled) return;
+          if (sessionError || !session) {
+            isCloudSyncActive = false;
+            console.warn("[CloudSync] Sesión no disponible para sincronizar", {
+              deviceId: shortCloudSyncId(deviceId),
+              error: sessionError?.message || "sin sesión",
+            });
+            return;
+          }
+
+          console.info("[CloudSync] Sesión Auth lista", {
+            deviceId: shortCloudSyncId(deviceId),
+            authUserId: shortCloudSyncId(session.user?.id),
           });
 
-        // ── Pull Inicial / Sincronización de Importación ──
-        // Consultar y fusionar antes de publicar: no se debe subir un snapshot
-        // local anterior que gane LWW solo por tener un timestamp posterior.
-        let docs = [];
-        const backupImported =
-          localStorage.getItem("pda_backup_imported_flag") === "true";
+          // Comprobar cuenta/membresía activa desde servidor antes de permitir
+          // lecturas multi-dispositivo. El pairing queda como compatibilidad
+          // restringida al device_id propio según las políticas actuales.
+          let deviceAccess = {
+            ok: false,
+            error: "No se pudo validar el equipo",
+          };
+          try {
+            const registration = await ensureDeviceSessionRegistered(deviceId);
+            if (!registration?.ok) {
+              throw new Error(
+                registration?.error?.message ||
+                  registration?.error ||
+                  "No se pudo registrar la identidad de este equipo",
+              );
+            }
+            deviceAccess = await validateCurrentDeviceSyncAccess(deviceId);
+          } catch (error) {
+            deviceAccess = {
+              ok: false,
+              error: error?.message || "No se pudo validar el equipo",
+            };
+          }
+          if (cancelled) return;
+          const accountCtx = deviceAccess.context || null;
+          if (!deviceAccess.ok || (isAccountLinkedLocally() && !accountCtx)) {
+            isCloudSyncActive = false;
+            console.warn(
+              "[CloudSync] Cuenta o equipo sin autorización activa; sync pausado",
+              {
+                deviceId: shortCloudSyncId(deviceId),
+                error: deviceAccess.error || null,
+              },
+            );
+            return;
+          }
 
-        if (backupImported) {
-          console.log(
-            "[CloudSync] Detectado backup importado localmente. Subiendo incondicionalmente a la nube...",
-          );
-          isCloudSyncActive = true;
-          const criticalKeys = [
-            "bodega_sales_v1",
-            "bodega_products_v1",
-            "bodega_customers_v1",
-            "bodega_customer_ledger_v1",
-            "bodega_accounts_v2",
-          ];
-          for (const key of criticalKeys) {
-            const localValue = await appForage.getItem(key);
-            if (localValue !== null) {
-              const result = await pushCloudSync(key, localValue);
-              if (!result?.ok) {
-                throw new Error(
-                  result?.error || `Falló la importación de ${key}`,
-                );
+          let pairedMonitorId = null;
+          if (!accountCtx) {
+            const { data: pairing, error: pairingError } = await supabaseCloud
+              .from("device_pairings")
+              .select("monitor_device_id")
+              .eq("primary_device_id", deviceId)
+              .maybeSingle();
+
+            console.info("[CloudSync] Pairing consultado", {
+              deviceId: shortCloudSyncId(deviceId),
+              paired: Boolean(pairing?.monitor_device_id),
+              monitorDeviceId: shortCloudSyncId(pairing?.monitor_device_id),
+              error: pairingError?.message || null,
+            });
+
+            if (pairingError || !pairing?.monitor_device_id) {
+              isCloudSyncActive = false;
+              console.warn(
+                "[CloudSync] Sincronización pausada hasta completar el pairing",
+                {
+                  reason: pairingError?.message || "pairing_sin_monitor",
+                  deviceId: shortCloudSyncId(deviceId),
+                },
+              );
+              if (!globalSubscription) {
+                globalSubscription = supabaseCloud
+                  .channel(`device_pairings:${deviceId}`)
+                  .on(
+                    "postgres_changes",
+                    {
+                      event: "*",
+                      schema: "public",
+                      table: "device_pairings",
+                      filter: `primary_device_id=eq.${deviceId}`,
+                    },
+                    () => {
+                      isInitialized.current = false;
+                      initSync();
+                    },
+                  )
+                  .subscribe();
               }
-              const hash = await quickHash(localValue);
-              localStorage.setItem(_pushHashKey(key), hash);
-              localStorage.setItem(_confirmedPushKey(key), hash);
+              return;
+            }
+            pairedMonitorId = pairing.monitor_device_id;
+          } else {
+            console.info("[CloudSync] Modo cuenta activo", {
+              deviceId: shortCloudSyncId(deviceId),
+              mode: accountCtx.mode,
+              devices: accountCtx.deviceIds.length,
+            });
+          }
+
+          isCloudSyncActive = true;
+          isInitialized.current = true;
+          console.info("[CloudSync] Receptor activo", {
+            deviceId: shortCloudSyncId(deviceId),
+            monitorDeviceId: shortCloudSyncId(pairedMonitorId),
+            accountMode: Boolean(accountCtx),
+          });
+
+          // Sincronizar automáticamente todos los datos del POS a la nube en segundo plano (Patrón Donde Juancho)
+          // En modo cuenta el push va con hash-gating (sin forzar): siembra la
+          // cuenta la primera vez y evita re-subir el catálogo en cada arranque.
+          const startInitialSync = () =>
+            forceSyncAllPOSData(deviceId, !accountCtx)
+              .then((result) => {
+                if (result && !result.ok) {
+                  console.warn(
+                    "[CloudSync] No se completó la sincronización inicial:",
+                    result.error,
+                  );
+                }
+                return result;
+              })
+              .catch((error) => {
+                console.warn(
+                  "[CloudSync] Falló la sincronización inicial:",
+                  error?.message || error,
+                );
+                return { ok: false, error };
+              });
+
+          // ── Pull Inicial / Sincronización de Importación ──
+          // Consultar y fusionar antes de publicar: no se debe subir un snapshot
+          // local anterior que gane LWW solo por tener un timestamp posterior.
+          let initialPull = null;
+          const backupImported =
+            localStorage.getItem("pda_backup_imported_flag") === "true";
+
+          if (backupImported) {
+            // Import remains explicit, but must not bypass a failed read or a
+            // retained remote conflict when confirming upload hashes.
+            initialPull = await pullCloudDocuments(
+              deviceAccess,
+              deviceId,
+              true,
+            );
+            if (cancelled || initialPull.queryFailed) return;
+            // Restored journal failures must not disable the engine: unaffected
+            // keys continue and the retained revisions remain manually retryable.
+            let importIncomplete = initialPull.pending > 0;
+            console.log(
+              "[CloudSync] Detectado backup importado localmente. Subiendo incondicionalmente a la nube...",
+            );
+            isCloudSyncActive = true;
+            const criticalKeys = [
+              "bodega_sales_v1",
+              "bodega_products_v1",
+              "bodega_customers_v1",
+              "bodega_customer_ledger_v1",
+              "bodega_accounts_v2",
+            ];
+            for (const key of criticalKeys) {
+              const physicalKey = toCloudDocId(key);
+              const localValue = await appForage.getItem(physicalKey);
+              if (localValue !== null) {
+                const result = await pushCloudSync(physicalKey, localValue);
+                if (!result?.ok) {
+                  throw new Error(
+                    result?.error || `Falló la importación de ${key}`,
+                  );
+                }
+                if (result.pending) {
+                  importIncomplete = true;
+                  continue;
+                }
+                const hash = await quickHash(localValue);
+                localStorage.setItem(_pushHashKey(physicalKey), hash);
+                localStorage.setItem(_confirmedPushKey(physicalKey), hash);
+              }
+            }
+            if (!importIncomplete) {
+              localStorage.setItem("cloud_sync_ts", new Date().toISOString());
+              localStorage.removeItem("pda_backup_imported_flag");
+              console.info(
+                "[CloudSync] Sincronización de importación completada.",
+              );
+            } else {
+              console.info(
+                "[CloudSync] Importación parcial; pendientes conservados para reintento.",
+              );
+            }
+          } else {
+            if (accountCtx) {
+              // Discover valid registry versions; invalid siblings stay pending.
+              const registry = await pullBusinessRegistry();
+              if (
+                !registry.ok &&
+                registry.message !== "No hay registro en la nube"
+              ) {
+                throw new Error(registry.message);
+              }
+            }
+            initialPull = await pullCloudDocuments(deviceAccess, deviceId);
+            if (cancelled || initialPull.queryFailed) return;
+            // A transient query failure keeps the engine available for the next
+            // periodic/manual retry; snapshots stay gated until coverage is complete.
+            // Invalid docs are durable pending, not a fatal initialization error.
+            // Affected snapshot keys are blocked by pushCloudSync; other keys proceed.
+          }
+
+          if (backupImported && accountCtx) {
+            initialPull = await pullCloudDocuments(
+              deviceAccess,
+              deviceId,
+              true,
+            );
+            if (cancelled || initialPull.queryFailed) return;
+          }
+
+          if (!backupImported) {
+            const verifyAccess =
+              await validateCurrentDeviceSyncAccess(deviceId);
+            if (!verifyAccess.ok)
+              throw new Error(
+                verifyAccess.error || "Equipo sin autorización activa",
+              );
+            if (cancelled) return;
+            const initialResult = await startInitialSync();
+            if (!initialResult?.ok) {
+              throw new Error(
+                initialResult?.error?.message ||
+                  initialResult?.error ||
+                  "Sincronización inicial incompleta",
+              );
             }
           }
-          localStorage.setItem("cloud_sync_ts", new Date().toISOString());
-          localStorage.removeItem("pda_backup_imported_flag");
-          console.log(
-            "[CloudSync] Sincronización incondicional de importación completada.",
-          );
-        } else if (accountCtx) {
-          // ── PULL MULTI-DISPOSITIVO (modo cuenta) ─────────────
-          // Trae los documentos de todos los dispositivos vinculados
-          // (propio + hermanos). Watermark por cuenta: solo lo nuevo
-          // desde el último pull (egress). La corrección no depende
-          // del watermark: _applyFromCloud ignora lo que no sea más
-          // nuevo que la metadata local por documento.
-          const wmKey = `cloud_pull_watermark_${accountCtx.userId}`;
-          const watermark = localStorage.getItem(wmKey);
-          let pullQuery = supabaseCloud
-            .from("sync_documents")
-            .select("collection, doc_id, data, updated_at, device_id")
-            .in("device_id", accountCtx.deviceIds)
-            .in("collection", ["store", "local"])
-            .order("updated_at", { ascending: true })
-            .limit(2000);
-          if (watermark) pullQuery = pullQuery.gt("updated_at", watermark);
 
-          const { data: initialDocs, error: docsError } = await pullQuery;
+          // ── Auto-recuperación: Purgar/subir datos locales que no llegaron a enviarse debido al bug anterior ──
+          try {
+            const recoveryAccess =
+              await validateCurrentDeviceSyncAccess(deviceId);
+            if (!recoveryAccess.ok || !isCloudSyncActive)
+              throw new Error(
+                recoveryAccess.error || "La sincronización no está autorizada",
+              );
+            const criticalKeys = [
+              "bodega_sales_v1",
+              "bodega_products_v1",
+              "bodega_customers_v1",
+              "bodega_customer_ledger_v1",
+              "bodega_accounts_v2",
+            ];
+            // Confirmed hashes are only written after a successful own push.
 
-          if (docsError) throw docsError;
-          docs = initialDocs || [];
+            for (const key of criticalKeys) {
+              const physicalKey = toCloudDocId(key);
+              const localValue = await appForage.getItem(physicalKey);
+              if (localValue == null) continue;
 
-          let applyFailures = 0;
-          if (docs.length > 0) {
-            for (const doc of docs) {
-              // FASE 1 + SEC-002 + V2.1.50: documentos de sedes conocidas
-              // (o globales); los legacy sin prefijo se ignoran.
-              if (!isDocForKnownBusiness(doc.doc_id)) continue;
-              const { key } = parseCloudDocId(doc.doc_id);
-              if (!isSupervisorSyncKey(key)) {
-                console.info(`[CloudSync] Clave obsoleta omitida: ${doc.doc_id}`);
+              const hashKey = _pushHashKey(physicalKey);
+              const confirmedHashKey = _confirmedPushHashKey(physicalKey);
+              const currentHash = await quickHash(localValue);
+              if (localStorage.getItem(confirmedHashKey) === currentHash) {
+                localStorage.setItem(hashKey, currentHash);
                 continue;
               }
-              try {
-                await _applyFromCloud(
-                  doc.doc_id,
-                  doc.collection,
-                  doc.data,
-                  doc.device_id,
-                );
-              } catch (e) {
-                applyFailures++;
-                console.warn(
-                  `[CloudSync] Error aplicando doc ${doc.doc_id}:`,
-                  e,
+
+              // Subimos los datos locales a la base de datos para sincronizar el historial.
+              // El hash solo se confirma si el upsert fue aceptado.
+              const result = await pushCloudSync(physicalKey, localValue);
+              // Un push SKIPPED (p. ej. "Cambio remoto en aplicación" mientras
+              // el pull aplica documentos) no es un fallo: el ciclo periódico,
+              // online o de visibilidad lo reintentará. Marcar el hash como
+              // confirmado sin upsert taparía el dato pendiente.
+              if (!result?.ok && !result?.skipped) {
+                throw new Error(
+                  result?.error || `Falló la recuperación de ${key}`,
                 );
               }
+              if (result?.ok && !result?.skipped) {
+                localStorage.setItem(hashKey, currentHash);
+                localStorage.setItem(confirmedHashKey, currentHash);
+              }
             }
-            console.log(
-              `[CloudSync] Pull cuenta: ${docs.length} documentos de ${accountCtx.deviceIds.length} dispositivos.`,
+          } catch (error) {
+            console.warn(
+              "[CloudSync] No se pudo recuperar un push pendiente:",
+              error?.message,
             );
+            throw error;
           }
-          if (applyFailures > 0) {
-            throw new Error(
-              `Falló la aplicación de ${applyFailures} documento(s); se conservará el watermark para reintentar`,
-            );
-          }
-          const verifyAccess = await validateCurrentDeviceSyncAccess(deviceId);
-          if (!verifyAccess.ok) throw new Error(verifyAccess.error || "Equipo sin autorización activa");
-          const initialResult = await startInitialSync();
-          if (!initialResult?.ok) {
-            throw new Error(initialResult?.error?.message || initialResult?.error || "Sincronización inicial incompleta");
-          }
-        } else {
-          // Pairing legacy puede recuperar documentos propios; RLS y este
-          // filtro impiden consultar datos de otros equipos.
-          const { data: initialDocs, error: docsError } = await supabaseCloud
-            .from("sync_documents")
-            .select("collection, doc_id, data, updated_at, device_id")
-            .eq("device_id", deviceId)
-            .in("collection", ["store", "local"]);
-          if (docsError) throw docsError;
-          docs = initialDocs || [];
 
-          let applyFailures = 0;
-          for (const doc of docs) {
-            if (!isDocForKnownBusiness(doc.doc_id)) continue;
-            try {
-              await _applyFromCloud(
-                doc.doc_id,
-                doc.collection,
-                doc.data,
-                doc.device_id,
-              );
-            } catch (error) {
-              applyFailures++;
-              console.warn(
-                `[CloudSync] Error aplicando doc legacy ${doc.doc_id}:`,
-                error,
-              );
-            }
+          if (cancelled) return;
+          if (initialPull)
+            publishCloudPullStatus(deviceId, {
+              ...initialPull,
+              status: initialPull.pending ? "partial" : "idle",
+            });
+          // Realtime es solo una señal para arrancar el mismo pull autenticado y
+          // validado por RLS; nunca aplicamos el payload del socket directamente.
+          // Cuenta/membresía limita las filas visibles en Supabase y se vuelve a
+          // validar antes de sincronizar. Legacy/pairing no amplía sus permisos.
+          if (accountCtx && !realtimeChannel) {
+            realtimeChannel = supabaseCloud
+              .channel(`cloud-sync:${deviceId}`)
+              .on(
+                "postgres_changes",
+                {
+                  event: "*",
+                  schema: "public",
+                  table: "sync_documents",
+                },
+                (change) => {
+                  const row = change?.new;
+                  if (!row || row.device_id === deviceId) return;
+                  if (!accountCtx.deviceIds.includes(row.device_id)) return;
+                  if (!isDocForKnownBusiness(row.doc_id)) return;
+                  const { key } = parseCloudDocId(row.doc_id);
+                  const isRate =
+                    row.collection === "local" && LOCAL_KEYS.includes(key);
+                  const isInventory =
+                    row.collection === "store" &&
+                    ["bodega_products_v1", "bodega_stock_v1"].includes(key);
+                  if (isRate || isInventory) scheduleRealtimePull();
+                },
+              )
+              .subscribe((status) => {
+                if (cancelled) return;
+                if (status === "SUBSCRIBED") {
+                  // Recupera cambios que ocurrieron mientras la conexión estaba caída.
+                  scheduleRealtimePull();
+                } else if (
+                  status === "CHANNEL_ERROR" ||
+                  status === "TIMED_OUT"
+                ) {
+                  console.warn(
+                    "[CloudSync] Canal Realtime no disponible; sigue activo el sondeo de respaldo",
+                  );
+                }
+              });
           }
-          if (applyFailures > 0) {
-            throw new Error(
-              `Falló la aplicación de ${applyFailures} documento(s) legacy; se reintentará`,
-            );
-          }
+        } catch (err) {
+          if (cancelled) return;
+          console.error("[CloudSync] Fallo en inicialización:", err);
+          publishCloudPullStatus(deviceId, {
+            ...getCloudPullStatus(deviceId),
+            status: "failed",
+          });
+          isInitialized.current = false;
+          isCloudSyncActive = false;
         }
-
-        if (backupImported && accountCtx) {
-          const pullDocs = async () => {
-            const { data, error } = await supabaseCloud
-              .from("sync_documents")
-              .select("collection, doc_id, data, updated_at, device_id")
-              .in("device_id", accountCtx.deviceIds)
-              .in("collection", ["store", "local"])
-              .order("updated_at", { ascending: true })
-              .limit(2000);
-            if (error) throw error;
-            return data || [];
-          };
-          docs = await pullDocs();
-          for (const doc of docs) {
-            if (!isDocForKnownBusiness(doc.doc_id)) continue;
-            const { key } = parseCloudDocId(doc.doc_id);
-            if (!isSupervisorSyncKey(key)) continue;
-            await _applyFromCloud(doc.doc_id, doc.collection, doc.data, doc.device_id);
-          }
-          const ownerAccess = await validateCurrentDeviceSyncAccess(deviceId);
-          if (!ownerAccess.ok) throw new Error(ownerAccess.error || "Equipo sin autorización activa");
-        }
-
-        if (!backupImported) {
-          const initialResult = await startInitialSync();
-          if (!initialResult?.ok) {
-            throw new Error(initialResult?.error?.message || initialResult?.error || "Sincronización inicial incompleta");
-          }
-        }
-
-        // ── Auto-recuperación: Purgar/subir datos locales que no llegaron a enviarse debido al bug anterior ──
-        try {
-          const recoveryAccess = await validateCurrentDeviceSyncAccess(deviceId);
-          if (!recoveryAccess.ok || !isCloudSyncActive) throw new Error(recoveryAccess.error || "La sincronización no está autorizada");
-          const criticalKeys = [
-            "bodega_sales_v1",
-            "bodega_products_v1",
-            "bodega_customers_v1",
-            "bodega_customer_ledger_v1",
-            "bodega_accounts_v2",
-          ];
-          // FASE 1: los doc_id en la nube van namespaced; comparar contra eso.
-          // Solo documentos del dispositivo propio cuentan como confirmación:
-          // el doc de un equipo hermano no cubre el push de este dispositivo.
-          const existingCloudKeys = new Set(
-            (docs || [])
-              .filter((d) => !d.device_id || d.device_id === deviceId)
-              .map((d) => d.doc_id),
-          );
-
-          for (const key of criticalKeys) {
-            const localValue = await appForage.getItem(key);
-            if (localValue == null) continue;
-
-            const hashKey = _pushHashKey(key);
-            const confirmedHashKey = _confirmedPushHashKey(key);
-            const currentHash = await quickHash(localValue);
-            if (
-              existingCloudKeys.has(toCloudDocId(key)) &&
-              localStorage.getItem(confirmedHashKey) === currentHash
-            ) {
-              localStorage.setItem(hashKey, currentHash);
-              continue;
-            }
-
-            // Subimos los datos locales a la base de datos para sincronizar el historial.
-            // El hash solo se confirma si el upsert fue aceptado.
-            const result = await pushCloudSync(key, localValue);
-            // Un push SKIPPED (p. ej. "Cambio remoto en aplicación" mientras
-            // el pull aplica documentos) no es un fallo: el ciclo periódico,
-            // online o de visibilidad lo reintentará. Marcar el hash como
-            // confirmado sin upsert taparía el dato pendiente.
-            if (!result?.ok && !result?.skipped) {
-              throw new Error(
-                result?.error || `Falló la recuperación de ${key}`,
-              );
-            }
-            if (result?.ok && !result?.skipped) {
-              localStorage.setItem(hashKey, currentHash);
-              localStorage.setItem(confirmedHashKey, currentHash);
-            }
-          }
-        } catch (error) {
-          console.warn(
-            "[CloudSync] No se pudo recuperar un push pendiente:",
-            error?.message,
-          );
-          throw error;
-        }
-
-        // ── Suscripción WebSocket Realtime ─────────────────────────
-        // EGRESS-FIX (RC3): ELIMINADA la auto-suscripción a `sync:${deviceId}`.
-        // El dispositivo principal es el ÚNICO escritor de su propio device_id,
-        // así que ese canal solo le devolvía el ECO de sus propias escrituras
-        // (egress puro de Realtime, sin valor). El monitor del dueño mantiene su
-        // propia suscripción independiente en useMonitorSync (canal
-        // `monitor:${pairedDeviceId}`), por lo que sigue recibiendo cambios en
-        // vivo. El estado inicial se obtiene con el pull por PostgREST de arriba.
-      } catch (err) {
-        console.error("[CloudSync] Fallo en inicialización:", err);
-        isInitialized.current = false;
-        isCloudSyncActive = false;
-      }
+      }).finally(() => {
+        initializationScheduled = false;
+      });
     };
 
     initSync().catch((error) => {
@@ -2090,21 +2285,23 @@ export function useCloudSync(deviceId) {
           "bodega_accounts_v2",
         ];
         for (const key of criticalKeys) {
-          const localValue = await appForage.getItem(key);
+          const physicalKey = toCloudDocId(key);
+          const localValue = await appForage.getItem(physicalKey);
           if (localValue == null) continue;
 
-          const hashKey = _pushHashKey(key);
-          const confirmedHashKey = _confirmedPushHashKey(key);
+          const hashKey = _pushHashKey(physicalKey);
+          const confirmedHashKey = _confirmedPushHashKey(physicalKey);
           const currentHash = await quickHash(localValue);
           if (localStorage.getItem(confirmedHashKey) === currentHash) {
             localStorage.setItem(hashKey, currentHash);
             continue;
           }
 
-          const result = await pushCloudSync(key, localValue);
+          const result = await pushCloudSync(physicalKey, localValue);
           if (!result?.ok) {
             throw new Error(result?.error || `Falló el reintento de ${key}`);
           }
+          if (result.pending) continue;
           localStorage.setItem(hashKey, currentHash);
           localStorage.setItem(confirmedHashKey, currentHash);
         }
@@ -2119,7 +2316,24 @@ export function useCloudSync(deviceId) {
       }
     };
 
-    window.addEventListener("online", forcePushLocalData);
+    const handleOnline = () => {
+      if (cancelled) return;
+      if (!isCloudSyncActive) {
+        // Network may have failed while initial auth/membership was being
+        // checked. Re-run the full fail-closed initialization; do not resume
+        // writes merely because navigator/browser reports online.
+        isInitialized.current = false;
+        initSync().catch((error) => {
+          isInitialized.current = false;
+          isCloudSyncActive = false;
+          console.error("[CloudSync] Fallo al reanudar tras conexión:", error);
+        });
+        return;
+      }
+      forcePushLocalData();
+    };
+
+    window.addEventListener("online", handleOnline);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // AUTO-SYNC PERIÓDICO (2026-10-01): sincronización completa (pull+push)
@@ -2131,7 +2345,7 @@ export function useCloudSync(deviceId) {
         try {
           const access = await validateCurrentDeviceSyncAccess(deviceId);
           if (!access.ok || !isCloudSyncActive) return;
-          const res = await syncNow();
+          const res = await syncNow({ manual: false });
           if (res.ok && (res.pulled > 0 || res.pushed > 0)) {
             console.log(`[AutoSync] Periódico: ${res.message}`);
           }
@@ -2143,8 +2357,22 @@ export function useCloudSync(deviceId) {
     );
 
     return () => {
+      cancelled = true;
+      if (realtimePullTimer) clearTimeout(realtimePullTimer);
+      realtimePullTimer = null;
+      if (realtimeChannel) {
+        const channelToRemove = realtimeChannel;
+        realtimeChannel = null;
+        if (globalSubscription === channelToRemove) globalSubscription = null;
+        try {
+          supabaseCloud.removeChannel(channelToRemove).catch(() => {});
+        } catch {
+          /* teardown should not block effect cleanup */
+        }
+      }
       isCloudSyncActive = false;
-      window.removeEventListener("online", forcePushLocalData);
+      isInitialized.current = false;
+      window.removeEventListener("online", handleOnline);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearInterval(periodicSync);
 

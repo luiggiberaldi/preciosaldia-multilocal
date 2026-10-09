@@ -28,6 +28,7 @@ vi.mock('localforage', () => {
         removeItem: async (k) => { _lfStore.delete(k); },
         clear: async () => { _lfStore.clear(); },
         createInstance: () => ({
+            keys: async () => [],
             getItem: async () => null,
             setItem: async () => {},
             removeItem: async () => {},

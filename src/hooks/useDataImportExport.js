@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import { storageService } from '../utils/storageService';
-import localforage from 'localforage';
 import { showToast } from '../components/Toast';
-import { IDB_KEYS, LS_KEYS, PROTECTED_KEYS } from '../config/backupKeys';
-import { validateBackupJson, applyBackupToStorage, clearAppKeysForRestore } from '../utils/backupRestoreService';
+import { collectLocalBackupPayload, validateBackupJson, applyBackupToStorage, clearAppKeysForRestore } from '../utils/backupRestoreService';
 import { isCloudSyncActiveNow } from './useCloudSync';
-import { isDynamicBackupKey } from '../config/backupKeys';
-import { appForage } from '../utils/appForage';
+import { restoreCloudPullJournal } from '../services/cloudPullService';
 
 /**
  * Hook that encapsulates JSON import/export and delete-all-data logic.
@@ -51,35 +48,9 @@ export function useDataImportExport({
             setImportStatus('loading');
             setStatusMessage('Generando backup completo...');
 
-            // HOOK-041: usa las listas canónicas de backupKeys.js.
-            const idbData = {};
-            for (const key of IDB_KEYS) {
-                const data = await storageService.getItem(key, null);
-                if (data !== null) idbData[key] = data;
-            }
-            // NÓMINA v1: keys dinámicas por prefijo (consumos/períodos/liquidaciones).
-            try {
-                const allKeys = await appForage.keys();
-                for (const key of allKeys) {
-                    if (isDynamicBackupKey(key) && !(key in idbData)) {
-                        const data = await appForage.getItem(key, null);
-                        if (data !== null && data !== undefined) idbData[key] = data;
-                    }
-                }
-            } catch { /* sin dinámicas */ }
-
-            const lsData = {};
-            for (const key of LS_KEYS) {
-                const val = localStorage.getItem(key);
-                if (val !== null) lsData[key] = val;
-            }
-
-            const backupData = {
-                timestamp: new Date().toISOString(),
-                version: '2.0',
-                appName: 'TasasAlDia_Bodegas',
-                data: { idb: idbData, ls: lsData }
-            };
+            // Same collector for file, cloud and automatic backups, including
+            // durable pending/resolved sync evidence (without sessions/cursors).
+            const backupData = await collectLocalBackupPayload();
 
             const blob = new Blob([JSON.stringify(backupData)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -150,6 +121,12 @@ export function useDataImportExport({
         setRestoreConfirm(null);
         try {
             setImportStatus('loading');
+            validateBackupJson(json);
+            // Confirm evidence persistence before destructive operational cleanup.
+            // applyBackupToStorage repeats this additive step idempotently.
+            if (json.version === '2.0' && json.data.cloudPullJournal) {
+                await restoreCloudPullJournal(json.data.cloudPullJournal);
+            }
             // ── FASE 1: LIMPIEZA SELECTIVA (HOOK-025) ─────────────────────────
             // HOOK-025: NO usar `localforage.clear()` — borraría flags críticos
             // como `bodega_autobackup_v1`. La limpieza ahora

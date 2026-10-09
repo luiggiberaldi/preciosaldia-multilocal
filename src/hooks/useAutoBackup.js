@@ -1,10 +1,10 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { storageService } from '../utils/storageService';
 import { supabaseCloud } from '../config/supabaseCloud';
-import { IDB_KEYS, LS_KEYS } from '../config/backupKeys';
+import { contentHash } from '../utils/contentHash';
 import { compressString, isCompressionSupported } from '../utils/compression';
 import { uploadToGoogleDrive } from '../utils/driveBackupUploader';
-import { validateBackupJson, applyBackupToStorage } from '../utils/backupRestoreService';
+import { collectLocalBackupPayload, countBackupRecords, validateBackupJson, applyBackupToStorage } from '../utils/backupRestoreService';
 import {
     isDeviceBackendDown,
     markDeviceBackendDown,
@@ -41,16 +41,6 @@ async function markBackupRequestFailed(requestId, reason) {
     console.warn(`[AutoBackup] Respaldo ${requestId} marcado como fallido: ${shortReason}`);
 }
 
-/** Hash ligero para detectar cambios sin comparar objetos enteros */
-function quickHash(obj) {
-    const str = JSON.stringify(obj) ?? '';
-    let h = 0;
-    for (let i = 0; i < Math.min(str.length, 5000); i++) {
-        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-    }
-    return `${str.length}_${h >>> 0}`;
-}
-
 /** Obtiene y sanitiza el nombre del negocio para el nombre del archivo en Drive */
 function getClientName(deviceId) {
     const raw = localStorage.getItem('business_name')
@@ -85,31 +75,11 @@ export function useAutoBackup(isPremium, deviceId) {
     const performBackup = useCallback(async (forceUpload = false) => {
         const { isPremium: premium, deviceId: devId } = configRef.current;
         try {
-                // ── Recolectar IndexedDB ────────────────────────────────
-                const idbData = {};
-                let hasData = false;
-                for (const key of IDB_KEYS) {
-                    const val = await storageService.getItem(key, null);
-                    if (val !== null) { idbData[key] = val; hasData = true; }
-                }
-
-                // ── Recolectar localStorage ────────────────────────────
-                const lsData = {};
-                for (const key of LS_KEYS) {
-                    const val = localStorage.getItem(key);
-                    if (val !== null) { lsData[key] = val; hasData = true; }
-                }
-
-                if (!hasData && !forceUpload) return;
-
-                // ── Backup completo (formato v2.0) ────────────────────
-                const fullBackup = {
-                    timestamp: new Date().toISOString(),
-                    version: '2.0',
-                    appName: 'TasasAlDia_Bodegas',
-                    device: navigator.userAgent?.substring(0, 80),
-                    data: { idb: idbData, ls: lsData }
-                };
+                // Shared v2.0 collector also covers dynamic keys and the journal.
+                const fullBackup = await collectLocalBackupPayload();
+                fullBackup.device = navigator.userAgent?.substring(0, 80);
+                const idbData = fullBackup.data.idb;
+                if (!countBackupRecords(fullBackup) && !forceUpload) return;
 
                 // Guardar copia local
                 await storageService.setItem(BACKUP_KEY, fullBackup);
@@ -128,7 +98,9 @@ export function useAutoBackup(isPremium, deviceId) {
                     // Si no es premium y ya respaldó hoy, omitir para evitar peticiones redundantes
                     if (!premium && lastDailyBackup === todayStr && !forceUpload) return;
 
-                    const currentHash = quickHash(idbData);
+                    // A journal-only change must trigger backup too; inspect all
+                    // bytes, not just the first 5 KB of operational data.
+                    const currentHash = contentHash(fullBackup.data);
                     const lastHash = localStorage.getItem(LAST_UPLOAD_HASH_KEY);
 
                     // forceUpload=true omite la verificación de hash (solicitud manual)

@@ -7,7 +7,7 @@ import { validateSupervisorSyncDocument } from '../services/supervisorContracts'
 import { ensureSupervisorSession } from '../services/supervisorAuth';
 import { getAccountSyncContext } from '../services/cloudAccount';
 // QUOTA-001/002: fusión delta al recibir (stock liviano, ventas podadas).
-import { applyStockMapDelta, isSalesDeltaKey, mergeSales, physicalDocId, salesDeltaTickets } from '../utils/syncDelta';
+import { applyStockMapDelta, isSalesDeltaKey, mergeSales, physicalDocId, preserveLocalStock, salesDeltaTickets } from '../utils/syncDelta';
 import {
     getSyncMetadataKey,
     isNewerSyncDocument,
@@ -195,6 +195,13 @@ export function useMonitorSync(deviceIdsInput, { excludeDeviceId = null, enabled
                 const merged = mergeSales(current, salesDeltaTickets(envelope.payload));
                 await localforage.setItem(salesDocId, merged);
                 window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_sales_v1', source: 'remote' } }));
+            } else if (key === 'bodega_products_v1' && Array.isArray(envelope.payload)) {
+                // El catálogo del primario trae su stock absoluto: conservar el stock local.
+                // Los cambios de stock llegan por bodega_stock_v1 como deltas; si el catálogo
+                // lo pisara, esas ventas se sumarían dos veces.
+                const current = await localforage.getItem(docId);
+                await localforage.setItem(docId, preserveLocalStock(current, envelope.payload));
+                window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key, source: 'remote' } }));
             } else if (collection === 'local') {
                 const stringPayload = typeof envelope.payload === 'string'
                     ? envelope.payload

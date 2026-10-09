@@ -22,6 +22,7 @@ import { appForage } from './appForage';
 import { IDB_KEYS, LS_KEYS, PROTECTED_KEYS, isDynamicBackupKey } from '../config/backupKeys';
 import { decompressString, isCompressionSupported } from './compression';
 import { runWithoutEco } from './syncFlags';
+import { exportCloudPullJournal, validateCloudPullJournalBackup, restoreCloudPullJournal } from '../services/cloudPullService';
 
 export const BACKUP_FORMAT_VERSION = '2.0';
 
@@ -77,7 +78,7 @@ export async function collectLocalBackupPayload({ appName = 'TasasAlDia_Bodegas'
         timestamp: new Date().toISOString(),
         version: BACKUP_FORMAT_VERSION,
         appName,
-        data: { idb: idbData, ls: lsData },
+        data: { idb: idbData, ls: lsData, cloudPullJournal: await exportCloudPullJournal() },
     };
 }
 
@@ -102,6 +103,7 @@ export function validateBackupJson(json) {
         if (!idb || typeof idb !== 'object' || Array.isArray(idb)) {
             throw new Error('Formato invalido: el backup v2.0 no contiene datos de la aplicacion (data.idb).');
         }
+        if (Object.hasOwn(json.data, 'cloudPullJournal')) validateCloudPullJournalBackup(json.data.cloudPullJournal);
         if (countBackupRecords(json) === 0) {
             throw new Error('El backup esta vacio: no contiene inventario, ventas ni configuracion.');
         }
@@ -169,6 +171,8 @@ export async function decompressCloudBackup(cloudBackup) {
  */
 export async function applyBackupToStorage(backup, { writeMode = 'storageService' } = {}) {
     const isV2 = backup.version === BACKUP_FORMAT_VERSION && backup.data?.idb;
+    // Validate the extension before any operational writes, including direct callers.
+    if (isV2 && Object.hasOwn(backup.data, 'cloudPullJournal')) validateCloudPullJournalBackup(backup.data.cloudPullJournal);
     const writeIdb = async (key, value) => {
         if (writeMode === 'direct') {
             const parsed = typeof value === 'string' ? safeParse(value) : value;
@@ -183,6 +187,10 @@ export async function applyBackupToStorage(backup, { writeMode = 'storageService
     const doApply = async () => {
         const applied = { idbKeys: [], lsKeys: [] };
         if (isV2) {
+            // Evidence is additive and durable before restoring operational data.
+            if (Object.hasOwn(backup.data, 'cloudPullJournal')) {
+                applied.cloudPullJournal = await restoreCloudPullJournal(backup.data.cloudPullJournal);
+            }
             for (const [key, value] of Object.entries(backup.data.idb)) {
                 // M-21 (2026-10-01): allowlist — un backup manipulado no puede
                 // envenenar claves fuera del catálogo canónico (p. ej. sesión o PINs).
@@ -249,6 +257,14 @@ export async function clearAppKeysForRestore() {
         localStorage.removeItem(key);
         removedLs.push(key);
     }
+    // Stock recibido y último visto por fuente describen el stock anterior: al
+    // restaurar deben reiniciarse para no restar/sumar cambios viejos.
+    for (const key of Object.keys(localStorage)) {
+        if (key.startsWith('pda_stock_received_') || key.startsWith('pda_stock_lastremote_')) {
+            localStorage.removeItem(key);
+            removedLs.push(key);
+        }
+    }
     return { removedIdb, removedLs };
 }
 
@@ -265,7 +281,9 @@ export function countBackupRecords(backup) {
         ? Object.keys(backup.data.idb).length : 0;
     const lsCount = backup.data.ls && typeof backup.data.ls === 'object'
         ? Object.keys(backup.data.ls).length : 0;
-    return idbCount + lsCount;
+    const journalCount = Array.isArray(backup.data.cloudPullJournal?.entries)
+        ? backup.data.cloudPullJournal.entries.length : 0;
+    return idbCount + lsCount + journalCount;
 }
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────

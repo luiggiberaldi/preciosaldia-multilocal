@@ -1,34 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Check, Store } from 'lucide-react';
-import { useNegociosStore } from '../hooks/store/useNegociosStore';
 
 /**
  * BusinessSetupOverlay.jsx — Configuración del primer negocio (flujo de primer arranque).
  *
  * Orden del flujo (multi-local): Términos → PIN maestro del dueño →
- * nombrar el primer negocio → app. Se muestra una sola vez por instalación
- * (flag `pda_business_config_done`); las instalaciones que ya aceptaron los
- * términos con el flujo anterior no lo ven de nuevo (migración en App.jsx).
- *
- * El nombre va al registro del negocio activo (fuente de verdad) y el correo
- * se guarda global como correo del dueño (las novedades son de la app, no
- * del negocio).
+ * PINs iniciales → app. Los nombres de sede se conservan desde el registro
+ * existente y se administran después desde el selector de negocios.
  */
 export default function BusinessSetupOverlay({ onDone }) {
-    const [businessName, setBusinessName] = useState('');
-    const [ownerEmail, setOwnerEmail] = useState('');
-
     const handleFinish = () => {
-        const trimmedName = businessName.trim();
-        const trimmedEmail = ownerEmail.trim();
-        // El nombre va al registro del negocio activo (fuente de verdad);
-        // el espejo fiscal business_* se refresca solo vía syncFiscalMirror.
-        try {
-            const { negocioActivoId, actualizarNegocio } = useNegociosStore.getState();
-            if (negocioActivoId && trimmedName) actualizarNegocio(negocioActivoId, { nombre: trimmedName });
-        } catch { /* boot aún no corrió: el espejo queda como fallback */ }
-        localStorage.setItem('business_name', trimmedName); // espejo fiscal
-        localStorage.setItem('marketing_email', trimmedEmail); // correo del dueño (global)
         localStorage.setItem('pda_business_config_done', 'true');
         if (onDone) onDone();
     };
@@ -51,44 +32,16 @@ export default function BusinessSetupOverlay({ onDone }) {
                 {/* Cuerpo */}
                 <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
                     <div className="text-center max-w-md mx-auto mb-2">
-                        <h3 className="font-display text-3xl text-surface-700 tracking-tight mb-2">¡Bienvenido a Precios al Día!</h3>
+                        <h3 className="font-display text-3xl text-surface-700 tracking-tight mb-2">¡Listo para comenzar!</h3>
                         <p className="text-xs text-surface-500 font-medium leading-relaxed">
-                            Este será tu primer negocio en PreciosAlDía. Podrás agregar más negocios después
-                            desde el selector en el encabezado; los datos de cada uno se mantienen totalmente separados.
-                            Ingresa los siguientes datos para empezar.
+                            Tus sedes existentes se mantienen como están. El dueño puede administrar sus nombres, usuarios y permisos desde la aplicación.
                         </p>
                     </div>
 
-                    <div className="space-y-4 max-w-md mx-auto">
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] uppercase font-bold text-surface-500 block">
-                                Nombre de tu Negocio *
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="Ej: Bodega Don José, Inversiones Rojas"
-                                value={businessName}
-                                onChange={e => setBusinessName(e.target.value)}
-                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand/30 transition-all font-medium"
-                                autoFocus
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] uppercase font-bold text-surface-500 block">
-                                Correo del Dueño (Opcional)
-                            </label>
-                            <input
-                                type="email"
-                                placeholder="Ej: contacto@minegocio.com"
-                                value={ownerEmail}
-                                onChange={e => setOwnerEmail(e.target.value)}
-                                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand/30 transition-all font-medium"
-                            />
-                            <p className="text-[10px] text-surface-400 font-medium leading-tight">
-                                Lo usaremos para mantenerte al tanto de actualizaciones y promociones de PreciosAlDía.
-                            </p>
-                        </div>
+                    <div className="max-w-md mx-auto rounded-2xl border border-surface-200 dark:border-surface-700 bg-white/70 dark:bg-slate-900/40 px-5 py-4">
+                        <p className="text-sm text-surface-600 dark:text-surface-300 text-center leading-relaxed">
+                            No necesitas volver a escribir el nombre de tu sede ni registrar un correo para empezar.
+                        </p>
                     </div>
                 </div>
 
@@ -96,8 +49,7 @@ export default function BusinessSetupOverlay({ onDone }) {
                 <div className="px-6 py-4 border-t border-surface-200 dark:border-surface-700 bg-surface-200 shrink-0">
                     <button
                         onClick={handleFinish}
-                        disabled={!businessName.trim()}
-                        className={`btn w-full ${businessName.trim() ? 'btn-primary' : 'bg-surface-300 dark:bg-surface-700 text-surface-500 dark:text-surface-400 cursor-not-allowed'} shadow-tone-md`}
+                        className="btn btn-primary w-full shadow-tone-md"
                     >
                         <Check size={20} strokeWidth={2.5} />
                         <span>Finalizar Registro</span>

@@ -21,7 +21,7 @@
 // Datos de prueba
 //──────────────────────────────────────────────────────────────────────────
 
-const DEVICE_ID = "PDA-V2-E2ECHECKOUT0000000000000000000000";
+const DEVICE_ID = "PDA-V2-E2EC0EC0000000000000000000000000";
 const RATE = 40; // Bs por USD — determinista para todas las aserciones
 
 const TEST_PRODUCTS = [
@@ -151,8 +151,8 @@ export const SEED_LOCALSTORAGE_SNIPPET = `
 (function __seedLocalStorage() {
     // Override de device_id para escenarios multi-dispositivo (window.__e2eDeviceId
     // lo inyecta el spec ANTES de este snippet vía un addInitScript previo). Si no
-    // hay override, queda el ID por defecto. Debe ser hex válido: el fingerprint
-    // real (SEC-008) solo lo adopta por TOFU si coincide con el formato canónico.
+    // hay override, queda el ID por defecto. Debe tener formato legacy hex válido:
+    // F1 conserva la identidad sembrada, sin recalcular fingerprint ni rotarla.
     const __deviceOverride = (typeof window !== 'undefined' && window.__e2eDeviceId) || null;
     const EFFECTIVE_DEVICE_ID = __deviceOverride || ${JSON.stringify(DEVICE_ID)};
     const LICENSE_CACHE = ${JSON.stringify({
@@ -172,11 +172,9 @@ export const SEED_LOCALSTORAGE_SNIPPET = `
     // Licencia: pda_pro_activated + pda_account_linked conceden premium en
     // checkLicense (useSecurity) sin red — flujo legítimo de un equipo ya
     // activado por CloudGate. La caché respalda el fallback offline.
-    // pda_device_id: SEC-008 verifica contra el fingerprint real; si difiere,
-    // verifyStoredFingerprint hace TOFU (sin ancla previa + continuidad de
-    // instalación) y re-fija el ID — la UI nunca se bloquea. En multi-dispositivo
-    // el override sí es hex canónico: TOFU lo adopta tal cual (mismo fingerprint
-    // de UA en ambos contextos, IDs distintos → cada equipo conserva su identidad).
+    // pda_device_id: fixture legacy con formato hex válido. F1 conserva el ID
+    // existente sin recalcular fingerprint ni sustituirlo. En multi-dispositivo
+    // cada override es canónico y permanece igual tras recarga/cambio de sede.
     localStorage.setItem('pda_device_id', EFFECTIVE_DEVICE_ID);
     // Proyecto sintético requerido por el CloudGate: evita ir a licencia/directorio.
     // Las llamadas de red se interceptan antes de llegar a cualquier servicio externo.

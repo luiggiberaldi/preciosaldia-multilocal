@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { supabase } from '../core/supabaseClient';
 import { verifyLicenseToken } from '../security/tokenCrypto';
-import { generateFingerprint, verifyStoredFingerprint, seedFingerprintAnchor } from '../security/deviceFingerprint';
+import { getOrCreateInstallationId, verifyInstallationIdentity } from '../security/installationIdentity';
 import { useLicenseMonitoring } from './useLicenseMonitoring';
 import { LICENSE_POLICY } from '../utils/securityConstants';
 import { isAccountLinkedLocally } from '../services/cloudAccount';
@@ -49,6 +49,8 @@ function useSecurityState() {
     const [isPremium, setIsPremium] = useState(false);
     const [loading, setLoading] = useState(true);
     const [integrityWarning, setIntegrityWarning] = useState(false);
+    const [identityReady, setIdentityReady] = useState(false);
+    const [identityError, setIdentityError] = useState('');
     const lastIntegrityCheckRef = useRef(0);
     // Mensaje cuando la licencia fue desactivada por el administrador.
     const [licenseExpiredMsg, setLicenseExpiredMsg] = useState('');
@@ -291,33 +293,23 @@ function useSecurityState() {
     }, [setLicenseExpiredMsg]);
 
     useEffect(() => {
+        let cancelled = false;
         const initDeviceId = async () => {
-            // SEC-008: Re-verificar fingerprint. Si el dispositivo cambió (o si alguien
-            // inyectó un pda_device_id arbitrario), invalidamos la sesión premium.
-            let storedId = localStorage.getItem('pda_device_id');
-            const currentFp = await generateFingerprint();
-            if (storedId) {
-                const matches = await verifyStoredFingerprint(storedId, currentFp);
-                if (!matches) {
-                    // Fingerprint manipulado o cambiado → revocar premium y re-fijar deviceId.
-                    if (import.meta.env?.DEV) {
-                        console.warn('[Security] Fingerprint mismatch detectado (SEC-008). Revocando sesión.');
-                    }
-                    localStorage.removeItem('pda_premium_token');
-                    setIntegrityWarning(true);
-                    storedId = currentFp;
-                    localStorage.setItem('pda_device_id', storedId);
-                }
-            } else {
-                storedId = currentFp;
-                localStorage.setItem('pda_device_id', storedId);
+            let storedId;
+            try {
+                storedId = await getOrCreateInstallationId();
+                if (cancelled) return;
+                if (!verifyInstallationIdentity(storedId)) throw new Error('Identidad local inconsistente');
+            } catch {
+                if (cancelled) return;
+                setIntegrityWarning(true);
+                setIdentityError('No se pudo verificar la identidad de esta instalación. Conserva los datos y solicita revisión; no borres el almacenamiento ni cambies el ID.');
+                setIsPremium(false);
+                setLoading(false);
+                return;
             }
-            // SEC-008-r2: mantener la ancla de identidad fresca. Tras un match exacto
-            // lo es/actualiza verifyStoredFingerprint; aquí cubre el registro fresco y la
-            // rotación post-manipulación, de modo que el ID activo quede protegido
-            // contra drift futuro desde su primer día.
-            seedFingerprintAnchor(storedId, currentFp);
             setDeviceId(storedId);
+            setIdentityReady(true);
 
             // Auto-registro: registrar dispositivo si no existe (sin importar licencia).
             // Guard deviceBackend: si el backend no existe, se omite (evita 404).
@@ -341,10 +333,16 @@ function useSecurityState() {
                 } else if (import.meta.env?.DEV) console.warn('[Security] auto_register_device falló:', e?.message ?? e);
             }
 
-            checkLicense(storedId);
+            if (!cancelled) await checkLicense(storedId);
         };
 
-        initDeviceId();
+        initDeviceId().catch(() => {
+            if (cancelled) return;
+            setIsPremium(false);
+            setLoading(false);
+            setIdentityError('No se pudo completar el inicio seguro. Conserva los datos y solicita revisión.');
+        });
+        return () => { cancelled = true; };
     }, [checkLicense]);
 
     // FIX 4: Integrity check periodico cada 30 minutos
@@ -357,21 +355,13 @@ function useSecurityState() {
             if (now - lastIntegrityCheckRef.current < COOLDOWN_MS) return;
             lastIntegrityCheckRef.current = now;
 
-            // SEC-008: Re-verificar fingerprint periódicamente.
-            try {
-                const currentFp = await generateFingerprint();
-                const matches = await verifyStoredFingerprint(deviceId, currentFp);
-                if (!matches) {
-                    console.warn('[Security] Fingerprint cambió durante integrity check (SEC-008).');
-                    setIntegrityWarning(true);
-                    setIsPremium(false);
-                    localStorage.removeItem('pda_premium_token');
-                    return;
-                }
-            } catch (e) {
-                if (import.meta.env?.DEV) {
-                    console.warn('[Security] Re-verificación de fingerprint falló:', e?.message ?? e);
-                }
+            // Un conflicto conserva ID, tokens y datos; no hay rotación automática.
+            if (!verifyInstallationIdentity(deviceId)) {
+                setIntegrityWarning(true);
+                setIsPremium(false);
+                setDeviceId('');
+                setIdentityError('La identidad local cambió durante la sesión. Se detuvo el acceso cloud; conserva los datos y solicita revisión.');
+                return;
             }
 
             const raw = localStorage.getItem('pda_premium_token');
@@ -584,6 +574,8 @@ function useSecurityState() {
         deviceId,
         isPremium,
         loading,
+        identityReady,
+        identityError,
         unlockApp,
         generateCodeForClient,
         licenseExpiredMsg,
@@ -598,7 +590,27 @@ const SecurityContext = createContext(null);
 
 export function SecurityProvider({ children }) {
     const value = useSecurityState();
-    return <SecurityContext.Provider value={value}>{children}</SecurityContext.Provider>;
+    useEffect(() => {
+        // AppRouter normalmente retira el splash; ante un fallo no llega a montar.
+        if (value.identityError) document.getElementById('initial-splash-overlay')?.remove();
+    }, [value.identityError]);
+    // CloudGate/App no se montan hasta verificar una identidad persistida.
+    // Una bandera premium o una sesión guardada no puede saltar este bloqueo.
+    return (
+        <SecurityContext.Provider value={value}>
+            {value.identityError ? (
+                <main className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-slate-900">
+                    <section role="alert" className="max-w-md rounded-2xl bg-white p-6 shadow">
+                        <h1 className="text-xl font-bold mb-3">Identidad de instalación pendiente de revisión</h1>
+                        <p>{value.identityError}</p>
+                        <p className="mt-3 text-sm">No se cambió el ID ni se eliminaron datos. No reinstales ni fuerces la sincronización.</p>
+                    </section>
+                </main>
+            ) : value.identityReady ? children : (
+                <main className="min-h-screen flex items-center justify-center" role="status">Verificando identidad de instalación…</main>
+            )}
+        </SecurityContext.Provider>
+    );
 }
 
 export function useSecurity() {

@@ -25,11 +25,13 @@ const {
   _lfStore,
   _lfThrowOnKey,
   _lfSetItemImpl,
+  _lfGetItemImpl,
   _pushCloudSyncSpy,
 } = vi.hoisted(() => ({
   _lfStore: new Map(),
   _lfThrowOnKey: { current: null },
   _lfSetItemImpl: { current: null },
+  _lfGetItemImpl: { current: null },
   _pushCloudSyncSpy: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -40,7 +42,7 @@ const {
 vi.mock('localforage', () => {
   const impl = {
     config: () => {},
-    getItem: async (k) => _lfStore.has(k) ? _lfStore.get(k) : null,
+    getItem: async (k) => _lfGetItemImpl.current ? _lfGetItemImpl.current(k) : (_lfStore.has(k) ? _lfStore.get(k) : null),
     setItem: async (k, v) => {
       if (_lfSetItemImpl.current) {
         return _lfSetItemImpl.current(k, v);
@@ -74,6 +76,7 @@ vi.mock('../src/hooks/useCloudSync', () => ({
 
 // ─── Imports (después de los mocks) ────────────────────────────────────────
 import { storageService } from '../src/utils/storageService';
+import { setNegocioActivoId } from '../src/utils/negocioContext';
 import { logEvent, getAuditLog, getAuditCount, purgeOldEntries, clearAuditLog, _AUDIT_CONFIG } from '../src/services/auditService';
 import { RateService } from '../src/services/RateService';
 import { CurrencyService } from '../src/services/CurrencyService';
@@ -93,12 +96,39 @@ beforeEach(async () => {
   _lfStore.clear();
   _lfThrowOnKey.current = null;
   _lfSetItemImpl.current = null;
+  _lfGetItemImpl.current = null;
+  setNegocioActivoId(null);
   _pushCloudSyncSpy.mockClear();
   localStorage.clear();
   syncFlags._resetSyncFlag();
 });
 
 // ─── Tests ─────────────────────────────────────────────────────────────────
+
+describe('Storage: destino capturado antes de I/O', () => {
+  it('encola la clave física guardada aunque la sede cambie durante setItem', async () => {
+    setNegocioActivoId('neg-a');
+    let release;
+    const gate = new Promise(resolve => { release = resolve; });
+    _lfSetItemImpl.current = async (key, value) => { await gate; _lfStore.set(key, value); };
+    const saved = storageService.setItem('bodega_sales_v1', [{ id: 'a' }]);
+    setNegocioActivoId('neg-b'); release(); await saved;
+    expect(_lfStore.get('nb_neg-a:bodega_sales_v1')).toEqual([{ id: 'a' }]);
+    expect(_lfStore.has('nb_neg-b:bodega_sales_v1')).toBe(false);
+    expect(_pushCloudSyncSpy).toHaveBeenCalledWith('nb_neg-a:bodega_sales_v1', [{ id: 'a' }]);
+  });
+  it('el fallback conserva sede cuando falla la lectura de IndexedDB', async () => {
+    setNegocioActivoId('neg-a');
+    localStorage.setItem('nb_neg-a:bodega_sales_v1', JSON.stringify([{ id: 'a' }]));
+    localStorage.setItem('nb_neg-b:bodega_sales_v1', JSON.stringify([{ id: 'b' }]));
+    let release;
+    const gate = new Promise(resolve => { release = resolve; });
+    _lfGetItemImpl.current = async () => { await gate; throw new Error('IDB unavailable'); };
+    const read = storageService.getItem('bodega_sales_v1');
+    setNegocioActivoId('neg-b'); release();
+    expect(await read).toEqual([{ id: 'a' }]);
+  });
+});
 
 describe('HOOK-007: storageService.setItem + QuotaExceededError', () => {
   it('dispara evento `quota_exceeded` cuando localforage lanza QuotaExceededError', async () => {

@@ -163,11 +163,10 @@ export function routeAuthKey(key) {
  */
 export function toCloudDocId(key) {
     if (typeof key !== 'string' || !key) return key;
-    if (isGlobalKey(key)) return key;
+    // Una clave física ya tiene destino: jamás envolverla en la sede activa.
+    if (isGlobalKey(key) || isNegocioKey(key)) return key;
     const id = getNegocioActivoId();
-    if (!id) return key;
-    const prefix = `${NEGOCIO_KEY_PREFIX}${id}:`;
-    return key.startsWith(prefix) ? key : `${prefix}${key}`;
+    return id ? `${NEGOCIO_KEY_PREFIX}${id}:${key}` : key;
 }
 
 /**

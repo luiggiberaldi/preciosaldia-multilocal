@@ -91,6 +91,14 @@ describe('doc IDs de sync cloud', () => {
         expect(parseCloudDocId(docId)).toEqual({ negocioId: NEG_A, key: 'bodega_products_v1' });
     });
 
+    it('una clave física conserva su sede aunque cambie la activa', () => {
+        setNegocioActivoId(NEG_A);
+        const docId = toCloudDocId('bodega_sales_v1');
+        setNegocioActivoId(NEG_B);
+        expect(toCloudDocId(docId)).toBe(docId);
+        expect(toCloudDocId(toCloudDocId(docId))).toBe(docId);
+    });
+
     it('las claves globales quedan sin prefijo en la nube', () => {
         setNegocioActivoId(NEG_A);
         expect(toCloudDocId('monitor_rates_v12')).toBe('monitor_rates_v12');

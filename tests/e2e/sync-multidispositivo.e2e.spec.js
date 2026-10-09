@@ -157,8 +157,9 @@ function readNamespacedList(page, key) {
  */
 function readRegistrySedes(page) {
   return page.evaluate(async () => {
-    const { useNegociosStore } =
-      await window.__e2eImportApp("/src/hooks/store/useNegociosStore.js");
+    const { useNegociosStore } = await window.__e2eImportApp(
+      "/src/hooks/store/useNegociosStore.js",
+    );
     const st = useNegociosStore.getState();
     return {
       total: st.negocios.length,
@@ -188,7 +189,11 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
     browser,
     deviceId,
     alias,
-    { seedData = true } = {},
+    {
+      seedData = true,
+      preserveSeedOnReload = false,
+      captureRealtimePull = false,
+    } = {},
   ) {
     backend.registerDevice(DEVICE_A, { alias: "Caja A" });
     backend.registerDevice(DEVICE_B, { alias: "Caja B" });
@@ -204,9 +209,101 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
     await page.addInitScript(
       `window.__e2eDeviceId = ${JSON.stringify(deviceId)};`,
     );
-    await page.addInitScript(SEED_LOCALSTORAGE_SNIPPET);
-    if (seedData) await page.addInitScript(SEED_INDEXEDDB_SNIPPET);
+    if (preserveSeedOnReload) {
+      const seedKey = `__e2e_seeded_${deviceId}`;
+      await page.addInitScript(`
+        window.__e2eShouldSeed = sessionStorage.getItem(${JSON.stringify(seedKey)}) !== "done";
+        if (window.__e2eShouldSeed) sessionStorage.setItem(${JSON.stringify(seedKey)}, "done");
+      `);
+      await page.addInitScript(
+        `if (window.__e2eShouldSeed) { ${SEED_LOCALSTORAGE_SNIPPET} }`,
+      );
+      if (seedData) {
+        await page.addInitScript(
+          `if (window.__e2eShouldSeed) { ${SEED_INDEXEDDB_SNIPPET} }`,
+        );
+      }
+    } else {
+      await page.addInitScript(SEED_LOCALSTORAGE_SNIPPET);
+      if (seedData) await page.addInitScript(SEED_INDEXEDDB_SNIPPET);
+    }
+    if (captureRealtimePull) {
+      await page.addInitScript(`
+        window.__e2eRealtimePulls = 0;
+        const nativeSetTimeout = window.setTimeout.bind(window);
+        window.setTimeout = (callback, delay, ...args) => {
+          if (delay === 100) {
+            const wrapped = (...callbackArgs) => {
+              window.__e2eRealtimePulls++;
+              return callback(...callbackArgs);
+            };
+            return nativeSetTimeout(wrapped, delay, ...args);
+          }
+          return nativeSetTimeout(callback, delay, ...args);
+        };
+      `);
+    }
+    await page.addInitScript(`
+      (() => {
+          localStorage.setItem("pda_customer_project", JSON.stringify({
+            url: "https://e2e-local.invalid",
+            key: "e2e-anon-key-never-used",
+            code: "E2E-LOCAL",
+          }));
+          const realtimeGlobal = typeof self !== "undefined" ? self : window;
+          window.__e2eWebSocketDebug = [];
+          const nativeWebSocket = window.WebSocket;
+          window.__e2eRealtimeTransportDebug = realtimeGlobal.WebSocket === window.WebSocket;
+          const RoutedWebSocket = new Proxy(nativeWebSocket, {
+            construct(Target, args) {
+              const originalUrl = String(args[0]);
+              const socket = new Target(originalUrl, ...args.slice(1));
+              const debug = { url: socketUrl, sent: [], received: [] };
+              if (window.__e2eWebSocketDebug.length > 50) window.__e2eWebSocketDebug.shift();
+              window.__e2eWebSocketDebug.push(debug);
+              const nativeSend = socket.send.bind(socket);
+              socket.send = (message) => {
+                try {
+                  const payload = JSON.parse(String(message));
+                  const frame = Array.isArray(payload)
+                    ? { event: payload[3], topic: payload[2] }
+                    : payload;
+                  debug.sent.push({ event: frame.event, topic: frame.topic });
+                  if (frame.event === "phx_join")
+                    window.__e2eRealtimeTopic = frame.topic;
+                } catch {
+                  /* binary/non-Phoenix frame */
+                }
+                return nativeSend(message);
+              };
+              socket.addEventListener("message", (event) => {
+                try {
+                  const payload = JSON.parse(String(event.data));
+                  const frame = Array.isArray(payload)
+                    ? { event: payload[3], payload: payload[4] }
+                    : payload;
+                  debug.received.push({ event: frame.event, payload: frame.payload });
+                  if (
+                    frame.event === "phx_reply" &&
+                    frame.payload?.status === "ok" &&
+                    frame.payload?.response?.postgres_changes
+                  ) {
+                    window.__e2eRealtimeSubscribed = true;
+                  }
+                } catch {
+                  /* binary/non-Phoenix frame */
+                }
+              });
+              return socket;
+            },
+          });
+          realtimeGlobal.WebSocket = RoutedWebSocket;
+          if (realtimeGlobal !== window) window.WebSocket = RoutedWebSocket;
+          window.__e2eRealtimeWebSocket = RoutedWebSocket;
+        })();
+      `);
     await page.addInitScript(BRIDGE_SNIPPET);
+
     await routeMockSupabase(page, backend);
     await page.goto("/");
     await expect(
@@ -319,72 +416,259 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
     expect(deltaDoc.device_id).toBe(DEVICE_A);
   });
 
-  test("bidireccional B→A con replay idempotente", async ({ browser }) => {
-    A = await launchDevice(browser, DEVICE_A, "Caja A");
-    B = await launchDevice(browser, DEVICE_B, "Caja B", { seedData: false });
+  test("Realtime propaga tasa y stock sin F5; reload y replay conservan el estado", async ({
+    browser,
+  }) => {
+    A = await launchDevice(browser, DEVICE_A, "Caja A", {
+      preserveSeedOnReload: true,
+      captureRealtimePull: true,
+    });
+    B = await launchDevice(browser, DEVICE_B, "Caja B");
     await B.page.waitForTimeout(2_000);
     await B.page.evaluate(() => window.__e2eSyncNow());
+    await expect
+      .poll(
+        () =>
+          backend.realtimeSocketUrls.some((url) =>
+            url.includes("/realtime/v1/websocket"),
+          ),
+        `Realtime websocket URL observadas: ${JSON.stringify(backend.realtimeSocketUrls)}`,
+        { timeout: 15_000 },
+      )
+      .toBe(true);
 
-    // A publica su tasa de arranque (40) por el canal real: el flush
-    // diferido de RateContext (300 ms) puede dispararse antes de que
-    // isCloudSyncActive=true y caerse en silencio ("Sync no activo", sin
-    // reintento). Empujar explícitamente fija el orden de updated_at y
-    // evita que un flush tardío pise el cambio de B (LWW por updated_at).
+    // Garantizar una revisión base de A antes de que B publique su cambio.
     const aPushRate = await A.page.evaluate(() =>
       window.__e2ePush("bodega_custom_rate", "40"),
     );
     expect(
       aPushRate?.ok,
-      `push de la tasa de A: ${aPushRate?.error ?? ""}`,
+      `push de la tasa inicial de A: ${aPushRate?.error ?? ""}`,
     ).toBe(true);
     await expectDocFrom(backend, DEVICE_A, "bodega_custom_rate");
 
-    // B cambia su tasa manual y la empuja por el canal real (clave
-    // allowlisted): syncNow solo sube criticalKeys, la tasa va vía
-    // pushCloudSync.
-    const bPushRate = await B.page.evaluate(() =>
-      window.__e2ePush("bodega_custom_rate", "41.5"),
-    );
-    expect(
-      bPushRate?.ok,
-      `push de la tasa de B: ${bPushRate?.error ?? ""}`,
-    ).toBe(true);
-    await expectDocFrom(backend, DEVICE_B, "bodega_custom_rate");
+    // A y B mantienen la vista de inventario abierta con el mismo catálogo.
+    await A.page.locator('[data-tour="tab-catalogo"]').click();
+    await B.page.locator('[data-tour="tab-catalogo"]').click();
+    await expect(A.page.getByText("Cafe E2E", { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(B.page.getByText("Cafe E2E", { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    const cafeCardA = A.page
+      .locator("div.select-none")
+      .filter({ has: A.page.getByText("Cafe E2E", { exact: true }) })
+      .first();
+    const cafeCardB = B.page
+      .locator("div.select-none")
+      .filter({ has: B.page.getByText("Cafe E2E", { exact: true }) })
+      .first();
+    await expect(cafeCardA).toBeVisible({ timeout: 30_000 });
+    await expect(cafeCardB).toBeVisible({ timeout: 30_000 });
+    await expect(
+      cafeCardA.locator('button[title="Toca para editar el stock"]'),
+    ).toHaveText("50");
+    await expect(
+      cafeCardB.locator('button[title="Toca para editar el stock"]'),
+    ).toHaveText("50");
 
-    // A baja el cambio de B.
-    await A.page.evaluate(() => window.__e2eSyncNow());
+    // B modifica la tasa desde el panel real de ventas, como lo haría el usuario.
+    await B.page.locator('[data-tour="tab-ventas"]').click();
+    await expect(
+      B.page.getByPlaceholder("Ingresa la tasa manual (ej: 42.50)"),
+    ).toHaveCount(0);
+    await expect(B.page.getByRole("button", { name: /40,00 MAN/ })).toBeVisible(
+      { timeout: 30_000 },
+    );
+    await B.page.getByRole("button", { name: /40,00 MAN/ }).click();
+    const rateInput = B.page.getByPlaceholder(
+      "Ingresa la tasa manual (ej: 42.50)",
+    );
+    await expect(rateInput).toBeVisible();
+    await rateInput.fill("41.5");
+    await B.page.getByRole("button", { name: "Aceptar" }).click();
+    await expect
+      .poll(
+        () => B.page.evaluate(() => localStorage.getItem("bodega_custom_rate")),
+        {
+          timeout: 10_000,
+        },
+      )
+      .toBe("41.5");
+    await expect
+      .poll(
+        () =>
+          backend
+            .docsFrom(DEVICE_B)
+            .some(
+              (row) =>
+                row.doc_id.includes("bodega_custom_rate") &&
+                row.data?.payload === "41.5",
+            ),
+        "la tasa confirmada de B queda en el backend simulado",
+        { timeout: 30_000 },
+      )
+      .toBe(true);
+
+    // A permanece abierta. Esperamos a que el sync explícito obtenga el doc
+    // autorizado de B y lo aplique localmente.
+    const timeOriginBefore = await A.page.evaluate(
+      () => performance.timeOrigin,
+    );
+    const urlBefore = A.page.url();
+    await expect
+      .poll(
+        () => A.page.evaluate(() =>
+          localStorage.getItem("bodega_custom_rate"),
+        ),
+        "Realtime propaga la tasa publicada por B a A",
+        { timeout: 30_000 },
+      )
+      .toBe("41.5");
+    expect(await A.page.evaluate(() => performance.timeOrigin)).toBe(
+      timeOriginBefore,
+    );
+    expect(A.page.url()).toBe(urlBefore);
+
+    // Cambiar stock desde el control de producto en B (persistencia + cola cloud reales).
+    await B.page.locator('[data-tour="tab-catalogo"]').click();
+    await expect(
+      cafeCardB.locator('button[title="Toca para editar el stock"]'),
+    ).toHaveText("50");
+    await cafeCardB
+      .locator('button[title="Toca para editar el stock"]')
+      .click();
+    const stockInput = cafeCardB.locator('input[type="number"]');
+    await stockInput.fill("47");
+    await stockInput.press("Enter");
+    await expect(
+      cafeCardB.locator('button[title="Toca para editar el stock"]'),
+    ).toHaveText("47");
+    await expect
+      .poll(
+        () =>
+          backend
+            .docsFrom(DEVICE_B)
+            .some(
+              (row) =>
+                row.doc_id.includes("bodega_stock_v1") &&
+                row.data?.payload?.p_cafe === 47,
+            ),
+        "el mapa de stock modificado por B se publica",
+        { timeout: 40_000 },
+      )
+      .toBe(true);
+
+    // El evento Realtime de B hace que A baje el stock mientras sigue abierta.
+    await expect(
+      cafeCardA.locator('button[title="Toca para editar el stock"]'),
+    ).toHaveText("47", { timeout: 30_000 });
+    expect(await A.page.evaluate(() => performance.timeOrigin)).toBe(
+      timeOriginBefore,
+    );
+
+    // Replay de ambos equipos no debe duplicar filas ni volver a aplicar el delta.
+    const docsBeforeReplay = new Set(backend.syncDocuments.keys());
+    const aStockBeforeReplay = await readNamespacedList(
+      A.page,
+      "bodega_products_v1",
+    );
+    const bStockBeforeReplay = await readNamespacedList(
+      B.page,
+      "bodega_products_v1",
+    );
+    expect(aStockBeforeReplay.find((p) => p.id === "p_cafe")?.stock).toBe(47);
+    expect(bStockBeforeReplay.find((p) => p.id === "p_cafe")?.stock).toBe(47);
+    const aReplay = await A.page.evaluate(() => window.__e2eSyncNow());
+    const bReplay = await B.page.evaluate(() => window.__e2eSyncNow());
+    expect(aReplay?.ok).toBe(true);
+    expect(bReplay?.ok).toBe(true);
+    expect(
+      [...backend.syncDocuments.keys()].filter(
+        (key) => !docsBeforeReplay.has(key),
+      ),
+      "el replay no crea nuevas claves de documento",
+    ).toEqual([]);
     await expect
       .poll(
         async () =>
-          A.page.evaluate(() =>
-            String(
-              localStorage.getItem("nb_neg-1:bodega_custom_rate") ??
-                localStorage.getItem("bodega_custom_rate") ??
-                "",
-            ),
-          ),
-        "la tasa manual de B debe llegar a A",
-        { timeout: 40_000 },
+          (await readNamespacedList(A.page, "bodega_products_v1")).find(
+            (p) => p.id === "p_cafe",
+          )?.stock,
+        "stock de A tras replay",
+        { timeout: 20_000 },
       )
-      .toContain("41.5");
+      .toBe(47);
+    await expect
+      .poll(
+        async () =>
+          (await readNamespacedList(B.page, "bodega_products_v1")).find(
+            (p) => p.id === "p_cafe",
+          )?.stock,
+        "stock de B tras replay",
+        { timeout: 20_000 },
+      )
+      .toBe(47);
 
-    // Replay: syncs repetidos en B y A no crean filas nuevas (hash-gating)
-    // ni duplican la tasa (upsert por clave compuesta).
-    const docsBefore = [...backend.syncDocuments.keys()].length;
-    await B.page.evaluate(() => window.__e2eSyncNow());
-    await B.page.evaluate(() => window.__e2eSyncNow());
-    await A.page.evaluate(() => window.__e2eSyncNow());
-    const docsAfter = [...backend.syncDocuments.keys()].length;
-    expect(docsAfter, "el replay no crea filas nuevas en sync_documents").toBe(
-      docsBefore,
+    // Reload real: no se vuelve a ejecutar la semilla; el valor local aplicado
+    // persiste y el pull de arranque/replay no lo modifica por segunda vez.
+    await A.page.reload();
+    const inventoryTab = A.page.locator('[data-tour="tab-catalogo"]');
+    await expect(inventoryTab).toBeVisible({ timeout: 45_000 });
+    await inventoryTab.click();
+    const reloadedCafe = A.page
+      .locator("div.select-none")
+      .filter({ has: A.page.getByText("Cafe E2E", { exact: true }) })
+      .first();
+    await expect(reloadedCafe).toBeVisible({ timeout: 30_000 });
+    await expect
+      .poll(
+        () => A.page.evaluate(() => localStorage.getItem("bodega_custom_rate")),
+        {
+          timeout: 20_000,
+        },
+      )
+      .toBe("41.5");
+    await expect
+      .poll(
+        () =>
+          readNamespacedList(A.page, "bodega_products_v1").then(
+            (products) => products?.find((p) => p.id === "p_cafe")?.stock,
+          ),
+        "stock guardado en IndexedDB tras reload",
+        { timeout: 20_000 },
+      )
+      .toBe(47);
+    const afterReload = await A.page.evaluate(() => window.__e2eSyncNow());
+    expect(afterReload?.ok).toBe(true);
+    await expect
+      .poll(
+        () =>
+          readNamespacedList(A.page, "bodega_products_v1").then(
+            (products) => products?.find((p) => p.id === "p_cafe")?.stock,
+          ),
+        "stock tras replay post-reload",
+        { timeout: 20_000 },
+      )
+      .toBe(47);
+    await expect(
+      reloadedCafe.locator('button[title="Toca para editar el stock"]'),
+    ).toHaveText("47");
+
+    // Tras el reload también se permite el push de arranque del dispositivo;
+    // verificar replay idempotente desde este punto ya asentado.
+    const docsAfterReload = new Set(backend.syncDocuments.keys());
+    const replayAfterReload = await A.page.evaluate(() =>
+      window.__e2eSyncNow(),
     );
-
-    // Y en B no hay filas duplicadas por clave compuesta.
-    const seen = new Set();
-    for (const key of backend.syncDocuments.keys()) {
-      expect(seen.has(key), `fila duplicada: ${key}`).toBe(false);
-      seen.add(key);
-    }
+    expect(replayAfterReload?.ok).toBe(true);
+    expect(
+      [...backend.syncDocuments.keys()].filter(
+        (key) => !docsAfterReload.has(key),
+      ),
+      "el replay posterior al reload no duplica documentos",
+    ).toEqual([]);
   });
 
   test("sedes: crear en B, descubrir en A y exactamente dos sedes en ambos equipos", async ({
@@ -401,8 +685,9 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
     // el doc global bodega_businesses_registry_v1 vía queueCloudSync (el
     // mismo camino del botón "Publicar sedes ahora").
     const created = await B.page.evaluate(async () => {
-      const { useNegociosStore } =
-        await window.__e2eImportApp("/src/hooks/store/useNegociosStore.js");
+      const { useNegociosStore } = await window.__e2eImportApp(
+        "/src/hooks/store/useNegociosStore.js",
+      );
       return useNegociosStore.getState().crearNegocio({
         nombre: "Sede B E2E",
         rif: "J-40222333-9",
@@ -443,7 +728,9 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
     // recarga). La vista es diferida: reintentar la pestaña como hace la
     // auditoría.
     const promoted = await A.page.evaluate(async () => {
-      const { useAuthStore } = await window.__e2eImportApp("/src/hooks/store/useAuthStore.js");
+      const { useAuthStore } = await window.__e2eImportApp(
+        "/src/hooks/store/useAuthStore.js",
+      );
       const st = useAuthStore.getState();
       useAuthStore.setState({
         usuarioActivo: {
@@ -541,8 +828,9 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
 
     // B crea una sede por el CRUD real (mismo canal del doc global).
     const created = await B.page.evaluate(async () => {
-      const { useNegociosStore } =
-        await window.__e2eImportApp("/src/hooks/store/useNegociosStore.js");
+      const { useNegociosStore } = await window.__e2eImportApp(
+        "/src/hooks/store/useNegociosStore.js",
+      );
       return useNegociosStore.getState().crearNegocio({
         nombre: "Sede EFIMERA E2E",
         rif: "",
@@ -566,8 +854,9 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
 
     // B la ELIMINA por el CRUD real: el doc republicado lleva la tumba.
     const deleted = await B.page.evaluate(async (id) => {
-      const { useNegociosStore } =
-        await window.__e2eImportApp("/src/hooks/store/useNegociosStore.js");
+      const { useNegociosStore } = await window.__e2eImportApp(
+        "/src/hooks/store/useNegociosStore.js",
+      );
       return useNegociosStore.getState().eliminarNegocio(id);
     }, created.id);
     expect(deleted?.ok, `eliminarNegocio en B: ${deleted?.error ?? ""}`).toBe(
@@ -579,9 +868,7 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
           const row = backend
             .docsFrom(DEVICE_B)
             .find((d) => d.doc_id.endsWith("bodega_businesses_registry_v1"));
-          return (row?.data?.payload?.deletedBusinesses ?? []).map(
-            (t) => t.id,
-          );
+          return (row?.data?.payload?.deletedBusinesses ?? []).map((t) => t.id);
         },
         "el doc publicado por B debe llevar la tumba de la sede eliminada",
         { timeout: 40_000 },
@@ -592,7 +879,9 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
     // vieja más reciente (sin tumba). «Buscar» debe combinarla con la tumba de B.
     const stalePush = await A.page.evaluate(async () => {
       const br = await window.__e2eImportApp("/src/utils/businessRegistry.js");
-      const { useNegociosStore } = await window.__e2eImportApp("/src/hooks/store/useNegociosStore.js");
+      const { useNegociosStore } = await window.__e2eImportApp(
+        "/src/hooks/store/useNegociosStore.js",
+      );
       const cs = await window.__e2eImportApp("/src/hooks/useCloudSync.js");
       const state = useNegociosStore.getState();
       return cs.pushCloudSync(
@@ -600,25 +889,48 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
         br.buildBusinessRegistryDoc(state.negocios, state.sedesEliminadas),
       );
     });
-    expect(stalePush?.ok, `A publica la copia vieja: ${stalePush?.error ?? ""}`).toBe(true);
-    const staleRow = await expectDocFrom(backend, DEVICE_A, "bodega_businesses_registry_v1");
-    expect(staleRow.data.payload.businesses.map((n) => n.id)).toContain(created.id);
+    expect(
+      stalePush?.ok,
+      `A publica la copia vieja: ${stalePush?.error ?? ""}`,
+    ).toBe(true);
+    const staleRow = await expectDocFrom(
+      backend,
+      DEVICE_A,
+      "bodega_businesses_registry_v1",
+    );
+    expect(staleRow.data.payload.businesses.map((n) => n.id)).toContain(
+      created.id,
+    );
     expect(staleRow.data.payload.deletedBusinesses ?? []).toHaveLength(0);
 
     // Usar el control real «Buscar sedes en la nube» con la fila vieja aún
     // presente en A. Debe consultar todas las filas autorizadas y respetar
     // la tumba de B, no volver a unir la sede eliminada.
     await A.page.evaluate(async () => {
-      const { useAuthStore } = await window.__e2eImportApp("/src/hooks/store/useAuthStore.js");
+      const { useAuthStore } = await window.__e2eImportApp(
+        "/src/hooks/store/useAuthStore.js",
+      );
       const store = useAuthStore.getState();
-      useAuthStore.setState({ usuarioActivo: { ...(store.usuarioActivo ?? { id: 1, nombre: "Dueño" }), rol: "DUENO" } });
+      useAuthStore.setState({
+        usuarioActivo: {
+          ...(store.usuarioActivo ?? { id: 1, nombre: "Dueño" }),
+          rol: "DUENO",
+        },
+      });
     });
     await A.page.locator('[data-tour="tab-ajustes"]').click();
-    await A.page.getByRole("button", { name: "Negocio", exact: true }).first().click();
-    const pill = A.page.locator('button[title="Cambiar o gestionar negocios"]').first();
+    await A.page
+      .getByRole("button", { name: "Negocio", exact: true })
+      .first()
+      .click();
+    const pill = A.page
+      .locator('button[title="Cambiar o gestionar negocios"]')
+      .first();
     await expect(pill).toBeVisible();
     await pill.click();
-    const searchButton = A.page.getByRole("button", { name: "Buscar sedes en la nube" });
+    const searchButton = A.page.getByRole("button", {
+      name: "Buscar sedes en la nube",
+    });
     await expect(searchButton).toBeVisible();
     await searchButton.click();
     await expect
@@ -633,14 +945,16 @@ test.describe.serial("gate local multi-dispositivo (sin staging)", () => {
     await A.page.evaluate(() => window.__e2eSyncNow());
     await A.page.evaluate(() => window.__e2eSyncNow());
     const tombsA = await A.page.evaluate(async () => {
-      const { useNegociosStore } =
-        await window.__e2eImportApp("/src/hooks/store/useNegociosStore.js");
-      return useNegociosStore.getState().sedesEliminadas?.map((t) => t.id) ?? [];
+      const { useNegociosStore } = await window.__e2eImportApp(
+        "/src/hooks/store/useNegociosStore.js",
+      );
+      return (
+        useNegociosStore.getState().sedesEliminadas?.map((t) => t.id) ?? []
+      );
     });
-    expect(
-      tombsA,
-      "A conserva la tumba para futuros pulls",
-    ).toContain(created.id);
+    expect(tombsA, "A conserva la tumba para futuros pulls").toContain(
+      created.id,
+    );
     expect(
       (await readRegistrySedes(A.page)).total,
       "el replay no revive la sede borrada en A",

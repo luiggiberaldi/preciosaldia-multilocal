@@ -245,6 +245,27 @@ export function mergeUserCatalog(localUsers, doc) {
             }
         }
 
+        // 2c) Remoto legacy SIN uid: si un local aún no fusionado tiene el mismo
+        //     nombre+rol, es el mismo usuario. Sin esto cada merge agrega una
+        //     copia nueva (duplica al cambiar de sede). Conserva el uid local.
+        if (!r.uid) {
+            const byNameRolLegacy = local.find(u =>
+                u && u.id != null &&
+                !mergedById.has(u.id) &&
+                u.nombre === r.nombre &&
+                u.rol === r.rol
+            );
+            if (byNameRolLegacy) {
+                pushMerged({
+                    ...byNameRolLegacy,
+                    nombre: typeof r.nombre === 'string' ? r.nombre : byNameRolLegacy.nombre,
+                    rol: typeof r.rol === 'string' ? r.rol : byNameRolLegacy.rol,
+                    requirePin: r.requirePin !== false,
+                });
+                continue;
+            }
+        }
+
         // 3) Usuario nuevo para este equipo: entra con `pinPendiente: true`.
         //    Si su id numérico ya está ocupado, se le asigna uno libre
         //    (el uid lo identifica de forma estable entre equipos).

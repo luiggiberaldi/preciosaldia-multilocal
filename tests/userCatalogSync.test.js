@@ -162,6 +162,23 @@ describe('mergeUserCatalog', () => {
         expect(zoe.pinPendiente).toBe(true);
     });
 
+    it('legacy sin uid con mismo nombre+rol que un local con uid: no duplica (adopta el local)', () => {
+        const localWithUid = [
+            { id: 1, uid: 'uid-admin', nombre: 'Administrador', rol: 'ADMIN', pin: PIN_HASH, requirePin: true },
+            { id: 2, uid: 'uid-cajero', nombre: 'Cajero', rol: 'CAJERO', pin: PIN_HASH, requirePin: true },
+        ];
+        const legacyRemote = { v: 1, users: [
+            { id: 1, nombre: 'Administrador', rol: 'ADMIN', requirePin: true },
+            { id: 2, nombre: 'Cajero', rol: 'CAJERO', requirePin: true },
+        ], deleted: [] };
+        const merged = mergeUserCatalog(localWithUid, legacyRemote);
+        expect(merged).toHaveLength(2);
+        expect(merged.find(u => u.uid === 'uid-admin')).toMatchObject({ id: 1, pin: PIN_HASH });
+        expect(merged.find(u => u.uid === 'uid-cajero')).toMatchObject({ id: 2, pin: PIN_HASH });
+        // Un segundo merge con el resultado tampoco agrega copias.
+        expect(mergeUserCatalog(merged, legacyRemote)).toHaveLength(2);
+    });
+
     it('tolera doc vacío o ausente', () => {
         expect(mergeUserCatalog(localUsers(), null)).toHaveLength(2);
         expect(mergeUserCatalog(localUsers(), {})).toHaveLength(2);

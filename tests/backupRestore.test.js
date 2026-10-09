@@ -12,9 +12,13 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import React, { act } from 'react';
+import { createRoot } from 'react-dom/client';
+vi.mock('../src/config/supabaseCloud', () => ({ supabaseCloud: null }));
 
-const { _lfStore, _pushCloudSyncSpy } = vi.hoisted(() => ({
+const { _lfStore, _journalStore, _pushCloudSyncSpy } = vi.hoisted(() => ({
     _lfStore: new Map(),
+    _journalStore: new Map(),
     _pushCloudSyncSpy: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -26,12 +30,16 @@ vi.mock('localforage', () => {
         setItem: async (k, v) => { _lfStore.set(k, v); },
         removeItem: async (k) => { _lfStore.delete(k); },
         clear: async () => { _lfStore.clear(); },
-        createInstance: () => ({
-            getItem: async () => null,
-            setItem: async () => {},
-            removeItem: async () => {},
-            clear: async () => {},
-        }),
+        createInstance: ({ name } = {}) => {
+            const data = name === 'BodegaCloudPull' ? _journalStore : new Map();
+            return {
+                keys: async () => [...data.keys()],
+                getItem: async key => data.get(key) ?? null,
+                setItem: async (key, value) => { data.set(key, structuredClone(value)); return value; },
+                removeItem: async key => { data.delete(key); },
+                clear: async () => { data.clear(); },
+            };
+        },
     };
     return { default: impl, ...impl };
 });
@@ -54,9 +62,15 @@ import {
     CRITICAL_SYNC_KEYS,
 } from '../src/utils/backupRestoreService';
 import { _resetSyncFlag, isSyncingFromCloud } from '../src/utils/syncFlags';
+import { useAutoBackup, restoreFromBackup } from '../src/hooks/useAutoBackup';
+import {
+    cloudPullScope, retainCloudPullFailure, resolveCloudPullFailure,
+    exportCloudPullJournal, restoreCloudPullJournal, getPendingCloudDocuments, runCloudPull,
+} from '../src/services/cloudPullService';
 
 beforeEach(async () => {
     _lfStore.clear();
+    _journalStore.clear();
     _pushCloudSyncSpy.mockClear();
     localStorage.clear();
     _resetSyncFlag();
@@ -258,6 +272,144 @@ describe('anti-eco durante restauración', () => {
         expect(CRITICAL_SYNC_KEYS).toContain('bodega_products_v1');
         expect(CRITICAL_SYNC_KEYS).toContain('bodega_sales_v1');
         expect(CRITICAL_SYNC_KEYS).toHaveLength(5);
+    });
+});
+
+// ─── JOURNAL F2: mismo JSON y restauración aditiva ──────────────────────────
+
+describe('backup del journal de sincronización', () => {
+    const sourceScope = cloudPullScope({ userId: 'account-a' }, 'installation-a');
+    const targetScope = cloudPullScope({ userId: 'account-a' }, 'installation-b');
+    const row = { device_id: 'source-device', collection: 'store',
+        doc_id: 'nb_neg-1:bodega_sales_delta_2026-10-08', updated_at: '2026-10-08T12:00:00.000Z',
+        data: { schemaVersion: 1, payload: { legacyUnknown: true }, updatedAt: '2026-10-08T12:00:00.000Z' } };
+    async function evidence() {
+        await retainCloudPullFailure(sourceScope, row, 'invalid-document');
+        return exportCloudPullJournal();
+    }
+
+    it('exporta pendientes, resueltos e historia sin cursores, sesión ni confirmar aplicación', async () => {
+        await evidence();
+        const resolved = { ...row, doc_id: 'nb_neg-fac22061:bodega_employees_v1' };
+        await retainCloudPullFailure(sourceScope, resolved, 'apply-failed');
+        await resolveCloudPullFailure(sourceScope, resolved);
+        _journalStore.set('cursor:never-export', row);
+        localStorage.setItem('sb-synthetic-auth-token', 'secret-session');
+        const backup = JSON.parse(JSON.stringify(await collectLocalBackupPayload()));
+        expect(backup.version).toBe('2.0');
+        expect(backup.data.cloudPullJournal.version).toBe(1);
+        expect(backup.data.cloudPullJournal.entries).toHaveLength(2);
+        expect(backup.data.cloudPullJournal.entries.map(e => e.status).sort()).toEqual(['pending', 'resolved']);
+        expect(backup.data.cloudPullJournal.entries.find(e => e.status === 'pending').row).toEqual(row);
+        expect(JSON.stringify(backup)).not.toContain('never-export');
+        expect(JSON.stringify(backup)).not.toContain('secret-session');
+        expect(validateBackupJson(backup)).toBe(true); // evidence-only backup is not empty
+    });
+
+    it('recupera en instalación nueva manteniendo cuenta, procedencia y ventas sin replay automático', async () => {
+        const cloudPullJournal = await evidence();
+        _journalStore.clear();
+        localStorage.setItem('pda_device_id', 'installation-b');
+        const backup = { version: '2.0', data: { idb: { bodega_sales_v1: [{ id: 'sale-1' }] }, ls: {}, cloudPullJournal } };
+        await applyBackupToStorage(backup, { writeMode: 'storageService' });
+        await applyBackupToStorage(backup, { writeMode: 'storageService' });
+        const pending = await getPendingCloudDocuments(targetScope);
+        expect(pending).toHaveLength(1);
+        expect(pending[0]).toMatchObject({ row, originScope: sourceScope, status: 'pending' });
+        expect(await getPendingCloudDocuments(cloudPullScope({ userId: 'account-b' }, 'installation-b'))).toEqual([]);
+        expect([..._journalStore.keys()].some(k => k.startsWith('cursor:'))).toBe(false);
+        expect(localStorage.getItem('pda_device_id')).toBe('installation-b');
+        expect(await storageService.getItem('bodega_sales_v1')).toEqual([{ id: 'sale-1' }]);
+        expect(_pushCloudSyncSpy).not.toHaveBeenCalled();
+    });
+
+    it('no reabre revisión resuelta ni pisa pendiente local al importar copia vieja', async () => {
+        const snapshot = await evidence();
+        await resolveCloudPullFailure(sourceScope, row);
+        localStorage.setItem('pda_device_id', 'installation-a');
+        await restoreCloudPullJournal(snapshot);
+        expect(await getPendingCloudDocuments(sourceScope)).toEqual([]);
+        const resolvedBackup = await exportCloudPullJournal();
+        await retainCloudPullFailure(sourceScope, row, 'apply-failed');
+        await restoreCloudPullJournal(resolvedBackup);
+        expect(await getPendingCloudDocuments(sourceScope)).toHaveLength(1);
+    });
+
+    it('limpieza selectiva y archivo antiguo sin journal preservan evidencia local', async () => {
+        await evidence();
+        const before = JSON.stringify([..._journalStore]);
+        await clearAppKeysForRestore();
+        await applyBackupToStorage({ version: '2.0', data: { idb: { bodega_sales_v1: [] }, ls: {} } });
+        expect(JSON.stringify([..._journalStore])).toBe(before);
+    });
+
+    it('valida todo el journal antes de escribir datos operativos', async () => {
+        const snapshot = await evidence();
+        const invalids = [null, { version: 99, entries: [] }, { version: 1, entries: [null] },
+            { version: 1, entries: [{ ...snapshot.entries[0], contentHash: 'tampered' }] },
+            { version: 1, entries: [{ ...snapshot.entries[0], scope: '["only-one"]' }] },
+            { version: 1, entries: [{ ...snapshot.entries[0], status: 'confirmed' }] }];
+        for (const cloudPullJournal of invalids) {
+            const backup = { version: '2.0', data: { idb: { bodega_sales_v1: [{ id: 'must-not-write' }] }, cloudPullJournal } };
+            expect(() => validateBackupJson(backup)).toThrow(/Journal/);
+            await expect(applyBackupToStorage(backup)).rejects.toThrow(/Journal/);
+            expect(await storageService.getItem('bodega_sales_v1')).toBeNull();
+        }
+    });
+
+    it('rechaza exportación/restore fallidos sin presentar backup incompleto como éxito', async () => {
+        await expect(exportCloudPullJournal({ keys: async () => { throw new Error('disk'); } })).rejects.toThrow('disk');
+        const snapshot = await evidence();
+        const store = { getItem: async () => null, setItem: async () => { throw new Error('quota'); } };
+        await expect(restoreCloudPullJournal(snapshot, { deviceId: 'b', store })).rejects.toThrow('quota');
+        const silent = { getItem: async () => null, setItem: async () => null };
+        await expect(restoreCloudPullJournal(snapshot, { deviceId: 'b', store: silent })).rejects.toThrow(/confirmó/);
+    });
+
+    it('backup automático local incluye cambios solo del journal y restauración de emergencia', async () => {
+        await evidence();
+        vi.useFakeTimers();
+        vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+        const container = document.createElement('div');
+        const root = createRoot(container);
+        function BackupHarness() { useAutoBackup(false, null); return null; }
+        try {
+            await act(async () => root.render(React.createElement(BackupHarness)));
+            await act(async () => vi.advanceTimersByTimeAsync(30_000));
+            const first = await storageService.getItem('bodega_autobackup_v1');
+            expect(first.data.cloudPullJournal.entries).toHaveLength(1);
+            await retainCloudPullFailure(sourceScope, { ...row, doc_id: 'nb_neg-fac22061:bodega_employees_v1' }, 'apply-failed');
+            await act(async () => vi.advanceTimersByTimeAsync(30 * 60_000));
+            const latest = await storageService.getItem('bodega_autobackup_v1');
+            expect(latest.data.cloudPullJournal.entries).toHaveLength(2);
+            _journalStore.clear();
+            localStorage.setItem('pda_device_id', 'installation-b');
+            _pushCloudSyncSpy.mockClear();
+            await restoreFromBackup();
+            expect(await getPendingCloudDocuments(targetScope)).toHaveLength(2);
+            expect(_pushCloudSyncSpy).not.toHaveBeenCalled();
+        } finally {
+            await act(async () => root.unmount());
+            vi.useRealTimers();
+            vi.unstubAllGlobals();
+        }
+    });
+
+    it('reintento recuperado sigue autorizado, resuelve una vez y no duplica venta', async () => {
+        const snapshot = await evidence();
+        _journalStore.clear();
+        await restoreCloudPullJournal(snapshot, { deviceId: 'installation-b' });
+        const sales = new Map();
+        const apply = async doc => { sales.set('sale-restored', doc.data); return true; };
+        const base = { scope: targetScope, deviceIds: ['source-device'], manual: true, classify: () => null, apply };
+        const denied = await runCloudPull({ ...base, fetchPage: async () => { throw new Error('revoked'); } });
+        expect(denied.pending).toBe(1);
+        expect(sales.size).toBe(0);
+        const result = await runCloudPull({ ...base, fetchPage: async () => [] });
+        expect(result).toMatchObject({ pending: 0, applied: 1 });
+        await runCloudPull({ ...base, fetchPage: async () => [] });
+        expect(sales.size).toBe(1);
+        expect((await exportCloudPullJournal()).entries[0].row).toEqual(row);
     });
 });
 

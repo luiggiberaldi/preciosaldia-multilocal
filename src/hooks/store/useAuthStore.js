@@ -26,7 +26,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { logEvent } from '../../services/auditService';
 import { hashPin, verifyPin } from '../../utils/crypto';
-import { routeAuthKey } from '../../utils/negocioContext';
+import { routeAuthKey, getNegocios } from '../../utils/negocioContext';
 // Catálogo de usuarios sync (SEC-002): solo builders sanitizados, sin PINs.
 // El push a la nube va por import dinámico de useCloudSync (evita acoplarlo
 // al store y romper el tree-shaking).
@@ -113,6 +113,11 @@ let _defaultUsersInitializationPromise = null;
 
 async function _ensureDefaultUsers(state, set) {
     if (state.usuarios && state.usuarios.length > 0) return;
+    // Solo la PRIMERA sede siembra usuarios locales. Una sede adicional (o un
+    // cambio de sede) debe recibir su roster desde la nube: sembrar defaults
+    // aquí crea Administrador/Cajero con uid nuevos que luego se duplican al
+    // fusionar con el catálogo remoto (mergeUserCatalog).
+    if (getNegocios().length > 1) return;
     if (_defaultUsersInitializationPromise) return _defaultUsersInitializationPromise;
 
     _defaultUsersInitializationPromise = (async () => {
