@@ -4,6 +4,24 @@ Registro de cambios del proyecto. Cada commit lleva su entrada: qué cambió y p
 
 ---
 
+## v2.2.0 — 2026-10-09 — Stock sin eco entre equipos
+
+**Qué:** el stock de bodega se duplicaba entre equipos. Una venta se repetía en cada ciclo de sincronización hasta dejar valores absurdos (p. ej. 10⁴⁵ unidades).
+
+**Causa:** cada equipo publicaba su stock absoluto y el otro lo aplicaba como delta. Ese delta volvía en el siguiente mapa y se aplicaba otra vez.
+
+**Fix:**
+- `src/utils/syncDelta.js`: `buildOwnStockMap` publica stock propio (local menos lo recibido). `accumulateReceivedStock` registra lo recibido y descarta residuos de punto flotante. `preserveLocalStock` evita que el catálogo remoto pise el stock local.
+- `src/hooks/useCloudSync.js`: publica el stock propio, acumula lo recibido y el catálogo conserva el stock local. La primera vista de una fuente solo siembra el último visto.
+- `src/utils/backupRestoreService.js`: al restaurar se reinicia el estado de stock recibido.
+- `src/utils/monitorStockApply.js` (nuevo) y `src/hooks/useMonitorSync.js`: el monitor aplica stock y catálogo con la misma semántica.
+
+**Verificado:** suite completa en verde (101 archivos). Prueba de dos equipos en `tests/syncDelta.test.js` y pruebas del monitor en `tests/monitorStockApply.test.js`.
+
+**Pendiente:** la prueba en la app con dos equipos reales. Los equipos con versión anterior no están cubiertos.
+
+---
+
 ## 2026-10-01 — Admin conserva sesión al cambiar de sede (FIX-ADMIN-SWITCH)
 
 **Qué:** luigi reportó que al cambiar de sede desde el usuario admin, la app retornaba con estado de cajero.
