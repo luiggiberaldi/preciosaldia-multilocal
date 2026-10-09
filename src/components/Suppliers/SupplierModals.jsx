@@ -3,6 +3,7 @@ import { X, Truck, Save, Pencil, FileText, CreditCard, Clock, Phone, Trash2, Arr
 import { formatUsd, formatBs, formatCop } from '../../utils/calculatorUtils';
 import CustomSelect from '../CustomSelect';
 import { compressImage, getInvoicePhotoUrl } from '../../utils/invoicePhotos';
+import { salesDayString } from '../../utils/syncDelta';
 
 /** Miniatura de la foto de una factura (solo local). */
 function InvoicePhotoThumb({ invoiceId }) {
@@ -97,6 +98,8 @@ export function AddSupplierModal({ onClose, onSave, editingSupplier = null }) {
 
 export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClose, onSave }) {
     const [invoiceNumber, setInvoiceNumber] = useState('');
+    // Fecha de la factura (local, YYYY-MM-DD). Por defecto hoy; permite cargar facturas pasadas.
+    const [invoiceDate, setInvoiceDate] = useState(() => salesDayString());
     const [dueDate, setDueDate] = useState('');
     // Moneda de entrada: USD o BS (conversión bidireccional a tasa BCV)
     const [currencyMode, setCurrencyMode] = useState('USD');
@@ -137,13 +140,14 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!invoiceNumber || amountUsdValue <= 0) return;
+        if (!invoiceNumber || amountUsdValue <= 0 || !invoiceDate) return;
         
         const invoiceData = {
             id: crypto.randomUUID(),
             supplierId: supplier.id,
             invoiceNumber: invoiceNumber.trim(),
-            date: new Date().toISOString(),
+            // Mediodía local: evita que la fecha caiga en el día anterior al convertir a ISO.
+            date: new Date(`${invoiceDate}T12:00:00`).toISOString(),
             dueDate: dueDate || null,
             amountUsd: amountUsdValue,
             amountBs: amountBsValue,
@@ -212,6 +216,8 @@ export function AddInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, onClos
                         )}
                     </div>
                     <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Fecha de la factura</label>
+                        <input type="date" required value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="w-full form-input border rounded-xl px-3 py-2 text-sm font-bold dark:bg-slate-950 text-slate-700 dark:text-white mb-3" />
                         <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Fecha Vencimiento (Opcional)</label>
                         <div className="flex gap-1.5 mb-2">
                             {[7, 15, 30, 45, 60].map(days => (
@@ -422,6 +428,9 @@ export function PayInvoiceModal({ supplier, bcvRate, tasaCop, copEnabled, copPri
 }
 
 export function SupplierDetailsSheet({ supplier, isOpen, isAdmin, onClose, onAddInvoice, onPayInvoice, onEdit, onDelete, bcvRate, tasaCop, copEnabled, copPrimary, historyData, triggerHaptic }) {
+    // Rango para estado de cuenta (YYYY-MM-DD local). Vacío = todo el historial.
+    const [desde, setDesde] = useState('');
+    const [hasta, setHasta] = useState('');
     if (!isOpen || !supplier) return null;
 
     return (
@@ -478,11 +487,39 @@ export function SupplierDetailsSheet({ supplier, isOpen, isAdmin, onClose, onAdd
 
                     {/* Historial (Facturas y Pagos) */}
                     <div>
+                        <div className="flex flex-wrap items-center gap-2 mb-3 text-[10px] font-bold text-slate-500">
+                            <label className="flex items-center gap-1">Desde
+                                <input type="date" value={desde} onChange={e => setDesde(e.target.value)} className="form-input border rounded-lg px-2 py-1 text-xs dark:bg-slate-950" />
+                            </label>
+                            <label className="flex items-center gap-1">Hasta
+                                <input type="date" value={hasta} onChange={e => setHasta(e.target.value)} className="form-input border rounded-lg px-2 py-1 text-xs dark:bg-slate-950" />
+                            </label>
+                            {(desde || hasta) && (
+                                <button type="button" onClick={() => { setDesde(''); setHasta(''); }} className="underline">Limpiar</button>
+                            )}
+                        </div>
                         <div className="flex items-center justify-between mb-3">
                             <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                                 <Clock size={12} /> Estado de Cuenta
                             </h4>
                             {historyData.length > 0 && (
+                                <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={async () => {
+                                        triggerHaptic && triggerHaptic();
+                                        const { printSupplierReportThermal } = await import('../../utils/supplierReportRange');
+                                        printSupplierReportThermal({
+                                            invoices: historyData.filter(r => r.type === 'INVOICE'),
+                                            payments: historyData.filter(r => r.tipo === 'PAGO_PROVEEDOR'),
+                                            desde,
+                                            hasta,
+                                            supplierName: supplier.name,
+                                        });
+                                    }}
+                                    className="text-[10px] font-bold text-brand-dark dark:text-brand bg-slate-100 dark:bg-slate-800/40 px-2.5 py-1 rounded-lg flex items-center gap-1 active:scale-95 transition-all animate-in fade-in duration-200"
+                                >
+                                    Ticket
+                                </button>
                                 <button
                                     onClick={async () => {
                                         triggerHaptic && triggerHaptic();
@@ -492,13 +529,16 @@ export function SupplierDetailsSheet({ supplier, isOpen, isAdmin, onClose, onAdd
                                             historyData,
                                             bcvRate,
                                             tasaCop,
-                                            copEnabled
+                                            copEnabled,
+                                            desde,
+                                            hasta,
                                         });
                                     }}
                                     className="text-[10px] font-bold text-brand-dark dark:text-brand bg-slate-100 dark:bg-slate-800/40 px-2.5 py-1 rounded-lg flex items-center gap-1 active:scale-95 transition-all animate-in fade-in duration-200"
                                 >
                                     <Download size={10} /> Reporte PDF
                                 </button>
+                                </div>
                             )}
                         </div>
                         {historyData.length === 0 ? (

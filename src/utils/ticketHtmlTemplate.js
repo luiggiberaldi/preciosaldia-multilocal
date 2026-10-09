@@ -1,7 +1,7 @@
 import { formatBs, formatCop, formatUsd } from './calculatorUtils.js';
 import { mulR, divR } from './dinero.js';
 
-function escapeHtml(str) {
+export function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     const s = String(str);
     return s

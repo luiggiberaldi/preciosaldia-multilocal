@@ -1,14 +1,18 @@
 import { jsPDF } from 'jspdf';
 import { formatBs, formatCop, formatUsd } from './calculatorUtils';
 import { getPaymentLabel, toTitleCase } from '../config/paymentMethods';
+import { filterActivityByRange, rangeLabel } from './supplierReportRange';
 
 export async function generateSupplierHistoryPDF({
     supplier,
-    historyData = [],
+    historyData: rawHistoryData = [],
     bcvRate = 0,
     tasaCop = 0,
     copEnabled = false,
+    desde = '',
+    hasta = '',
 }) {
+    const historyData = filterActivityByRange(rawHistoryData, desde, hasta);
     const doc = new jsPDF('p', 'mm', 'letter');
     const WIDTH = 215.9;
     const HEIGHT = 279.4;
@@ -61,7 +65,7 @@ export async function generateSupplierHistoryPDF({
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(...MUTED);
-    doc.text(`Emitido: ${nowStr}`, RIGHT, y, { align: 'right' });
+    doc.text(`Emitido: ${nowStr} · ${rangeLabel(desde, hasta)}`, RIGHT, y, { align: 'right' });
     y += 6;
 
     if (supplier.documentId || supplier.contactName) {
@@ -231,12 +235,15 @@ export async function generateSupplierHistoryPDF({
 
 export async function generateGlobalSuppliersPDF({
     suppliers = [],
-    invoices = [],
+    invoices: rawInvoices = [],
     allSales = [],
     bcvRate = 0,
     tasaCop = 0,
     copEnabled = false,
+    desde = '',
+    hasta = '',
 }) {
+    const invoices = filterActivityByRange(rawInvoices, desde, hasta);
     const doc = new jsPDF('p', 'mm', 'letter');
     const WIDTH = 215.9;
     const HEIGHT = 279.4;
@@ -283,7 +290,7 @@ export async function generateGlobalSuppliersPDF({
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(...MUTED);
-    doc.text(`Emitido: ${nowStr}`, M, y);
+    doc.text(`Emitido: ${nowStr} · ${rangeLabel(desde, hasta)}`, M, y);
     y += 8;
 
     // --- Cálculos Generales ---
@@ -433,7 +440,7 @@ export async function generateGlobalSuppliersPDF({
     drawActivityHeader(y);
     y += 8;
 
-    const allPayments = allSales.filter(s => s.tipo === 'PAGO_PROVEEDOR');
+    const allPayments = filterActivityByRange(allSales.filter(s => s.tipo === 'PAGO_PROVEEDOR'), desde, hasta);
     const combinedActivity = [
         ...invoices.map(i => ({ ...i, type: 'INVOICE' })),
         ...allPayments.map(p => ({ ...p, type: 'PAYMENT' }))
