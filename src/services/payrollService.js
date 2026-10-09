@@ -740,10 +740,21 @@ export async function liquidar({ employeeId, metodoPago, tasaBcv }) {
         await pushCloudSync(SALES_KEY, arr);
     } catch { /* el push encolado lo reintentará */ }
 
-    // 4. Cerrar el período.
-    if (resumen.periodo) {
-        await _savePayrollDoc({ ...resumen.periodo, status: 'LIQUIDADO', liquidacionId: liqId, updatedAt: now });
-    }
+    // 4. Cerrar el período. Si aún no tenía documento (liquidación sin consumos), se crea ya
+    // LIQUIDADO: así un consumo posterior abre un período secuenciado (-2) y no queda sin liquidar.
+    const bounds = periodBounds(periodKey);
+    const periodoACerrar = resumen.periodo || {
+        kind: 'periodo',
+        id: _periodId(emp.id, periodKey),
+        employeeId: emp.id,
+        periodKey,
+        frecuencia: emp.frecuenciaPago,
+        inicioISO: bounds.inicioISO,
+        finISO: bounds.finISO,
+        salarioSnapshot: { monto: resumen.salarioSnapshot.monto, moneda: resumen.salarioSnapshot.moneda },
+        createdAt: now,
+    };
+    await _savePayrollDoc({ ...periodoACerrar, status: 'LIQUIDADO', liquidacionId: liqId, updatedAt: now });
 
     await logEvent('NOMINA', 'LIQUIDACION_REGISTRADA',
         `Nómina liquidada: ${emp.nombre} (${periodKey}) — neto $${netoUsd.toFixed(2)} / Bs ${netoBs.toFixed(2)}. Folio ${folio}`,

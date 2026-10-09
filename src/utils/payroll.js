@@ -91,7 +91,12 @@ export function periodKeyFor(date, frecuencia) {
  * También acepta sufijo de reapertura ('2026-W40-2'): los límites son los de la key base.
  */
 export function basePeriodKey(periodKey) {
-    return String(periodKey || '').replace(/-\d+$/, '');
+    const key = String(periodKey || '');
+    // Una clave base válida (incluida la mensual '2026-10', cuyo '-10' parece un sufijo) se devuelve tal cual.
+    if (/^\d{4}-W\d{1,2}$/.test(key) || /^\d{4}-\d{2}-Q[12]$/.test(key) || /^\d{4}-\d{2}$/.test(key)) {
+        return key;
+    }
+    return key.replace(/-\d+$/, '');
 }
 
 export function periodBounds(periodKey) {
