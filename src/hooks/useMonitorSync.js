@@ -23,6 +23,19 @@ const isMergeSemanticsKey = (key) => MERGED_SYNC_KEYS.has(key) || isSalesDeltaKe
 localforage.config({ name: 'BodegaApp', storeName: 'bodega_app_data' });
 
 const SUBSCRIBE_TIMEOUT_MS = 8000;
+// Pull incremental: solape hacia atrás para absorber desfases de reloj y escrituras tardías.
+// Los documentos repetidos se descartan en applyDocToLocal (isNewerSyncDocument).
+const PULL_OVERLAP_MS = 5 * 60 * 1000;
+
+/** Devuelve el updated_at más reciente (ISO) entre `docs` y `previous`. */
+function newestUpdatedAt(docs, previous) {
+    let newest = previous ? Date.parse(previous) : Number.NEGATIVE_INFINITY;
+    for (const doc of docs || []) {
+        const t = Date.parse(doc?.updated_at);
+        if (Number.isFinite(t) && t > newest) newest = t;
+    }
+    return Number.isFinite(newest) ? new Date(newest).toISOString() : null;
+}
 const RECONNECT_DELAYS_MS = [1000, 3000, 10000, 30000];
 // B-13 (2026-10-01): tope de reintentos de reconexión. Sin tope, el monitor
 // reintentaba para siempre en silencio si la red caía de forma permanente.
@@ -56,6 +69,8 @@ export function useMonitorSync(deviceIdsInput, { excludeDeviceId = null, enabled
     const removeInFlightRef = useRef(Promise.resolve());
     // Lista efectiva de devices a monitorear (modo cuenta o fallback 1:1).
     const deviceIdsRef = useRef([]);
+    // Cursor del pull incremental { key: deviceIds ordenados, since: ISO }. En memoria: al recargar se hace pull completo.
+    const pullCursorRef = useRef(null);
 
     const resolveDeviceIds = async () => {
         // Modo cuenta: todos los equipos vinculados (propio + hermanos).
@@ -353,16 +368,26 @@ export function useMonitorSync(deviceIdsInput, { excludeDeviceId = null, enabled
                 if (!isActiveLifecycle(lifecycleId)) return { ok: false, error: 'Ciclo de sincronización obsoleto' };
 
                 setSyncState(SUPERVISOR_SYNC_STATES.PULLING);
-                const { data: docs, error } = await supabaseCloud
+                // Sin cursor (primer pull o cambio de equipos) se descarga todo.
+                const cursorKey = [...deviceIds].sort().join(',');
+                const cursor = pullCursorRef.current?.key === cursorKey ? pullCursorRef.current.since : null;
+                let query = supabaseCloud
                     .from('sync_documents')
                     .select('collection, doc_id, data, updated_at, device_id')
                     .in('device_id', deviceIds)
                     .in('collection', ['store', 'local']);
+                if (cursor) {
+                    query = query.gte('updated_at', new Date(Date.parse(cursor) - PULL_OVERLAP_MS).toISOString());
+                }
+                const { data: docs, error } = await query;
 
                 if (error) throw error;
 
                 const batch = await applyBatch(docs || []);
                 if (!isActiveLifecycle(lifecycleId)) return { ok: false, error: 'Ciclo de sincronización obsoleto' };
+                // Avanza el cursor solo tras una consulta correcta y lotes aplicados.
+                const since = newestUpdatedAt(docs, cursor);
+                if (since) pullCursorRef.current = { key: cursorKey, since };
                 if (batch.applied > 0) updateLastSync(new Date());
 
                 const realtime = await subscribeToRealtime(lifecycleId);
