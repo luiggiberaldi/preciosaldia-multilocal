@@ -189,6 +189,11 @@ describe('syncDelta — eco de stock entre equipos', () => {
         expect(accumulateReceivedStock({ p1: 2 }, { p1: -2 })).toEqual({});
     });
 
+    it('accumulateReceivedStock descarta residuos de punto flotante', () => {
+        expect(accumulateReceivedStock({ p1: 1 }, { p1: -1 + 1e-12 })).toEqual({});
+        expect(accumulateReceivedStock({ p1: 1 }, { p1: -0.5 })).toEqual({ p1: 0.5 });
+    });
+
     it('preserveLocalStock: el catálogo remoto no pisa el stock local', () => {
         const local = [{ id: 'p1', name: 'A', stock: 7 }, { id: 'p2', name: 'B', stock: 3 }];
         const remote = [{ id: 'p1', name: 'A2', stock: 10 }, { id: 'p3', name: 'Nuevo', stock: 4 }];

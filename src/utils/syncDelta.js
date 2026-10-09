@@ -146,13 +146,17 @@ export function buildOwnStockMap(products, receivedMap) {
     return map;
 }
 
+// Residuos de punto flotante (p. ej. 1e-11 tras sumar fracciones de granel) se
+// tratan como cero para no acumular entradas inútiles.
+const RECEIVED_STOCK_EPSILON = 1e-9;
+
 /** Suma los deltas aplicados de una fuente al acumulado de recibido por producto. */
 export function accumulateReceivedStock(receivedMap, deltas) {
     const out = { ...(receivedMap && typeof receivedMap === 'object' ? receivedMap : {}) };
     for (const [key, delta] of Object.entries(deltas || {})) {
         const next = (Number(out[key]) || 0) + Number(delta);
         if (!Number.isFinite(next)) continue;
-        if (next === 0) delete out[key];
+        if (Math.abs(next) < RECEIVED_STOCK_EPSILON) delete out[key];
         else out[key] = next;
     }
     return out;

@@ -7,7 +7,8 @@ import { validateSupervisorSyncDocument } from '../services/supervisorContracts'
 import { ensureSupervisorSession } from '../services/supervisorAuth';
 import { getAccountSyncContext } from '../services/cloudAccount';
 // QUOTA-001/002: fusión delta al recibir (stock liviano, ventas podadas).
-import { applyStockMapDelta, isSalesDeltaKey, mergeSales, physicalDocId, preserveLocalStock, salesDeltaTickets } from '../utils/syncDelta';
+import { isSalesDeltaKey, mergeSales, physicalDocId, salesDeltaTickets } from '../utils/syncDelta';
+import { applyMonitorCatalogDoc, applyMonitorStockDoc } from '../utils/monitorStockApply';
 import {
     getSyncMetadataKey,
     isNewerSyncDocument,
@@ -161,24 +162,16 @@ export function useMonitorSync(deviceIdsInput, { excludeDeviceId = null, enabled
             // M-6 (2026-10-01): reconciliación por deltas por fuente (mismo
             // helper que el primario) para no perder descuentos concurrentes.
             if (key === 'bodega_stock_v1' && envelope.payload && typeof envelope.payload === 'object') {
-                const productsDocId = physicalDocId(negocioId, 'bodega_products_v1');
-                const current = await localforage.getItem(productsDocId);
-                if (Array.isArray(current)) {
-                    const lrKey = `pda_stock_lastremote_${docId}__${doc?.device_id || 'unknown'}`;
-                    let lastRemote = null;
-                    try {
-                        const raw = localStorage.getItem(lrKey);
-                        lastRemote = raw ? JSON.parse(raw) : null;
-                    } catch { lastRemote = null; }
-                    const { products: merged, nextRemoteMap } =
-                        applyStockMapDelta(current, envelope.payload, lastRemote);
-                    try {
-                        if (nextRemoteMap) localStorage.setItem(lrKey, JSON.stringify(nextRemoteMap));
-                    } catch { /* cuota llena: se re-siembra en el próximo ciclo */ }
-                    if (merged !== current) {
-                        await localforage.setItem(productsDocId, merged);
-                        window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_products_v1', source: 'remote' } }));
-                    }
+                const { changed } = await applyMonitorStockDoc({
+                    localforage,
+                    storage: localStorage,
+                    docId,
+                    negocioId,
+                    sourceDeviceId: doc?.device_id,
+                    payload: envelope.payload,
+                });
+                if (changed) {
+                    window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key: 'bodega_products_v1', source: 'remote' } }));
                 }
             } else if (key === 'bodega_sales_v1' && Array.isArray(envelope.payload)) {
                 // QUOTA-002: las ventas llegan podadas (90 días); fusión por id
@@ -199,8 +192,7 @@ export function useMonitorSync(deviceIdsInput, { excludeDeviceId = null, enabled
                 // El catálogo del primario trae su stock absoluto: conservar el stock local.
                 // Los cambios de stock llegan por bodega_stock_v1 como deltas; si el catálogo
                 // lo pisara, esas ventas se sumarían dos veces.
-                const current = await localforage.getItem(docId);
-                await localforage.setItem(docId, preserveLocalStock(current, envelope.payload));
+                await applyMonitorCatalogDoc({ localforage, docId, payload: envelope.payload });
                 window.dispatchEvent(new CustomEvent('app_storage_update', { detail: { key, source: 'remote' } }));
             } else if (collection === 'local') {
                 const stringPayload = typeof envelope.payload === 'string'
