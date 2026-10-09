@@ -14,6 +14,7 @@ import {
 const SALES_KEY = "bodega_sales_v1";
 const CUSTOMERS_KEY = "bodega_customers_v1";
 const PRODUCTS_KEY = "bodega_products_v1";
+const ATOMIC_POS_KEYS = [SALES_KEY, PRODUCTS_KEY, CUSTOMERS_KEY, CUSTOMER_LEDGER_KEY];
 
 function legacyReversalMovements(sale) {
   const fiadoAmountUsd = round2(
@@ -81,19 +82,40 @@ export async function processVoidSale(sale, currentSales, currentProducts) {
   if (sale.status === "ANULADA") throw new Error("Esta venta ya fue anulada.");
 
   return withLock("pos_write_lock", async () => {
-    const freshSales = await storageService.getItem(SALES_KEY, []);
+    const atomicEnabled = typeof storageService.readAtomicSnapshot === "function"
+      && typeof storageService.commitAtomicSnapshot === "function";
+    const atomicSnapshot = atomicEnabled
+      ? await storageService.readAtomicSnapshot(ATOMIC_POS_KEYS, {
+          defaults: {
+            [SALES_KEY]: [],
+            [PRODUCTS_KEY]: currentProducts || [],
+            [CUSTOMERS_KEY]: [],
+            [CUSTOMER_LEDGER_KEY]: [],
+          },
+        })
+      : null;
+    const atomicValues = atomicSnapshot?.values;
+    const freshSales = atomicValues
+      ? (Array.isArray(atomicValues[SALES_KEY]) ? atomicValues[SALES_KEY] : [])
+      : await storageService.getItem(SALES_KEY, []);
     const freshSale = freshSales.find((s) => s.id === sale.id);
-    if (!freshSale || freshSale.status === "ANULADA")
-      throw new Error("Esta venta ya fue anulada.");
+    if (!freshSale) throw new Error("La venta no existe o ya fue eliminada.");
+    if (freshSale.status === "ANULADA") {
+      return {
+        updatedSales: freshSales,
+        updatedProducts: atomicValues?.[PRODUCTS_KEY] || currentProducts || [],
+        updatedCustomers: atomicValues?.[CUSTOMERS_KEY] || [],
+        replayed: true,
+      };
+    }
 
     const updatedSales = freshSales.map((s) =>
       s.id === sale.id ? { ...s, status: "ANULADA" } : s,
     );
 
-    const freshProducts = await storageService.getItem(
-      PRODUCTS_KEY,
-      currentProducts || [],
-    );
+    const freshProducts = atomicValues
+      ? atomicValues[PRODUCTS_KEY]
+      : await storageService.getItem(PRODUCTS_KEY, currentProducts || []);
     let updatedProducts = freshProducts;
     if (freshSale.items?.length > 0) {
       updatedProducts = freshProducts.map((p) => {
@@ -122,10 +144,14 @@ export async function processVoidSale(sale, currentSales, currentProducts) {
       });
     }
 
-    const savedCustomers = await storageService.getItem(CUSTOMERS_KEY, []);
+    const savedCustomers = atomicValues
+      ? atomicValues[CUSTOMERS_KEY]
+      : await storageService.getItem(CUSTOMERS_KEY, []);
     let updatedCustomers = savedCustomers;
 
-    const savedLedger = await storageService.getItem(CUSTOMER_LEDGER_KEY, []);
+    const savedLedger = atomicValues
+      ? atomicValues[CUSTOMER_LEDGER_KEY]
+      : await storageService.getItem(CUSTOMER_LEDGER_KEY, []);
 
     // Movimientos de esta venta según el ledger (fuente para la reversión
     // exacta; el mapeo conservador legacy se decide más abajo).
@@ -206,14 +232,18 @@ export async function processVoidSale(sale, currentSales, currentProducts) {
     const casheaRemesaUsd =
       freshSale.tipo === "COBRO_CASHEA" ? round2(freshSale.totalUsd || 0) : 0;
 
+    let ledgerToCommit = savedLedger;
     if (freshSale.customerId && reversalMovements.length > 0) {
       const walletResult = await applyCustomerMovementsWithinLock({
         customerId: freshSale.customerId,
         customers: savedCustomers,
         user: useAuthStore.getState().usuarioActivo,
         movements: reversalMovements,
+        ledger: atomicValues ? savedLedger : undefined,
+        persist: !atomicSnapshot,
       });
       updatedCustomers = walletResult.updatedCustomers;
+      if (atomicSnapshot) ledgerToCommit = walletResult.ledger;
     }
 
     if (freshSale.customerId && (casheaVentaUsd > 0 || casheaRemesaUsd > 0)) {
@@ -231,9 +261,21 @@ export async function processVoidSale(sale, currentSales, currentProducts) {
       });
     }
 
-    await storageService.setItem(SALES_KEY, updatedSales);
-    await storageService.setItem(CUSTOMERS_KEY, updatedCustomers);
-    await storageService.setItem(PRODUCTS_KEY, updatedProducts);
+    if (atomicSnapshot) {
+      await storageService.commitAtomicSnapshot({
+        snapshot: atomicSnapshot,
+        writes: {
+          [SALES_KEY]: updatedSales,
+          [CUSTOMERS_KEY]: updatedCustomers,
+          [PRODUCTS_KEY]: updatedProducts,
+          [CUSTOMER_LEDGER_KEY]: ledgerToCommit,
+        },
+      });
+    } else {
+      await storageService.setItem(SALES_KEY, updatedSales);
+      await storageService.setItem(CUSTOMERS_KEY, updatedCustomers);
+      await storageService.setItem(PRODUCTS_KEY, updatedProducts);
+    }
 
     deepFreeze(updatedProducts);
     deepFreeze(updatedCustomers);

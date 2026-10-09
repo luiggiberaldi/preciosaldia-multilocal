@@ -38,7 +38,7 @@ export function useDashboardMetrics(sales, customers, products, bcvRate) {
     const todayCashFlow = useMemo(() =>
         salesWithLocalDate.filter(s => {
             if (s.status === 'ANULADA') return false;
-            if (s.tipo !== 'VENTA' && s.tipo !== 'VENTA_FIADA' && s.tipo !== 'VENTA_CASHEA' && s.tipo !== 'COBRO_DEUDA' && s.tipo !== 'COBRO_CASHEA' && s.tipo !== 'PAGO_PROVEEDOR' && s.tipo !== 'GASTO_INTERNO' && s.tipo !== 'APERTURA_CAJA') return false;
+            if (s.tipo !== 'VENTA' && s.tipo !== 'VENTA_FIADA' && s.tipo !== 'VENTA_CASHEA' && s.tipo !== 'COBRO_DEUDA' && s.tipo !== 'COBRO_CASHEA' && s.tipo !== 'PAGO_PROVEEDOR' && s.tipo !== 'GASTO_INTERNO' && s.tipo !== 'APERTURA_CAJA' && s.tipo !== 'APORTE_CAJA') return false;
             if ((s.tipo === 'PAGO_PROVEEDOR' || s.tipo === 'GASTO_INTERNO') && s.afectaCaja === false) return false;
             if (s.cajaCerrada === true) return false;
             return s.localDate === today;

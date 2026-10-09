@@ -43,6 +43,7 @@ export async function applyCustomerMovementsWithinLock({
     user,
     customers: suppliedCustomers,
     ledger: suppliedLedger,
+    persist = true,
 }) {
     if (!customerId) throw new Error('Se requiere cliente para modificar cartera.');
     if (!Array.isArray(movements) || movements.length === 0) {
@@ -123,9 +124,11 @@ export async function applyCustomerMovementsWithinLock({
     // Always normalize the snapshot, including idempotent retries.
     workingCustomer = normalizeCustomer(workingCustomer);
     const updatedCustomers = customers.map(c => c.id === customerId ? workingCustomer : c);
-    await storageService.setItem(CUSTOMERS_KEY, updatedCustomers);
-    if (createdMovements.length > 0 || !suppliedLedger) {
-        await storageService.setItem(CUSTOMER_LEDGER_KEY, workingLedger);
+    if (persist) {
+        await storageService.setItem(CUSTOMERS_KEY, updatedCustomers);
+        if (createdMovements.length > 0 || !suppliedLedger) {
+            await storageService.setItem(CUSTOMER_LEDGER_KEY, workingLedger);
+        }
     }
 
     return {

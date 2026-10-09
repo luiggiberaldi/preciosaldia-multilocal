@@ -101,6 +101,7 @@ export async function generateDailyClosePDF({
     todayItemsSold = 0,
     reconData = null, // Datos del cuadre físico
     apertura = null,  // Registro de apertura de caja
+    aportes = [],     // Aportes de efectivo a la caja del turno (APORTE_CAJA)
     carteraUsd = null, // Deuda pendiente acumulada (stock) para el cierre
 
     copEnabled: copEnabledParam,
@@ -886,6 +887,7 @@ export async function generateDailyClosePDF({
         + (topProdRows * 9.5)
         + (daySummaryRowsCount * 5.2)
         + (apertura ? 24 : 0)
+        + (aportes.length > 0 ? 10 + aportes.length * 5.5 : 0)
         + (reconData ? 32 : 0);
 
     const doc = new jsPDF('p', 'mm', [WIDTH, H]);
@@ -955,6 +957,34 @@ export async function generateDailyClosePDF({
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(...INK);
             doc.text(value, VALUE_RIGHT, y, { align: 'right' });
+            y += 5;
+        });
+
+        y += 1;
+        dash(y); y += 6;
+    }
+
+    // Aportes de efectivo (no son ingresos; suman al efectivo esperado)
+    if (aportes.length > 0) {
+        y = sectionTitle('APORTES DE EFECTIVO', y);
+
+        aportes.forEach((ap) => {
+            const montos = [];
+            if (ap.aporteUsd > 0) montos.push(fmtUsd(ap.aporteUsd));
+            if (ap.aporteBs > 0) montos.push(`Bs ${formatBs(ap.aporteBs)}`);
+            if (ap.aporteCop > 0) montos.push(`${formatCop(ap.aporteCop)} COP`);
+            const hora = ap.timestamp
+                ? new Date(ap.timestamp).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
+                : '';
+            const motivo = (ap.motivo || 'Aporte').slice(0, 26);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(fBody);
+            doc.setTextColor(...BODY);
+            doc.text(`${hora} ${motivo}`.trim(), M, y);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...INK);
+            doc.text(montos.join(' + ') || '-', VALUE_RIGHT, y, { align: 'right' });
             y += 5;
         });
 

@@ -296,9 +296,11 @@ export default function DashboardView({ rates, refreshRates, ratesLoading, trigg
         if (todayCashFlow.length > 0 || todaySales.length > 0) {
             const allTodayForReport = sales.filter(s => {
                 const saleLocalDay = s.timestamp ? getLocalISODate(new Date(s.timestamp)) : getLocalISODate(new Date());
-                return saleLocalDay === today && !s.cajaCerrada && s.tipo !== 'APERTURA_CAJA';
+                return saleLocalDay === today && !s.cajaCerrada && s.tipo !== 'APERTURA_CAJA' && s.tipo !== 'APORTE_CAJA';
             });
-            const salesForPDF = todayCashFlow.filter(s => s.tipo !== 'APERTURA_CAJA');
+            const salesForPDF = todayCashFlow.filter(s => s.tipo !== 'APERTURA_CAJA' && s.tipo !== 'APORTE_CAJA');
+            // Aportes de efectivo del turno: se listan en su propia sección del PDF de cierre.
+            const todayAportes = todayCashFlow.filter(s => s.tipo === 'APORTE_CAJA');
 
             const todayAdvances = extractAdvancesFromSales(todayCashFlow);
             const totalAdvancesEfectivoBs = todayAdvances.filter(a => a.currency === 'BS').reduce((sum, a) => sum + (a.montoEfectivo || 0), 0);
@@ -318,6 +320,7 @@ export default function DashboardView({ rates, refreshRates, ratesLoading, trigg
                 todayItemsSold,
                 reconData,
                 apertura: todayApertura,
+                aportes: todayAportes,
                 // FIA-CIERRE-001: la cartera al cierre (stock) no se puede derivar de
                 // las ventas del día; se pasa desde las métricas de clientes.
                 carteraUsd: totalDeudas?.totalUsd ?? null,
@@ -337,7 +340,7 @@ export default function DashboardView({ rates, refreshRates, ratesLoading, trigg
         const currentCierreId = new Date().getTime();
         const existingCloses = sales.filter(s => s.tipo === 'REGISTRO_CIERRE');
         const cierreNumber = existingCloses.reduce((mx, s) => Math.max(mx, s.cierreNumber || 0), 0) + 1;
-        const validTiposParaCerrar = ['VENTA', 'VENTA_FIADA', 'VENTA_CASHEA', 'COBRO_DEUDA', 'COBRO_CASHEA', 'PAGO_PROVEEDOR', 'GASTO_INTERNO', 'APERTURA_CAJA', 'AVANCE_EFECTIVO'];
+        const validTiposParaCerrar = ['VENTA', 'VENTA_FIADA', 'VENTA_CASHEA', 'COBRO_DEUDA', 'COBRO_CASHEA', 'PAGO_PROVEEDOR', 'GASTO_INTERNO', 'APERTURA_CAJA', 'APORTE_CAJA', 'AVANCE_EFECTIVO'];
         
         // Registrar el cierre formalmente en el log de transacciones para sincronización con el supervisor
         let registroCierre = null;

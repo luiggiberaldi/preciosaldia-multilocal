@@ -6,6 +6,11 @@ import { withLock } from '../utils/withLock';  // FIN-026: lock para apertura de
 import { round2 } from '../utils/dinero';
 import { CurrencyService } from '../services/CurrencyService'; // FIN-026: safeParse en vez de parseFloat.
 import { SALES_KEY } from './useSalesData';
+import { useAuthStore } from './store/useAuthStore';
+import { canRegistrarAporteCaja } from '../utils/roles';
+import { buildAporteCajaRecord } from '../utils/cajaAporte';
+
+const CHECKOUT_INTENT_STORAGE_KEY = 'pda_checkout_intent_v1';
 
 export function useCheckoutFlow({
     cart, cartTotalUsd, cartTotalBs, cartSubtotalUsd,
@@ -17,6 +22,7 @@ export function useCheckoutFlow({
 }) {
     const [isProcessing, setIsProcessing] = useState(false);
     const isProcessingRef = useRef(false);
+    const checkoutIntentRef = useRef(null);
 
     const handleCheckout = async (payments, changeBreakdown) => {
         if (isProcessingRef.current) return;
@@ -25,10 +31,26 @@ export function useCheckoutFlow({
 
         triggerHaptic && triggerHaptic();
 
-        const opts = {
+        const checkoutInput = {
             cart, cartTotalUsd, cartTotalBs, cartSubtotalUsd, payments, changeBreakdown,
-            selectedCustomerId, customers, products, effectiveRate, tasaCop, copEnabled,
-            discountData, useAutoRate
+            selectedCustomerId, effectiveRate, tasaCop, copEnabled, discountData, useAutoRate,
+        };
+        const inputFingerprint = JSON.stringify(checkoutInput);
+        if (!checkoutIntentRef.current || checkoutIntentRef.current.fingerprint !== inputFingerprint) {
+            let persistedIntent = null;
+            try {
+                persistedIntent = JSON.parse(localStorage.getItem(CHECKOUT_INTENT_STORAGE_KEY) || 'null');
+            } catch { /* corrupted/blocked browser storage must not break checkout */ }
+            checkoutIntentRef.current = persistedIntent?.fingerprint === inputFingerprint
+                ? persistedIntent
+                : { fingerprint: inputFingerprint, id: crypto.randomUUID() };
+            try { localStorage.setItem(CHECKOUT_INTENT_STORAGE_KEY, JSON.stringify(checkoutIntentRef.current)); }
+            catch { /* atomic sale storage still protects the commit; in-memory retry remains stable */ }
+        }
+        const opts = {
+            ...checkoutInput,
+            customers, products, useAutoRate,
+            intentId: checkoutIntentRef.current.id,
         };
 
         let result;
@@ -52,6 +74,11 @@ export function useCheckoutFlow({
             return;
         }
 
+        try {
+            const persistedIntent = JSON.parse(localStorage.getItem(CHECKOUT_INTENT_STORAGE_KEY) || 'null');
+            if (persistedIntent?.id === checkoutIntentRef.current?.id) localStorage.removeItem(CHECKOUT_INTENT_STORAGE_KEY);
+        } catch { /* successful atomic sale is already durable */ }
+        checkoutIntentRef.current = null;
         setProducts(result.updatedProducts);
         if (result.updatedCustomers) setCustomers(result.updatedCustomers);
         setSalesData(prev => [result.sale, ...prev]);
@@ -134,10 +161,47 @@ export function useCheckoutFlow({
         }
     };
 
+    // Aporte de efectivo a la caja: solo dueño y administrador (validado también aquí,
+    // no solo en la UI). Entra al arqueo como ingreso de efectivo, no como venta.
+    const handleSaveAporte = async (data) => {
+        const usuario = useAuthStore.getState().usuarioActivo;
+        if (!canRegistrarAporteCaja(usuario)) {
+            showToast('Solo el administrador o el dueño pueden registrar aportes.', 'error');
+            if (playError) playError();
+            return false;
+        }
+
+        let record;
+        try {
+            record = buildAporteCajaRecord({ ...data, usuario });
+        } catch (err) {
+            showToast(err.message, 'error');
+            if (playError) playError();
+            return false;
+        }
+
+        try {
+            await withLock('pos_write_lock', async () => {
+                const existingSales = await storageService.getItem(SALES_KEY, []);
+                await storageService.setItem(SALES_KEY, [...existingSales, record]);
+                setSalesData(prev => [record, ...prev]);
+            });
+            showToast('Aporte de efectivo registrado', 'success');
+            if (triggerHaptic) triggerHaptic();
+            return true;
+        } catch (error) {
+            console.error('Error al registrar aporte de caja:', error);
+            showToast('Error al registrar el aporte', 'error');
+            if (playError) playError();
+            return false;
+        }
+    };
+
     return {
         handleCheckout,
         handleCreateCustomer,
         handleSaveApertura,
+        handleSaveAporte,
         isProcessing
     };
 }

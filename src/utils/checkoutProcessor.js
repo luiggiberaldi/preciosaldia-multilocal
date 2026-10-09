@@ -1,6 +1,6 @@
 import { storageService } from './storageService.js';
 import { applyCustomerMovementsWithinLock } from '../services/customerWalletService.js';
-import { CUSTOMER_MOVEMENT_TYPES, normalizeCustomer } from './customerLedger.js';
+import { CUSTOMER_LEDGER_KEY, CUSTOMER_MOVEMENT_TYPES, normalizeCustomer } from './customerLedger.js';
 import { logEvent } from '../services/auditService.js';
 import { useAuthStore } from '../hooks/store/useAuthStore.js';
 import { round2, round0, round3, sumR, subR, divR, mulR } from './dinero.js';
@@ -14,6 +14,7 @@ import { CurrencyService } from '../services/CurrencyService.js';
 const SALES_KEY = 'bodega_sales_v1';
 const PRODUCTS_KEY = 'bodega_products_v1';
 const CUSTOMERS_KEY = 'bodega_customers_v1';
+const ATOMIC_POS_KEYS = [SALES_KEY, PRODUCTS_KEY, CUSTOMERS_KEY, CUSTOMER_LEDGER_KEY];
 
 export async function processSaleTransaction({
     cart,
@@ -29,7 +30,8 @@ export async function processSaleTransaction({
     tasaCop,
     copEnabled,
     discountData,
-    useAutoRate
+    useAutoRate,
+    intentId
 }) {
     if (cart.length === 0) return { success: false, error: 'Carrito vacío' };
 
@@ -205,8 +207,15 @@ export async function processSaleTransaction({
         };
     }
 
+    const checkoutIntentFingerprint = JSON.stringify({
+        cart, payments, changeBreakdown, selectedCustomerId: selectedCustomerId || null,
+        cartTotalUsd: activeCartTotalUsd, cartTotalBs: activeCartTotalBs, cartSubtotalUsd,
+        effectiveRate, tasaCop, copEnabled, discountData, useAutoRate,
+    });
+    const stableIntentId = typeof intentId === 'string' && intentId ? intentId : crypto.randomUUID();
     const sale = {
-        id: crypto.randomUUID(),
+        id: stableIntentId,
+        checkoutIntentFingerprint,
         tipo: tipoVenta,
         status: 'COMPLETADA',
         // NÓMINA v1: quién vendió (snapshot; tickets viejos no lo traen = "sin asignar").
@@ -287,7 +296,35 @@ export async function processSaleTransaction({
 
     // FIN-007: withLock reemplaza navigator.locks.request directo (feature detection + fallback).
     const lockResult = await withLock('pos_write_lock', async () => {
-        const existingSales = await storageService.getItem(SALES_KEY, []);
+        const atomicEnabled = typeof storageService.readAtomicSnapshot === 'function'
+            && typeof storageService.commitAtomicSnapshot === 'function';
+        const atomicSnapshot = atomicEnabled
+            ? await storageService.readAtomicSnapshot(ATOMIC_POS_KEYS, {
+                defaults: {
+                    [SALES_KEY]: [],
+                    [PRODUCTS_KEY]: products || [],
+                    [CUSTOMERS_KEY]: customers || [],
+                    [CUSTOMER_LEDGER_KEY]: [],
+                },
+            })
+            : null;
+        const atomicValues = atomicSnapshot?.values;
+        const existingSales = atomicValues
+            ? (Array.isArray(atomicValues[SALES_KEY]) ? atomicValues[SALES_KEY] : [])
+            : await storageService.getItem(SALES_KEY, []);
+        const replayedSale = existingSales.find(existing => existing.id === stableIntentId);
+        if (replayedSale) {
+            if (replayedSale.checkoutIntentFingerprint !== checkoutIntentFingerprint) {
+                throw new Error('El identificador de checkout ya fue usado con otros datos.');
+            }
+            return {
+                success: true,
+                sale: replayedSale,
+                updatedProducts: atomicValues[PRODUCTS_KEY],
+                updatedCustomers: atomicValues[CUSTOMERS_KEY],
+                replayed: true,
+            };
+        }
         const saleNumber = existingSales.reduce((mx, s) => Math.max(mx, s.saleNumber || 0), 0) + 1;
         // FIN-008: deep-freeze el sale persistido final.
         let finalPersistedSale = deepFreeze({ ...sale, saleNumber });
@@ -296,7 +333,9 @@ export async function processSaleTransaction({
         // antes de persistir venta o stock.
         let walletSnapshot = null;
         if (selectedCustomerId) {
-            const validationCustomers = await storageService.getItem(CUSTOMERS_KEY, customers);
+            const validationCustomers = atomicValues
+                ? atomicValues[CUSTOMERS_KEY]
+                : await storageService.getItem(CUSTOMERS_KEY, customers);
             const validationCustomer = validationCustomers.find(c => c.id === selectedCustomerId);
             if (!validationCustomer) {
                 return { success: false, error: 'El cliente no existe o fue actualizado.' };
@@ -333,21 +372,14 @@ export async function processSaleTransaction({
             finalPersistedSale = deepFreeze({ ...finalPersistedSale, walletSnapshot });
         }
 
-        await storageService.setItem(SALES_KEY, [finalPersistedSale, ...existingSales]);
-
-        // Audit log
+        const updatedSales = [finalPersistedSale, ...existingSales];
         const user = useAuthStore.getState().usuarioActivo;
-        const tipo = casheaUsd > 0 ? 'VENTA_CASHEA' : (fiadoAmountUsd > 0 ? 'VENTA_FIADA' : 'VENTA_COMPLETADA');
-        logEvent('VENTA', tipo,
-            // FIN-036: usar el total dinámico, el mismo que se persiste en la venta.
-            `Venta #${saleNumber} - $${round2(activeCartTotalUsd)} - ${cart.length} items - ${selectedCustomer?.name || 'Consumidor Final'}`,
-            user,
-            { saleId: finalPersistedSale.id, total: activeCartTotalUsd, items: cart.length }
-        );
+        if (!atomicSnapshot) await storageService.setItem(SALES_KEY, updatedSales);
 
         // ── Deducir stock con precisión ──
-        // FIN-027-pattern: re-leer productos fresco aquí para evitar stale state.
-        const freshProducts = await storageService.getItem(PRODUCTS_KEY, products);
+        const freshProducts = atomicValues
+            ? atomicValues[PRODUCTS_KEY]
+            : await storageService.getItem(PRODUCTS_KEY, products);
         const allowNeg = localStorage.getItem('allow_negative_stock') === 'true';
         let negativeStockUsed = false;
         const negativeItems = [];
@@ -379,25 +411,19 @@ export async function processSaleTransaction({
             return p;
         });
 
-        if (negativeStockUsed) {
-            const user = useAuthStore.getState().usuarioActivo;
-            logEvent('CONFIG', 'NEGATIVE_STOCK_USED',
-                `Venta #${saleNumber} usó stock negativo en ${negativeItems.length} producto(s)`,
-                user,
-                { saleId: finalPersistedSale.id, items: negativeItems }
-            );
-        }
-
         // FIN-008: deep-freeze products antes de retornar.
-        await storageService.setItem(PRODUCTS_KEY, updatedProducts);
+        if (!atomicSnapshot) await storageService.setItem(PRODUCTS_KEY, updatedProducts);
         deepFreeze(updatedProducts);
 
-        let updatedCustomers = customers;
+        let updatedCustomers = atomicValues ? atomicValues[CUSTOMERS_KEY] : customers;
+        let updatedLedger = atomicValues ? atomicValues[CUSTOMER_LEDGER_KEY] : undefined;
 
         if (selectedCustomerId) {
             // Leer cliente fresco dentro del lock y registrar cada impacto como un
             // movimiento independiente, manteniendo snapshot y ledger consistentes.
-            const freshCustomers = await storageService.getItem(CUSTOMERS_KEY, customers);
+            const freshCustomers = atomicValues
+                ? atomicValues[CUSTOMERS_KEY]
+                : await storageService.getItem(CUSTOMERS_KEY, customers);
             const freshSelected = freshCustomers.find(c => c.id === selectedCustomerId);
             if (!freshSelected) {
                 throw new Error('El cliente no existe o fue actualizado.');
@@ -460,19 +486,48 @@ export async function processSaleTransaction({
                     customers: freshCustomers,
                     user,
                     movements,
+                    ledger: atomicValues ? atomicValues[CUSTOMER_LEDGER_KEY] : undefined,
+                    persist: !atomicSnapshot,
                 });
                 updatedCustomers = walletResult.updatedCustomers;
+                if (atomicSnapshot) updatedLedger = walletResult.ledger;
             } else {
                 updatedCustomers = freshCustomers;
             }
             deepFreeze(updatedCustomers);
         }
 
+        if (atomicSnapshot) {
+            await storageService.commitAtomicSnapshot({
+                snapshot: atomicSnapshot,
+                writes: {
+                    [SALES_KEY]: updatedSales,
+                    [PRODUCTS_KEY]: updatedProducts,
+                    [CUSTOMERS_KEY]: updatedCustomers,
+                    [CUSTOMER_LEDGER_KEY]: updatedLedger,
+                },
+            });
+        }
+
+        const tipo = casheaUsd > 0 ? 'VENTA_CASHEA' : (fiadoAmountUsd > 0 ? 'VENTA_FIADA' : 'VENTA_COMPLETADA');
+        logEvent('VENTA', tipo,
+            `Venta #${saleNumber} - $${round2(activeCartTotalUsd)} - ${cart.length} items - ${selectedCustomer?.name || 'Consumidor Final'}`,
+            user,
+            { saleId: finalPersistedSale.id, total: activeCartTotalUsd, items: cart.length }
+        );
+        if (negativeStockUsed) {
+            logEvent('CONFIG', 'NEGATIVE_STOCK_USED',
+                `Venta #${saleNumber} usó stock negativo en ${negativeItems.length} producto(s)`,
+                user,
+                { saleId: finalPersistedSale.id, items: negativeItems }
+            );
+        }
+
         return {
             success: true,
             sale: finalPersistedSale,
             updatedProducts,
-            updatedCustomers
+            updatedCustomers,
         };
     });
 

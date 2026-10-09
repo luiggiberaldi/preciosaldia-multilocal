@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, ShoppingCart, Keyboard, LogOut, ClipboardList } from 'lucide-react';
+import { RefreshCw, ShoppingCart, Keyboard, LogOut, ClipboardList, Wallet } from 'lucide-react';
 import Tooltip from '../Tooltip';
 import { pushLocalSync } from '../../hooks/useCloudSync';
 import { useAuthStore } from '../../hooks/store/useAuthStore';
-import { isAdministrador, isOwner } from '../../utils/roles';
+import { canRegistrarAporteCaja, isAdministrador, isCashier, isOwner } from '../../utils/roles';
 import EmployeeConsumptionModal from '../Payroll/EmployeeConsumptionModal';
 
 const formatBs = (n) => new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
@@ -30,6 +30,7 @@ export default function SalesHeader({
     setAutoCopEnabled,
     tasaCopManual,
     setTasaCopManual,
+    onOpenAporte,
 }) {
     const isCopMode = copEnabled && copPrimary && tasaCop > 0;
 
@@ -50,7 +51,12 @@ export default function SalesHeader({
         }
     }, [showRateConfig, rateMode, customRate, tasaCopManual, redondearTasaAuto]);
 
+    const { usuarioActivo, requireLogin, logout } = useAuthStore();
+    // El cajero no puede cambiar la tasa (solo dueño y administrador).
+    const puedeCambiarTasa = !isCashier(usuarioActivo);
+
     const handleRateToggle = () => {
+        if (!puedeCambiarTasa) return;
         setShowRateConfig(!showRateConfig);
     };
 
@@ -88,7 +94,6 @@ export default function SalesHeader({
         setShowRateConfig(false);
     };
 
-    const { usuarioActivo, requireLogin, logout } = useAuthStore();
     const [showConsumo, setShowConsumo] = useState(false);
     const puedeConsumo = isAdministrador(usuarioActivo) || isOwner(usuarioActivo);
     const tasaBcv = Number(rates?.bcv?.price) || 0;
@@ -107,7 +112,9 @@ export default function SalesHeader({
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleRateToggle}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all bg-slate-50 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 active:scale-95 dark:bg-slate-800 dark:border-slate-700"
+                            disabled={!puedeCambiarTasa}
+                            title={puedeCambiarTasa ? undefined : 'Solo el administrador o el dueño pueden cambiar la tasa'}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700 ${puedeCambiarTasa ? 'hover:border-emerald-500 hover:bg-emerald-50 active:scale-95' : 'cursor-default'}`}
                         >
                             <RefreshCw size={12} className={showRateConfig ? (isCopMode ? "text-amber-500" : "text-emerald-500") : "text-slate-400"} />
                             {isCopMode
@@ -116,6 +123,17 @@ export default function SalesHeader({
                             }
                             {!isAuto && <span className="text-[8px] bg-brand-light dark:bg-surface-800/30 text-brand-dark dark:text-brand px-1 rounded font-bold">MAN</span>}
                         </button>
+
+                        {canRegistrarAporteCaja(usuarioActivo) && onOpenAporte && (
+                            <button
+                                onClick={() => { triggerHaptic && triggerHaptic(); onOpenAporte(); }}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 transition-colors border border-emerald-200/50 text-xs font-bold active:scale-95 shrink-0"
+                                title="Registrar aporte de efectivo a la caja"
+                            >
+                                <Wallet size={14} />
+                                <span className="text-xs font-bold hidden sm:inline">Aporte</span>
+                            </button>
+                        )}
 
                         {puedeConsumo && (
                             <button
@@ -143,7 +161,7 @@ export default function SalesHeader({
             </div>
 
             {/* Rate Config Panel */}
-            {showRateConfig && (
+            {showRateConfig && puedeCambiarTasa && (
                 <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 mb-3 animate-in fade-in slide-in-from-top-2">
                     <div className="max-w-md mx-auto w-full space-y-4">
                         {isCopMode ? (

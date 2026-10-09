@@ -15,6 +15,10 @@ import { useProductContext } from '../context/ProductContext';
 import { isGranelProduct, parseCartQuantity, adjustStockValue } from '../utils/granel'; // GRANEL-001
 import { deriveCartFields, resyncCartItems } from '../utils/cartSync'; // SYNC-CESTA-001
 import { advancePriceUsdt } from '../utils/fase6Money'; // B-6 (2026-10-01)
+import { useAuthStore } from '../hooks/store/useAuthStore';
+import { canRegistrarAporteCaja, isCashier } from '../utils/roles';
+import AporteCajaModal from '../components/Sales/AporteCajaModal';
+import { evaluarAlertaEfectivo, UMBRAL_EFECTIVO_KEY, UMBRAL_EFECTIVO_DEFAULT } from '../utils/cajaAporte';
 
 // Components
 import SalesHeader from '../components/Sales/SalesHeader';
@@ -80,8 +84,34 @@ export default function SalesView({ triggerHaptic, isActive }) {
     const [weightPending, setWeightPending] = useState(null);
     const [selectedCustomerId, setSelectedCustomerId] = useState('');
 
-    // Rate config
+    // Rate config (el cajero no puede cambiar la tasa)
     const [showRateConfig, setShowRateConfig] = useState(false);
+    const { usuarioActivo } = useAuthStore();
+    const puedeCambiarTasa = !isCashier(usuarioActivo);
+
+    // Aporte de efectivo y alerta de efectivo bajo: solo dueño y administrador.
+    const puedeGestionarCaja = canRegistrarAporteCaja(usuarioActivo);
+    const [isAporteOpen, setIsAporteOpen] = useState(false);
+    const [umbralEfectivo, setUmbralEfectivo] = useState(UMBRAL_EFECTIVO_DEFAULT);
+    useEffect(() => {
+        if (!puedeGestionarCaja) return;
+        storageService.getItem(UMBRAL_EFECTIVO_KEY, UMBRAL_EFECTIVO_DEFAULT)
+            .then(v => setUmbralEfectivo({ usd: Number(v?.usd) || 0, bs: Number(v?.bs) || 0 }))
+            .catch(err => console.error('[caja] Error al leer umbral de efectivo:', err));
+    }, [puedeGestionarCaja]);
+    // Confirma el aporte y guarda el umbral de alerta. Cierra el modal solo si el aporte se registró.
+    const handleConfirmAporte = async ({ umbral, ...aporte }) => {
+        try {
+            await storageService.setItem(UMBRAL_EFECTIVO_KEY, umbral);
+            setUmbralEfectivo(umbral);
+        } catch (err) {
+            console.error('[caja] Error al guardar umbral de efectivo:', err);
+        }
+        const ok = await handleSaveAporte(aporte);
+        if (ok) setIsAporteOpen(false);
+        return ok;
+    };
+
 
     const [isCartSheetOpen, setIsCartSheetOpen] = useState(false);
 
@@ -349,6 +379,11 @@ export default function SalesView({ triggerHaptic, isActive }) {
         };
     }, [salesData]);
 
+    const alertaEfectivo = useMemo(
+        () => evaluarAlertaEfectivo(currentFloat, umbralEfectivo),
+        [currentFloat, umbralEfectivo]
+    );
+
     // GRANEL-001-UI: cuenta ARTÍCULOS distintos de la cesta, nunca suma cantidades
     // (sumar item.qty mostraba decimales "1.355" para productos a granel).
     const cartItemCount = cart.length;
@@ -400,7 +435,7 @@ export default function SalesView({ triggerHaptic, isActive }) {
     }, [cart, showCheckout, showReceipt, showHoldsModal, pendingCarts]);
 
     // ── Checkout Flow Hook ──────────────────────────
-    const { handleCheckout, handleCreateCustomer, handleSaveApertura, isProcessing } = useCheckoutFlow({
+    const { handleCheckout, handleCreateCustomer, handleSaveApertura, handleSaveAporte, isProcessing } = useCheckoutFlow({
         cart, cartTotalUsd, cartTotalBs, cartSubtotalUsd,
         selectedCustomerId, customers, setCustomers, products, setProducts,
         effectiveRate, tasaCop, copEnabled, discountData, useAutoRate,
@@ -758,6 +793,7 @@ export default function SalesView({ triggerHaptic, isActive }) {
                 copEnabled={copEnabled} copPrimary={copPrimary} tasaCop={tasaCop}
                 autoCopEnabled={autoCopEnabled} setAutoCopEnabled={setAutoCopEnabled}
                 tasaCopManual={tasaCopManual} setTasaCopManual={setTasaCopManual}
+                onOpenAporte={() => setIsAporteOpen(true)}
             />
 
             {/* Banner de Advertencia de Discrepancia de Tasas */}
@@ -777,6 +813,24 @@ export default function SalesView({ triggerHaptic, isActive }) {
                     <span className="text-[9px] bg-amber-500/20 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
                         {rateDiscrepancyWarning.diff}% DIF
                     </span>
+                </div>
+            )}
+
+            {/* Alerta de efectivo bajo (solo dueño/administrador) */}
+            {puedeGestionarCaja && todayAperturaData && alertaEfectivo.bajo && (
+                <div className="mx-4 lg:mx-0 mb-3 bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 px-4 py-3 rounded-2xl flex items-center justify-between gap-3">
+                    <div className="text-left">
+                        <p className="text-xs font-black uppercase tracking-wider">Efectivo bajo en caja</p>
+                        <p className="text-[10px] font-semibold leading-tight">
+                            Esperado: {alertaEfectivo.usd && `$ ${Number(currentFloat.usd).toFixed(2)} `}{alertaEfectivo.bs && `Bs ${Number(currentFloat.bs).toFixed(2)}`}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setIsAporteOpen(true)}
+                        className="shrink-0 px-3 py-2 rounded-xl bg-emerald-500 text-white text-xs font-black active:scale-95 transition-all"
+                    >
+                        Registrar aporte
+                    </button>
                 </div>
             )}
 
@@ -817,8 +871,10 @@ export default function SalesView({ triggerHaptic, isActive }) {
 
                                 {/* Tasa de Referencia Flotante (estilo Listo POS 2026) — solo visible en desktop (lg:flex) */}
                                 <button
-                                    onClick={() => setShowRateConfig(v => !v)}
-                                    className="hidden lg:flex shrink-0 flex-col items-center justify-center bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl px-5 border border-slate-100 dark:border-slate-800 shadow-sm hover:border-brand/40 transition-all min-w-[100px] gap-0.5"
+                                    onClick={() => { if (puedeCambiarTasa) setShowRateConfig(v => !v); }}
+                                    disabled={!puedeCambiarTasa}
+                                    title={puedeCambiarTasa ? undefined : 'Solo el administrador o el dueño pueden cambiar la tasa'}
+                                    className={`hidden lg:flex shrink-0 flex-col items-center justify-center bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl px-5 border border-slate-100 dark:border-slate-800 shadow-sm transition-all min-w-[100px] gap-0.5 ${puedeCambiarTasa ? 'hover:border-brand/40' : 'cursor-default'}`}
                                 >
                                     <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                                         {copEnabled && copPrimary ? 'TASA COP' : 'TASA BCV'}
@@ -1073,6 +1129,17 @@ export default function SalesView({ triggerHaptic, isActive }) {
                 copEnabled={copEnabled}
                 copPrimary={copPrimary}
             />
+
+            {/* Aporte de Efectivo Modal (solo dueño/administrador) */}
+            {puedeGestionarCaja && (
+                <AporteCajaModal
+                    isOpen={isAporteOpen}
+                    onClose={() => setIsAporteOpen(false)}
+                    onConfirm={handleConfirmAporte}
+                    umbral={umbralEfectivo}
+                    copEnabled={copEnabled}
+                />
+            )}
 
             {/* Holds Modal */}
             {showHoldsModal && (

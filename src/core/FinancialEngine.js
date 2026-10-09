@@ -181,6 +181,23 @@ export class FinancialEngine {
                 return; // Do NOT count opening as revenue
             }
 
+            // ── APORTE DE EFECTIVO: dinero que entra a la caja durante el turno (no es ingreso) ──
+            if (sale.tipo === 'APORTE_CAJA') {
+                if (sale.aporteUsd > 0) {
+                    if (!breakdown['efectivo_usd']) breakdown['efectivo_usd'] = { total: 0, currency: 'USD', label: 'Efectivo $' };
+                    breakdown['efectivo_usd'].total = round2(breakdown['efectivo_usd'].total + round2(sale.aporteUsd));
+                }
+                if (sale.aporteBs > 0) {
+                    if (!breakdown['efectivo_bs']) breakdown['efectivo_bs'] = { total: 0, currency: 'BS', label: 'Efectivo Bs' };
+                    breakdown['efectivo_bs'].total = round2(breakdown['efectivo_bs'].total + round2(sale.aporteBs));
+                }
+                if (sale.aporteCop > 0) {
+                    if (!breakdown['efectivo_cop']) breakdown['efectivo_cop'] = { total: 0, currency: 'COP', label: 'Efectivo COP' };
+                    breakdown['efectivo_cop'].total = round2(breakdown['efectivo_cop'].total + round2(sale.aporteCop));
+                }
+                return; // Aporte no es revenue
+            }
+
             if (sale.tipo === 'AVANCE_EFECTIVO') {
                 const isBs = sale.currency === 'BS';
                 const isUsd = sale.currency === 'USD';
