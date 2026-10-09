@@ -4,14 +4,43 @@ import {
     validateSupervisorSyncDocument,
 } from '../src/services/supervisorContracts';
 import {
+    accumulateReceivedStock,
     applyStockMap,
+    applyStockMapDelta,
+    buildOwnStockMap,
     buildStockMap,
     catalogHash,
+    preserveLocalStock,
     isValidStockMap,
     mergeSales,
+    normalizeSalesDeltaPayload,
     physicalDocId,
     pruneSalesForSync,
 } from '../src/utils/syncDelta';
+
+describe('delta legado sin fecha', () => {
+    const key = 'bodega_sales_delta_2026-09-27';
+    const legacy = { tickets: [{ id: 't1', totalUsd: 3 }] };
+
+    it('toma la fecha de la clave y el documento pasa el contrato del supervisor', () => {
+        const normalized = normalizeSalesDeltaPayload(key, legacy);
+        expect(normalized).toEqual({ date: '2026-09-27', tickets: legacy.tickets });
+        expect(validateSupervisorSyncDocument(key, normalized).valid).toBe(true);
+        // Sin normalizar sigue rechazado: la validación estricta no cambió.
+        expect(validateSupervisorSyncDocument(key, legacy).valid).toBe(false);
+    });
+
+    it('no altera deltas ya válidos, claves ajenas ni formas que no son delta', () => {
+        const current = { date: '2026-09-27', tickets: [] };
+        expect(normalizeSalesDeltaPayload(key, current)).toBe(current);
+        expect(normalizeSalesDeltaPayload('bodega_products_v1', legacy)).toBe(legacy);
+        expect(normalizeSalesDeltaPayload('bodega_sales_delta_2026-9-27', legacy)).toBe(legacy);
+        const array = [{ id: 't1' }];
+        expect(normalizeSalesDeltaPayload(key, array)).toBe(array);
+        const noTickets = { items: [] };
+        expect(normalizeSalesDeltaPayload(key, noTickets)).toBe(noTickets);
+    });
+});
 
 const products = [
     { id: 'p1', name: 'A', priceUsd: 1, stock: 10, updatedAt: 't1' },
@@ -106,6 +135,66 @@ describe('syncDelta — ventas podadas y fusión', () => {
     it('mergeSales tolera nulls', () => {
         expect(mergeSales(null, [sale('a', 1)]).map((s) => s.id)).toEqual(['a']);
         expect(mergeSales([sale('a', 1)], null).map((s) => s.id)).toEqual(['a']);
+    });
+});
+
+describe('syncDelta — eco de stock entre equipos', () => {
+    // Un equipo: stock del producto p1, lo recibido de otros y el último mapa visto.
+    const device = (stock) => ({ products: [{ id: 'p1', stock }], received: {}, lastSeen: null });
+    const publish = (d) => buildOwnStockMap(d.products, d.received);
+    // Mismo flujo que useCloudSync: aplicar delta, persistir y acumular lo recibido.
+    const receive = (dst, srcMap) => {
+        const r = applyStockMapDelta(dst.products, srcMap, dst.lastSeen);
+        dst.products = r.products;
+        dst.lastSeen = r.nextRemoteMap;
+        dst.received = accumulateReceivedStock(dst.received, r.deltas);
+    };
+    const sync = (a, b, cycles = 5) => {
+        for (let i = 0; i < cycles; i++) {
+            receive(b, publish(a));
+            receive(a, publish(b));
+        }
+    };
+
+    it('una venta en A se aplica una sola vez en ambos equipos (sin eco)', () => {
+        const A = device(10);
+        const B = device(10);
+        A.lastSeen = publish(B);
+        B.lastSeen = publish(A);
+        A.products[0].stock = 9; // venta única
+        sync(A, B);
+        expect(A.products[0].stock).toBe(9);
+        expect(B.products[0].stock).toBe(9);
+    });
+
+    it('ventas simultáneas en A (1) y B (2) convergen a 7 sin duplicarse', () => {
+        const A = device(10);
+        const B = device(10);
+        A.lastSeen = publish(B);
+        B.lastSeen = publish(A);
+        A.products[0].stock = 9;
+        B.products[0].stock = 8;
+        sync(A, B);
+        expect(A.products[0].stock).toBe(7);
+        expect(B.products[0].stock).toBe(7);
+    });
+
+    it('buildOwnStockMap resta lo recibido de otras fuentes', () => {
+        expect(buildOwnStockMap([{ id: 'p1', stock: 7 }], { p1: -1 })).toEqual({ p1: 8 });
+        expect(buildOwnStockMap([{ id: 'p1', stock: 7 }], {})).toEqual({ p1: 7 });
+    });
+
+    it('accumulateReceivedStock suma deltas y descarta los que vuelven a cero', () => {
+        expect(accumulateReceivedStock({ p1: -1 }, { p1: -2 })).toEqual({ p1: -3 });
+        expect(accumulateReceivedStock({ p1: 2 }, { p1: -2 })).toEqual({});
+    });
+
+    it('preserveLocalStock: el catálogo remoto no pisa el stock local', () => {
+        const local = [{ id: 'p1', name: 'A', stock: 7 }, { id: 'p2', name: 'B', stock: 3 }];
+        const remote = [{ id: 'p1', name: 'A2', stock: 10 }, { id: 'p3', name: 'Nuevo', stock: 4 }];
+        const merged = preserveLocalStock(local, remote);
+        expect(merged.find((p) => p.id === 'p1')).toEqual({ id: 'p1', name: 'A2', stock: 7 });
+        expect(merged.find((p) => p.id === 'p3').stock).toBe(4);
     });
 });
 

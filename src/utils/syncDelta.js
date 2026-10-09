@@ -107,11 +107,15 @@ export function isValidStockMap(value) {
  */
 export function applyStockMapDelta(products, stockMap, lastRemoteMap) {
     if (!Array.isArray(products) || !stockMap || typeof stockMap !== 'object') {
-        return { products, nextRemoteMap: lastRemoteMap || null };
+        return { products, nextRemoteMap: lastRemoteMap || null, deltas: {} };
     }
     if (!lastRemoteMap || typeof lastRemoteMap !== 'object') {
-        return { products: applyStockMap(products, stockMap), nextRemoteMap: { ...stockMap } };
+        // Primera vista de la fuente: solo se siembra el "último visto". El mapa
+        // que publica un equipo es stock PROPIO (sin lo recibido de otros); asignarlo
+        // pisaría el stock local con un valor incompleto.
+        return { products, nextRemoteMap: { ...stockMap }, deltas: {} };
     }
+    const deltas = {};
     let changed = false;
     const out = products.map((p) => {
         if (!p || p.id == null) return p;
@@ -120,10 +124,57 @@ export function applyStockMapDelta(products, stockMap, lastRemoteMap) {
         if (!Object.prototype.hasOwnProperty.call(lastRemoteMap, key)) return p;
         const delta = Number(stockMap[key]) - Number(lastRemoteMap[key]);
         if (!Number.isFinite(delta) || delta === 0) return p;
+        deltas[key] = delta;
         changed = true;
         return { ...p, stock: (Number(p.stock) || 0) + delta };
     });
-    return { products: changed ? out : products, nextRemoteMap: { ...stockMap } };
+    return { products: changed ? out : products, nextRemoteMap: { ...stockMap }, deltas };
+}
+
+/**
+ * Mapa de stock PROPIO a publicar: stock local menos lo recibido de otras fuentes
+ * (receivedMap, acumulado por producto). Así el otro equipo solo ve cambios de
+ * actividad propia y nunca re-publica deltas ajenos (eco).
+ */
+export function buildOwnStockMap(products, receivedMap) {
+    const map = buildStockMap(products);
+    if (!receivedMap || typeof receivedMap !== 'object') return map;
+    for (const key of Object.keys(map)) {
+        const received = Number(receivedMap[key]);
+        if (Number.isFinite(received) && received !== 0) map[key] = map[key] - received;
+    }
+    return map;
+}
+
+/** Suma los deltas aplicados de una fuente al acumulado de recibido por producto. */
+export function accumulateReceivedStock(receivedMap, deltas) {
+    const out = { ...(receivedMap && typeof receivedMap === 'object' ? receivedMap : {}) };
+    for (const [key, delta] of Object.entries(deltas || {})) {
+        const next = (Number(out[key]) || 0) + Number(delta);
+        if (!Number.isFinite(next)) continue;
+        if (next === 0) delete out[key];
+        else out[key] = next;
+    }
+    return out;
+}
+
+/**
+ * El catálogo remoto trae el stock absoluto del equipo que lo publicó: no debe
+ * pisar el stock local. Conserva el stock local por id; los productos sin copia
+ * local toman el stock remoto.
+ */
+export function preserveLocalStock(localProducts, remoteProducts) {
+    if (!Array.isArray(remoteProducts) || !Array.isArray(localProducts)) return remoteProducts;
+    const localById = new Map();
+    for (const p of localProducts) {
+        if (p && p.id != null) localById.set(String(p.id), p);
+    }
+    return remoteProducts.map((p) => {
+        if (!p || p.id == null) return p;
+        const local = localById.get(String(p.id));
+        if (!local || local.stock === undefined) return p;
+        return local.stock === p.stock ? p : { ...p, stock: local.stock };
+    });
 }
 
 function saleTime(sale) {
@@ -247,6 +298,18 @@ export function filterTicketsForDay(tickets, dateStr) {
 export function buildSalesDeltaPayload(tickets, dateStr) {
     const day = dateStr || salesDayString();
     return { date: day, tickets: filterTicketsForDay(tickets, day) };
+}
+
+/**
+ * Completa la fecha de un delta legado `{ tickets }` (sin `date`) con la fecha
+ * de su clave `bodega_sales_delta_YYYY-MM-DD`. Cualquier otro caso se devuelve
+ * sin cambios, así que el validador sigue rechazando lo que no sea un delta.
+ */
+export function normalizeSalesDeltaPayload(key, payload) {
+    if (!isSalesDeltaKey(key)) return payload;
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+    if (payload.date !== undefined || !Array.isArray(payload.tickets)) return payload;
+    return { ...payload, date: key.slice(SALES_DELTA_KEY_PREFIX.length) };
 }
 
 /** Validador del payload del delta para STORE_SCHEMAS / contratos. */
