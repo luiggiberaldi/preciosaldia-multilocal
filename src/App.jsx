@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
-import { Home, ShoppingCart, Store, Users, Download, FlaskConical, Moon, Sun, BarChart3, WifiOff, X, Settings, Building2, Wallet } from 'lucide-react';
+import { Home, ShoppingCart, Store, Users, Download, FlaskConical, Moon, Sun, BarChart3, WifiOff, X, Settings, Building2, Wallet, MoreHorizontal } from 'lucide-react';
 
 import DashboardView from './views/DashboardView';
 
@@ -785,6 +785,9 @@ export default function App() {
   );
 }
 
+// Pestañas visibles fuera del menú "Más". El resto (Reportes, Ajustes, Control, Nómina) va dentro de "Más".
+const PRIMARY_TAB_IDS = ['inicio', 'ventas', 'catalogo', 'clientes'];
+
 function BottomNav({
   tabs,
   activeTab,
@@ -799,7 +802,24 @@ function BottomNav({
   setShowIOSInstall,
   isKeyboardOpen
 }) {
+  const [showMore, setShowMore] = useState(false);
+  const moreRef = useRef(null);
+
+  // Cierra el menú "Más" al tocar fuera de él.
+  useEffect(() => {
+    if (!showMore) return undefined;
+    const onPointerDown = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setShowMore(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [showMore]);
+
   if (isKeyboardOpen) return null;
+
+  const primaryTabs = tabs.filter(t => PRIMARY_TAB_IDS.includes(t.id));
+  const moreTabs = tabs.filter(t => !PRIMARY_TAB_IDS.includes(t.id));
+  const moreActive = moreTabs.some(t => t.id === activeTab);
 
   const { cart } = useCart();
   // GRANEL-001-UI: el badge cuenta ARTÍCULOS distintos de la cesta, nunca suma cantidades.
@@ -818,7 +838,7 @@ function BottomNav({
       }}
     >
       <div className="relative bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-2xl rounded-2xl px-1 sm:px-2 pt-1.5 pb-2 flex justify-between items-center shadow-2xl shadow-black/40 border border-white/10 ring-1 ring-black/10 pointer-events-auto">
-        {tabs.map(tab => {
+        {primaryTabs.map(tab => {
           const isVender = tab.id === 'ventas';
           const isActive = activeTab === tab.id;
           const badgeCount = isVender ? totalCartItems : 0;
@@ -837,7 +857,38 @@ function BottomNav({
           );
         })}
 
-
+        {moreTabs.length > 0 && (
+          <div ref={moreRef} className="relative flex-1 min-w-0 flex">
+            {showMore && (
+              <div className="absolute bottom-full right-0 mb-3 w-44 rounded-2xl bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-white/10 shadow-2xl p-1.5 flex flex-col gap-0.5 z-40">
+                {moreTabs.map(tab => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => { triggerHaptic(); setActiveTab(tab.id); setShowMore(false); }}
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                        isActive ? 'bg-emerald-500 text-white' : 'text-slate-200 hover:bg-white/10'
+                      }`}
+                    >
+                      <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <TabButton
+              id="mas"
+              icon={<MoreHorizontal size={18} strokeWidth={moreActive ? 2.5 : 2} />}
+              label="Más"
+              isActive={moreActive}
+              badgeCount={0}
+              onClick={() => { triggerHaptic(); setShowMore(v => !v); }}
+            />
+          </div>
+        )}
 
         {installPrompt && activeTab === 'inicio' && (
           <button onClick={() => { triggerHaptic(); handleInstall(); }} className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-0.5 sm:py-1 px-0.5 min-h-[44px] rounded-xl transition-all duration-300 text-brand hover:bg-brand/10 animate-pulse overflow-hidden">
