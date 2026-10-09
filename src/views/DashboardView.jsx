@@ -16,7 +16,6 @@ import { generateTicketPDF, printThermalTicket } from '../utils/ticketGenerator'
 import { shareSaleWhatsApp } from '../utils/dashboardActions';
 import { generateDailyClosePDF } from '../utils/dailyCloseGenerator';
 import { useNotifications } from '../hooks/useNotifications';
-import SyncStatus from '../components/SyncStatus';
 import { pushSalesWindow } from '../hooks/useCloudSync';
 import { useProductContext } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
@@ -473,7 +472,7 @@ export default function DashboardView({ rates, refreshRates, ratesLoading, trigg
 
             {/* Header Sticky con 5 Fichas Integradas (estilo donde juancho - Glassmorphism & Scroll reactive) */}
             <div className={`sticky top-0 z-30 flex flex-col transition-all duration-200 -mx-3 sm:-mx-5 lg:-mx-6 xl:-mx-8 px-3 sm:px-5 lg:px-6 xl:px-8 py-2 mb-4 bg-surface-50/95 dark:bg-surface-950/95 backdrop-blur-md border-b ${isScrolled ? 'border-slate-200/80 dark:border-slate-800/80 shadow-md' : 'border-transparent'}`}>
-                {/* Fila Superior: Reloj | Logo | SyncStatus */}
+                {/* Fila Superior: Reloj | Logo | Salir */}
                 <div className="flex md:grid md:grid-cols-3 items-center justify-between">
                     {/* Reloj y fecha en PC */}
                     <div className="hidden md:flex flex-col items-start gap-1">
@@ -488,8 +487,6 @@ export default function DashboardView({ rates, refreshRates, ratesLoading, trigg
                         <img src={theme === 'dark' ? './logodark.png' : './logo.png'} alt="PreciosAlDía" className="h-10 sm:h-12 md:h-[85px] w-auto object-contain drop-shadow-sm shrink-0" />
                     </div>
                     <div className="flex items-center justify-end gap-1.5 shrink-0">
-                        <SyncStatus />
-
                         {/* SALIR-MOBILE: visible con sesión activa (logout) o en
                             modo libre sin login requerido (portal de cambio de usuario). */}
                         {(useAuthStore.getState().usuarioActivo || !useAuthStore.getState().requireLogin) && (
