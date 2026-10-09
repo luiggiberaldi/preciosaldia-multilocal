@@ -8,6 +8,8 @@ import { showToast } from '../components/Toast';
 import { Modal } from '../components/Modal';
 import { AlertTriangle, ShieldAlert, RotateCcw } from 'lucide-react';
 import { isGranelProduct, adjustStockValue, normalizeStockValue, formatStockDisplay } from '../utils/granel.js'; // GRANEL-001
+import { buildStockMovements, enqueueStockMovements } from '../utils/stockLedger.js';
+import { getNegocioActivoId } from '../utils/negocioContext.js';
 
 // Mantener una única instancia durante HMR y cargas lazy. Si Vite recarga este
 // módulo mientras una vista lazy conserva la versión anterior, un Context nuevo
@@ -275,6 +277,20 @@ export function ProductProvider({ children }) {
         setProducts(updated);
         // Guardado local (encola el debounce como red de reintento).
         storageService.setItem('bodega_products_v1', updated);
+
+        // Ledger de stock para la nube (ajuste manual). No altera el stock local.
+        try {
+            const before = prevProducts.find(p => p.id === productId)?.stock ?? 0;
+            enqueueStockMovements(buildStockMovements({
+                negocioId: getNegocioActivoId(),
+                deviceId: localStorage.getItem('pda_device_id'),
+                reason: 'ADJUST',
+                sourceRef: `adjust:${crypto.randomUUID()}`,
+                changes: [{ productId, delta: (adjusted.stock ?? 0) - before }],
+            }));
+        } catch (err) {
+            console.warn('[stock] No se pudo registrar el ajuste en el ledger:', err?.message || err);
+        }
 
         const nombre = adjusted.name || adjusted.nombre || 'Producto';
         const nuevo = formatStockDisplay(adjusted.stock ?? 0, isGranelProduct(adjusted));

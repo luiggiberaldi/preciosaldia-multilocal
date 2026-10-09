@@ -3,6 +3,8 @@ import { logEvent } from "../services/auditService.js";
 import { useAuthStore } from "../hooks/store/useAuthStore.js";
 import { divR, sumR, round2, round3 } from "./dinero.js";
 import { isGranelProduct, adjustStockValue } from "./granel.js"; // GRANEL-001
+import { buildStockMovements, enqueueStockMovements } from "./stockLedger.js";
+import { getNegocioActivoId } from "./negocioContext.js";
 import { withLock } from "./withLock.js";
 import { deepFreeze } from "./deepFreeze.js";
 import { applyCustomerMovementsWithinLock } from "../services/customerWalletService.js";
@@ -275,6 +277,24 @@ export async function processVoidSale(sale, currentSales, currentProducts) {
       await storageService.setItem(SALES_KEY, updatedSales);
       await storageService.setItem(CUSTOMERS_KEY, updatedCustomers);
       await storageService.setItem(PRODUCTS_KEY, updatedProducts);
+    }
+
+    // Ledger de stock para la nube: solo tras confirmar la anulación.
+    // Delta efectivo por producto (antes vs después); no altera el stock local.
+    try {
+      const beforeById = new Map(freshProducts.map((p) => [p.id, p.stock ?? 0]));
+      const stockChanges = updatedProducts
+        .filter((p) => beforeById.has(p.id))
+        .map((p) => ({ productId: p.id, delta: (p.stock ?? 0) - beforeById.get(p.id) }));
+      enqueueStockMovements(buildStockMovements({
+        negocioId: getNegocioActivoId(),
+        deviceId: localStorage.getItem("pda_device_id"),
+        reason: "VOID",
+        sourceRef: `void:${freshSale.id}`,
+        changes: stockChanges,
+      }));
+    } catch (err) {
+      console.warn("[void] No se pudo registrar el movimiento de stock:", err?.message || err);
     }
 
     deepFreeze(updatedProducts);

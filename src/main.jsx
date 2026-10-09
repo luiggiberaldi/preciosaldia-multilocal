@@ -9,6 +9,7 @@ import { supabaseCloud, hasCustomerProject } from './config/supabaseCloud.js'
 import { syncNow } from './hooks/useCloudSync.js'
 import { registerSW } from 'virtual:pwa-register'
 import { bootNegocios } from './utils/bootNegocios'
+import { startStockLedgerFlush } from './utils/stockLedger.js'
 import './index.css'
 
 // ── FASE 1 MULTI-NEGOCIO: arrancar el registro/migración ANTES del primer render ──
@@ -23,6 +24,8 @@ async function startApp() {
   } catch (e) {
     console.error('[bootNegocios] Falló el arranque multi-negocio:', e);
   }
+  // Ledger de stock: envía los movimientos pendientes (reintento seguro, idempotente).
+  startStockLedgerFlush();
   try {
     const { useNegociosStore } = await import('./hooks/store/useNegociosStore');
     await useNegociosStore.persist.rehydrate();
