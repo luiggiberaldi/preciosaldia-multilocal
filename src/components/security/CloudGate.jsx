@@ -32,7 +32,13 @@ import {
     getCurrentDeviceMembershipStatus,
     resolveCloudGateEntry,
     authorizeDeviceRebindAfterLicenseCode,
+    isAccountLinkedLocally,
 } from '../../services/cloudAccount.js';
+import {
+    clearOfflineLease,
+    getStoredOfflineAuthorization,
+    requestOfflineLease,
+} from '../../services/offlineLease.js';
 
 const inputBase =
     'w-full px-3 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 ' +
@@ -176,14 +182,28 @@ export default function CloudGate({ onReady }) {
                     if (alive) setState('code');
                     return;
                 }
+                const deviceId = getLocalDeviceId();
+                const offlineAuthorization = await getStoredOfflineAuthorization(deviceId);
+                if (!alive) return;
+                if (offlineAuthorization.ok && typeof navigator !== 'undefined' && !navigator.onLine) {
+                    setState('ready');
+                    onReady();
+                    return;
+                }
+
                 const { session } = await getOwnerSession();
                 if (!alive) return;
-                const membership = session && !session.user?.is_anonymous
-                    ? await getCurrentDeviceMembershipStatus()
-                    : null;
+                const membership = await getCurrentDeviceMembershipStatus();
                 if (!alive) return;
-                const entryState = resolveCloudGateEntry(session, membership?.status);
+                if (membership.status === 'revoked' || membership.status === 'missing') clearOfflineLease();
+                const linkedSession = isAccountLinkedLocally();
+                const entryState = membership.status === 'active' && (session || linkedSession)
+                    ? 'ready'
+                    : resolveCloudGateEntry(session, membership?.status);
                 if (entryState === 'ready') {
+                    // Renovar el lease incluso si la conexión se recuperó
+                    // después de iniciar la pantalla; solo firma el servidor.
+                    requestOfflineLease(deviceId).catch(() => {});
                     // Mantener flags locales solo después de validar en servidor.
                     try {
                         localStorage.setItem('pda_pro_activated', 'true');
@@ -205,9 +225,12 @@ export default function CloudGate({ onReady }) {
                             : 'Este dispositivo no está vinculado. Ingresa el código de licencia para autorizarlo.'
                     );
                     setState('code');
+                } else if (entryState === 'blocked' && offlineAuthorization.ok) {
+                    // Un lease firmado permite operación local durante una caída
+                    // de red; el servidor seguirá negando cualquier push/pull.
+                    setState('ready');
+                    onReady();
                 } else if (entryState === 'blocked') {
-                    // Fail closed: la caché local no puede demostrar que el
-                    // dispositivo no fue revocado mientras estuvo offline.
                     setError(membership?.error || 'No se pudo validar la autorización de este equipo. Conéctate para verificarla.');
                     setState('code');
                 } else if (entryState === 'login' && membership?.status === 'no-owner-session'
@@ -218,7 +241,14 @@ export default function CloudGate({ onReady }) {
                     setState('login');
                 }
             } catch {
-                if (alive) setState('code');
+                if (alive) {
+                    getStoredOfflineAuthorization(getLocalDeviceId()).then((authorization) => {
+                        if (alive && authorization.ok) {
+                            setState('ready');
+                            onReady();
+                        } else if (alive) setState('code');
+                    });
+                }
             }
         })();
         return () => {

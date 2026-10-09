@@ -22,6 +22,7 @@ import {
   isAccountLinkedLocally,
   validateCurrentDeviceSyncAccess,
 } from "../services/cloudAccount";
+import { getStoredOfflineAuthorization } from "../services/offlineLease";
 import {
   mergeLedgerEntries,
   rebuildCustomersFromLedger,
@@ -48,6 +49,7 @@ import {
   buildOwnStockMap,
   accumulateReceivedStock,
   preserveLocalStock,
+  stockBaseAfterAdoption,
   isSalesDeltaKey,
   normalizeSalesDeltaPayload,
   isValidSalesDelta,
@@ -114,6 +116,8 @@ const LOCAL_KEYS = [
   "tasa_cop",
   "cop_enabled",
   "auto_cop_enabled",
+  "redondear_tasa_auto",
+  "cop_primary",
 ];
 
 const quickHash = contentHash;
@@ -201,6 +205,76 @@ function _confirmedPushKey(key) {
 let globalSubscription = null;
 let isSyncingFromCloud = false; // true mientras aplicamos cambios de la nube → evita eco
 const pendingPush = new Map(); // Debounce por destino físico + instalación.
+const OUTBOX_KEY = "pda_cloud_sync_outbox_v1";
+export const CLOUD_OUTBOX_EVENT = "pda_cloud_sync_outbox";
+const OUTBOX_LIMIT = 5000;
+function publishOutboxCount(count) {
+  try { window.dispatchEvent(new CustomEvent(CLOUD_OUTBOX_EVENT, { detail: { count } })); } catch { /* no window */ }
+}
+export function getPendingCloudSyncCount() { return readDurableOutbox().length; }
+function readDurableOutbox() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(OUTBOX_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed.filter((entry) =>
+      entry && typeof entry.deviceId === "string" && typeof entry.docId === "string" && typeof entry.key === "string",
+    ) : [];
+  } catch { return []; }
+}
+function writeDurableOutbox(entries) {
+  try {
+    const bounded = entries.slice(-OUTBOX_LIMIT);
+    localStorage.setItem(OUTBOX_KEY, JSON.stringify(bounded));
+    publishOutboxCount(bounded.length);
+  } catch (error) {
+    console.warn("[CloudSync] No se pudo persistir la cola offline:", error?.message || error);
+  }
+}
+function enqueueDurablePush(target, value) {
+  const entries = readDurableOutbox();
+  const slot = JSON.stringify([target.deviceId, target.docId]);
+  const entry = {
+    deviceId: target.deviceId,
+    docId: target.docId,
+    key: target.key,
+    queuedAt: Date.now(),
+    hash: quickHash(value),
+  };
+  const existing = entries.findIndex((item) => JSON.stringify([item.deviceId, item.docId]) === slot);
+  if (existing >= 0) entries[existing] = entry;
+  else entries.push(entry);
+  writeDurableOutbox(entries);
+}
+function acknowledgeDurablePush(target) {
+  const slot = JSON.stringify([target.deviceId, target.docId]);
+  writeDurableOutbox(readDurableOutbox().filter((entry) =>
+    JSON.stringify([entry.deviceId, entry.docId]) !== slot,
+  ));
+}
+async function pushWithDurableOutbox(key, value, forceUnconditional = false, target = capturePushTarget(key)) {
+  enqueueDurablePush(target, value);
+  const result = await serializePush(() =>
+    pushCloudSyncImpl(target.key, value, forceUnconditional, target),
+  );
+  if (result?.ok && !result.pending) acknowledgeDurablePush(target);
+  return result;
+}
+async function flushDurableOutbox(deviceId) {
+  const entries = readDurableOutbox().filter((entry) => entry.deviceId === deviceId);
+  let completed = 0;
+  for (const entry of entries) {
+    if (!SYNC_KEYS.includes(entry.key)) { acknowledgeDurablePush(entry); continue; }
+    const value = LOCAL_KEYS.includes(entry.key)
+      ? localStorage.getItem(entry.docId) ?? localStorage.getItem(entry.key)
+      : await appForage.getItem(entry.docId);
+    if (value == null) { acknowledgeDurablePush(entry); continue; }
+    const payload = LOCAL_KEYS.includes(entry.key) && typeof value === "string"
+      ? (() => { try { return JSON.parse(value); } catch { return value; } })()
+      : value;
+    const result = await pushCloudSync(entry.docId, payload);
+    if (result?.ok && !result.pending) completed++;
+  }
+  return completed;
+}
 let pushSequence = Promise.resolve();
 
 // Una revisión vieja no puede completar su retry DESPUÉS de la revisión nueva.
@@ -278,6 +352,7 @@ const DEBOUNCE_HEAVY_MS = 3000;
 
 function _debouncePush(key, value) {
   const target = capturePushTarget(key);
+  enqueueDurablePush(target);
   const slot = JSON.stringify([target.deviceId, target.docId]);
   const snapshot = structuredClone(value);
   if (pendingPush.has(slot)) clearTimeout(pendingPush.get(slot));
@@ -292,7 +367,7 @@ function _debouncePush(key, value) {
       // B-13 (2026-10-01): antes los errores se tragaban con `.catch(() => {})`
       // y el push fallaba en silencio. Ahora se registran (evento + último
       // error consultable) para que la UI pueda avisar.
-      serializePush(() => pushCloudSyncImpl(key, snapshot, false, target))
+      pushWithDurableOutbox(key, snapshot, false, target)
         .then((res) => {
           if (res && res.ok === false && !res.skipped)
             recordSyncPushError(key, res.error);
@@ -329,9 +404,7 @@ export function getLastSyncPushError() {
 export const pushCloudSync = async (key, value, forceUnconditional = false) => {
   const target = capturePushTarget(key);
   const snapshot = structuredClone(value);
-  return serializePush(() =>
-    pushCloudSyncImpl(target.key, snapshot, forceUnconditional, target),
-  );
+  return pushWithDurableOutbox(target.key, snapshot, forceUnconditional, target);
 };
 
 const pushCloudSyncImpl = async (key, value, forceUnconditional, target) => {
@@ -881,11 +954,49 @@ export const pushLocalSync = (key, value) => {
  * @param {string} key
  * @param {any} value
  */
+export const flushPendingCloudSync = async () => {
+  const deviceId = _currentDeviceId || localStorage.getItem("pda_device_id");
+  if (!deviceId || !isCloudSyncActive) return { ok: false, count: getPendingCloudSyncCount() };
+  const count = await flushDurableOutbox(deviceId);
+  return { ok: true, count, pending: getPendingCloudSyncCount() };
+};
+
 export const queueCloudSync = (key, value) => {
   const baseKey = parseCloudDocId(key).key;
   if (!SYNC_KEYS.includes(baseKey)) return;
   if (baseKey === "abasto-auth-storage") return; // SEC-002
   _debouncePush(key, value);
+};
+
+/**
+ * Empuja a la nube AHORA, sin esperar el debounce por-key.
+ *
+ * Las keys pesadas (HEAVY_KEYS, p. ej. `bodega_products_v1`) esperan 3000ms para
+ * agrupar ráfagas; una edición puntual de stock no debería quedarse ese rato sin
+ * subir. El push programado por la escritura normal se conserva como red de
+ * reintento: si este push inmediato falla, el debounced o el ciclo periódico lo
+ * recuperan. Un segundo upsert del mismo valor se descarta por hash en
+ * `pushCloudSyncImpl`, así que no genera egress duplicado.
+ *
+ * @param {string} key
+ * @param {any} value
+ * @returns {Promise<{ok: boolean, skipped?: boolean, error?: string}>}
+ */
+export const flushCloudSync = async (key, value) => {
+  const baseKey = parseCloudDocId(key).key;
+  if (!LOCAL_KEYS.includes(baseKey) && !SYNC_KEYS.includes(baseKey))
+    return { ok: false, skipped: true, error: "Clave fuera del contrato de sync" };
+  if (baseKey === "abasto-auth-storage")
+    return {
+      ok: false,
+      skipped: true,
+      error: "Documento de autenticación bloqueado (SEC-002)",
+    };
+  const target = capturePushTarget(key);
+  const result = await pushWithDurableOutbox(target.key, value, false, target);
+  if (result && result.ok === false && !result.skipped)
+    recordSyncPushError(target.key, result.error);
+  return result;
 };
 
 /**
@@ -1157,6 +1268,10 @@ const syncNowImpl = async ({ manual = true } = {}, cycleTarget) => {
       };
     }
 
+    // ── PUSH: vaciar primero los cambios persistidos offline ──
+    const outboxPushed = await flushDurableOutbox(activeDeviceId);
+    if (outboxPushed) pushed += outboxPushed;
+
     // ── PUSH: subir cambios locales ──
     const criticalKeys = [
       "bodega_sales_v1",
@@ -1276,6 +1391,7 @@ export const forceSyncAllPOSData = async (
   const userCatalog = buildUserCatalogDoc(
     useAuthStore.getState().usuarios,
     readUserTombstones(),
+    getNegocioActivoId(),
   );
   if (!supabaseCloud) return { ok: false, error: "Supabase no disponible" };
   const isMonitor = localStorage.getItem("pda_pairing_mode") === "monitor";
@@ -1652,7 +1768,7 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
           if (negocioId !== getNegocioActivoId())
             throw new Error("Catálogo de usuarios requiere su sede activa");
           const authState = useAuthStore.getState();
-          const merged = mergeUserCatalog(authState.usuarios, payload);
+          const merged = mergeUserCatalog(authState.usuarios, payload, negocioId);
           if (typeof authState.aplicarCatalogoRemoto !== "function") {
             throw new Error("El store no puede aplicar el catálogo remoto");
           }
@@ -1771,10 +1887,23 @@ async function _applyFromCloud(docId, collection, data, sourceDeviceId = null) {
       }
       // El catálogo remoto trae stock absoluto de otro equipo: conservar el stock
       // local para no pisar ventas propias ni reintroducir deltas ajenos.
+      // Equipo nuevo (sin productos locales): adopta el stock de la nube como base
+      // y lo marca como recibido, para que el stock propio empiece en cero.
+      let adoptedStockBase = null;
       if (key === "bodega_products_v1" && Array.isArray(payloadToStore)) {
-        payloadToStore = preserveLocalStock(await nsGet(key), payloadToStore);
+        const localProducts = await nsGet(key);
+        if (!Array.isArray(localProducts)) {
+          adoptedStockBase = stockBaseAfterAdoption(payloadToStore);
+        }
+        payloadToStore = preserveLocalStock(localProducts, payloadToStore);
       }
       await nsSet(key, payloadToStore);
+      if (adoptedStockBase) {
+        writeReceivedStockMap(
+          physicalDocId(negocioId, "bodega_stock_v1"),
+          adoptedStockBase,
+        );
+      }
       if (key === "bodega_customer_ledger_v1") {
         const localCustomers = await nsGet("bodega_customers_v1");
         if (Array.isArray(localCustomers)) {
@@ -1918,6 +2047,11 @@ export function useCloudSync(deviceId) {
             error: "No se pudo validar el equipo",
           };
           try {
+            // Offline-lease permits local operation only. It never turns on
+            // sync writes or reads; an online server membership check is required.
+            if (typeof navigator !== "undefined" && navigator.onLine === false) {
+              deviceAccess = { ok: false, error: "Sin conexión" };
+            } else {
             const registration = await ensureDeviceSessionRegistered(deviceId);
             if (!registration?.ok) {
               throw new Error(
@@ -1927,6 +2061,7 @@ export function useCloudSync(deviceId) {
               );
             }
             deviceAccess = await validateCurrentDeviceSyncAccess(deviceId);
+            }
           } catch (error) {
             deviceAccess = {
               ok: false,
@@ -1936,6 +2071,14 @@ export function useCloudSync(deviceId) {
           if (cancelled) return;
           const accountCtx = deviceAccess.context || null;
           if (!deviceAccess.ok || (isAccountLinkedLocally() && !accountCtx)) {
+            // Validate the signed lease so the UI gate can safely permit local
+            // work offline. Cloud access remains inactive until server validation.
+            if (typeof navigator !== "undefined" && navigator.onLine === false) {
+              const offlineLease = await getStoredOfflineAuthorization(deviceId);
+              if (offlineLease.ok) {
+                console.info("[CloudSync] Lease offline válido; almacenamiento local habilitado, sync en pausa");
+              }
+            }
             isCloudSyncActive = false;
             console.warn(
               "[CloudSync] Cuenta o equipo sin autorización activa; sync pausado",
@@ -2192,6 +2335,8 @@ export function useCloudSync(deviceId) {
           }
 
           if (cancelled) return;
+          const outboxPushed = await flushDurableOutbox(deviceId);
+          if (outboxPushed) console.info(`[CloudSync] Cola offline vaciada: ${outboxPushed} documentos`);
           if (initialPull)
             publishCloudPullStatus(deviceId, {
               ...initialPull,
@@ -2284,12 +2429,18 @@ export function useCloudSync(deviceId) {
           "bodega_customer_ledger_v1",
           "bodega_accounts_v2",
         ];
+        await flushDurableOutbox(deviceId);
         for (const key of criticalKeys) {
           const physicalKey = toCloudDocId(key);
           const localValue = await appForage.getItem(physicalKey);
-          if (localValue == null) continue;
+      if (localValue == null) continue;
+      const outboxEntry = readDurableOutbox().find((entry) => entry.docId === physicalKey && entry.deviceId === deviceId);
+      if (outboxEntry && outboxEntry.hash === await quickHash(localValue)) {
+        // Este snapshot ya salió en la descarga del outbox; evitar re-publicarlo.
+        continue;
+      }
 
-          const hashKey = _pushHashKey(physicalKey);
+      const hashKey = _pushHashKey(physicalKey);
           const confirmedHashKey = _confirmedPushHashKey(physicalKey);
           const currentHash = await quickHash(localValue);
           if (localStorage.getItem(confirmedHashKey) === currentHash) {
@@ -2333,6 +2484,12 @@ export function useCloudSync(deviceId) {
       forcePushLocalData();
     };
 
+    const handleOffline = () => {
+      // Prevent further attempts to push after connectivity drops.
+      isCloudSyncActive = false;
+    };
+
+    window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
@@ -2373,6 +2530,7 @@ export function useCloudSync(deviceId) {
       isCloudSyncActive = false;
       isInitialized.current = false;
       window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearInterval(periodicSync);
 

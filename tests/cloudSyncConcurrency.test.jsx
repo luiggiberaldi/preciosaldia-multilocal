@@ -62,7 +62,7 @@ vi.mock('../src/services/cloudPullService', () => ({
         return { applied: 0, pending: 0, queryFailed: false, status: 'confirmed' };
     },
 }));
-import { useCloudSync, isCloudSyncActiveNow, pushCloudSync, queueCloudSync, syncNow } from '../src/hooks/useCloudSync';
+import { useCloudSync, isCloudSyncActiveNow, pushCloudSync, queueCloudSync, syncNow, flushCloudSync } from '../src/hooks/useCloudSync';
 import { setNegocioActivoId, setKnownBusinessIds } from '../src/utils/negocioContext';
 
 let root, container;
@@ -234,5 +234,24 @@ describe('cloud sync concurrency invariants', () => {
         expect(fixture.data.get('nb_neg-fac22061:bodega_products_v1')).toEqual([{ id: 'cosmetics-product', stock: 12 }]);
         expect(fixture.data.get('nb_neg-fac22061:bodega_sales_v1')).toEqual([{ id: 'cosmetics-stable-sale' }]);
         expect(fixture.writes.every(row => row.doc_id.startsWith('nb_neg-fac22061:'))).toBe(true);
+    });
+
+    it('flushCloudSync sube el stock al momento, sin esperar el debounce de 3s', async () => {
+        // El debounce de las keys pesadas es de 3000ms: al esperar el resultado de
+        // flushCloudSync ya debe haber escritura. Si dependiera del debounce, aquí
+        // no habría ninguna.
+        const products = [{ id: 'p1', name: 'Harina', priceUsd: 1, stock: 9 }];
+        const result = await flushCloudSync('bodega_products_v1', products);
+        expect(result.ok).toBe(true);
+        const stockWrite = fixture.writes.find(row => row.doc_id === 'nb_neg-a:bodega_stock_v1');
+        expect(stockWrite).toBeTruthy();
+        expect(stockWrite.data.payload).toEqual({ p1: 9 });
+    });
+
+    it('flushCloudSync rechaza claves fuera del contrato sin escribir', async () => {
+        const before = fixture.writes.length;
+        const result = await flushCloudSync('clave_inventada', 1);
+        expect(result).toMatchObject({ ok: false, skipped: true });
+        expect(fixture.writes).toHaveLength(before);
     });
 });

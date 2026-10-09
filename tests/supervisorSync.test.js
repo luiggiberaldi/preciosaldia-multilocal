@@ -49,6 +49,18 @@ describe('Supervisor sync contract', () => {
         expect(validateSupervisorSyncDocument('bodega_use_auto_rate', 'true').valid).toBe(true);
     });
 
+    it('las tasas de redondeo y COP primario viajan a la nube', () => {
+        // Antes se empujaban con pushLocalSync pero faltaban en el contrato: el
+        // push se descartaba y el cambio nunca llegaba a la nube.
+        expect(SUPERVISOR_SYNC_KEYS).toContain('redondear_tasa_auto');
+        expect(SUPERVISOR_SYNC_KEYS).toContain('cop_primary');
+        expect(validateSupervisorSyncDocument('redondear_tasa_auto', 'true').valid).toBe(true);
+        expect(validateSupervisorSyncDocument('redondear_tasa_auto', 'false').valid).toBe(true);
+        expect(validateSupervisorSyncDocument('cop_primary', 'true').valid).toBe(true);
+        expect(validateSupervisorSyncDocument('redondear_tasa_auto', 'quizá').valid).toBe(false);
+        expect(validateSupervisorSyncDocument('cop_primary', '1').valid).toBe(false);
+    });
+
     it('rechaza claves de autenticación aunque tengan payload', () => {
         const result = validateSupervisorSyncDocument('abasto-auth-storage', { state: {} });
         expect(result.valid).toBe(false);

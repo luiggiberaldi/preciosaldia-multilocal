@@ -80,6 +80,10 @@ const SYNC_VALIDATORS = Object.freeze({
     tasa_cop: (value) => isFiniteNumber(Number(value)) && Number(value) >= 0,
     cop_enabled: isBooleanLike,
     auto_cop_enabled: isBooleanLike,
+    // Estas dos se empujaban con `pushLocalSync` pero no estaban en el contrato:
+    // el push se descartaba en silencio y el cambio nunca llegaba a la nube.
+    redondear_tasa_auto: isBooleanLike,
+    cop_primary: isBooleanLike,
 });
 
 export const SUPERVISOR_SYNC_KEYS = Object.freeze(Object.keys(SYNC_VALIDATORS));

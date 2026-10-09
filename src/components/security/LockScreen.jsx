@@ -6,11 +6,15 @@ import UserCard from './UserCard';
 import LoginPinModal from './LoginPinModal';
 import EmergencyPinResetModal from './EmergencyPinResetModal';
 import { isMasterPinSetup } from '../../utils/duenoAuth';
+import { usersOfSede } from '../../utils/userCatalog';
+import { getNegocioActivoId } from '../../utils/negocioContext';
 
 const DUENO_PSEUDO_USER = { id: 'dueno', nombre: 'Dueño', rol: 'DUENO' };
 
 export default function LockScreen({ installPrompt, onInstall, showIOSButton, onShowIOSInstall, onOpenRemotion, onCancel }) {
-  const { usuarios, login, loginDirect, requireCajeroPin, requireAdminPin, resetPinEmergency, loginAsDueno } = useAuthStore();
+  const { usuarios: usuariosTodos, login, loginDirect, requireCajeroPin, requireAdminPin, resetPinEmergency, loginAsDueno } = useAuthStore();
+  // Login: solo se muestran los usuarios de la sede activa.
+  const usuarios = useMemo(() => usersOfSede(usuariosTodos, getNegocioActivoId()), [usuariosTodos]);
   const { negocios: negociosStore, negocioActivoId, activarNegocio } = useNegociosStore();
   // FIX (2.0.1): fallback a localStorage por si el store aún no hidrató.
   // El registro es GLOBAL (pda-negocios-registry) y se persiste directo.

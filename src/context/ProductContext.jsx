@@ -2,12 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useRef, useMemo,
 import { storageService } from '../utils/storageService';
 import { shadowBackupService } from '../utils/shadowBackupService';
 import { BODEGA_CATEGORIES } from '../config/categories';
-import { pushLocalSync, pushCloudSync } from '../hooks/useCloudSync';
+import { pushLocalSync, pushCloudSync, flushCloudSync } from '../hooks/useCloudSync';
 import { useRateContext } from './RateContext';
 import { showToast } from '../components/Toast';
 import { Modal } from '../components/Modal';
 import { AlertTriangle, ShieldAlert, RotateCcw } from 'lucide-react';
-import { isGranelProduct, adjustStockValue, normalizeStockValue } from '../utils/granel.js'; // GRANEL-001
+import { isGranelProduct, adjustStockValue, normalizeStockValue, formatStockDisplay } from '../utils/granel.js'; // GRANEL-001
 
 // Mantener una única instancia durante HMR y cargas lazy. Si Vite recarga este
 // módulo mientras una vista lazy conserva la versión anterior, un Context nuevo
@@ -256,20 +256,41 @@ export function ProductProvider({ children }) {
 
     // GRANEL-001: ajuste con aritmética canónica — sin drift IEEE-754.
     // Granel → hasta 3 decimales; resto → entero estricto.
+    // SYNC-INMEDIATO (v2.2.1): el guardado local encola un push con debounce de
+    // 3s (key pesada). Aquí se empuja además al momento y se confirma con un
+    // aviso. El ref optimista evita que dos clics rápidos partan del valor viejo.
     const adjustStock = useCallback((productId, delta) => {
-        setProducts(prevProducts => {
-            const updated = prevProducts.map(p => {
-                if (p.id === productId) {
-                    const allowNeg = localStorage.getItem('allow_negative_stock') === 'true';
-                    const isGranel = isGranelProduct(p);
-                    const newStock = adjustStockValue(p.stock ?? 0, delta, isGranel);
-                    return { ...p, stock: allowNeg ? newStock : Math.max(0, newStock) };
-                }
-                return p;
-            });
-            storageService.setItem('bodega_products_v1', updated);
-            return updated;
+        const prevProducts = productsRef.current || [];
+        const allowNeg = localStorage.getItem('allow_negative_stock') === 'true';
+        let adjusted = null;
+        const updated = prevProducts.map(p => {
+            if (p.id !== productId) return p;
+            const isGranel = isGranelProduct(p);
+            const newStock = adjustStockValue(p.stock ?? 0, delta, isGranel);
+            adjusted = { ...p, stock: allowNeg ? newStock : Math.max(0, newStock) };
+            return adjusted;
         });
+        if (!adjusted) return null;
+        productsRef.current = updated;
+        setProducts(updated);
+        // Guardado local (encola el debounce como red de reintento).
+        storageService.setItem('bodega_products_v1', updated);
+
+        const nombre = adjusted.name || adjusted.nombre || 'Producto';
+        const nuevo = formatStockDisplay(adjusted.stock ?? 0, isGranelProduct(adjusted));
+        const aviso = `${nombre}: ${delta > 0 ? '+' : ''}${delta} → ${nuevo} uds`;
+        flushCloudSync('bodega_products_v1', updated)
+            .then((res) => {
+                if (res?.ok) showToast(`${aviso} · subido a la nube`, 'success', 2500);
+                else if (res?.skipped)
+                    showToast(`${aviso} · guardado local (sincronización inactiva)`, 'info', 2500);
+                else
+                    showToast(`${aviso} · guardado local, se reintentará subir`, 'error', 3500);
+            })
+            .catch(() =>
+                showToast(`${aviso} · guardado local, se reintentará subir`, 'error', 3500),
+            );
+        return adjusted;
     }, []);
 
     // GRANEL-001: fijar el stock directamente (edición inline en tarjeta/lista).

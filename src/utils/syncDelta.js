@@ -150,6 +150,16 @@ export function buildOwnStockMap(products, receivedMap) {
 // tratan como cero para no acumular entradas inútiles.
 const RECEIVED_STOCK_EPSILON = 1e-9;
 
+/**
+ * Base de "recibido" al adoptar el catálogo de la nube en un equipo nuevo.
+ * El stock adoptado ya incluye la actividad de los demás equipos: se marca como
+ * recibido para que el stock PROPIO empiece en cero y no se republique como
+ * actividad propia (eco). Solo cuenta lo que el equipo vende después.
+ */
+export function stockBaseAfterAdoption(products) {
+    return buildStockMap(products);
+}
+
 /** Suma los deltas aplicados de una fuente al acumulado de recibido por producto. */
 export function accumulateReceivedStock(receivedMap, deltas) {
     const out = { ...(receivedMap && typeof receivedMap === 'object' ? receivedMap : {}) };

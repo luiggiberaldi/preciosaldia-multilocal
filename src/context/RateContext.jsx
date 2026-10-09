@@ -115,6 +115,10 @@ export function RateProvider({ children, rates = {}, rateDiscrepancyWarning = nu
             if (key === 'auto_cop_enabled') setAutoCopEnabled(localStorage.getItem('auto_cop_enabled') === 'true');
             if (key === 'tasa_cop') setTasaCopManual(localStorage.getItem('tasa_cop') || '');
             if (key === 'cop_primary') setCopPrimary(localStorage.getItem('cop_primary') === 'true');
+            // Faltaba en este handler: era la única tasa que no se re-leía al
+            // aplicarse el documento remoto (quedaba visible tras recargar).
+            if (key === 'redondear_tasa_auto')
+                setRedondearTasaAuto(localStorage.getItem('redondear_tasa_auto') === 'true');
         };
 
         window.addEventListener('storage', handleStorageChange);

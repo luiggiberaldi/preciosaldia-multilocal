@@ -5,6 +5,33 @@ import { sumR, mulR } from '../utils/dinero';
 import { getLocalISODate } from '../utils/dateHelpers';
 
 /**
+ * Ranking de productos vendidos. Agrupa por id de producto (no por nombre, que
+ * dejaba duplicados como "Cigarro Consul" y "CIGARRO CONSUL") y solo incluye
+ * productos que existen hoy en el inventario, con su nombre actual.
+ * Ventas libres y productos borrados del inventario no aparecen.
+ */
+export function aggregateTopProducts(salesList, products) {
+    const catalog = new Map();
+    (Array.isArray(products) ? products : []).forEach(p => {
+        if (p && p.id != null) catalog.set(String(p.id), p.name || p.nombre || 'Producto');
+    });
+    const byId = new Map();
+    (Array.isArray(salesList) ? salesList : []).forEach(s => {
+        (s?.items || []).forEach(item => {
+            const isCustom = item.isCustom || String(item.id || '').startsWith('custom_') || item.name?.toLowerCase()?.trim() === 'venta libre' || item.name?.toLowerCase()?.startsWith('venta libre');
+            if (isCustom) return;
+            const key = String(item._originalId ?? item.id ?? '');
+            if (!key || !catalog.has(key)) return;
+            if (!byId.has(key)) byId.set(key, { id: key, name: catalog.get(key), qty: 0, revenue: 0 });
+            const row = byId.get(key);
+            row.qty += item.qty;
+            row.revenue = sumR(row.revenue, mulR(item.priceUsd, item.qty));
+        });
+    });
+    return [...byId.values()].sort((a, b) => b.qty - a.qty);
+}
+
+/**
  * Hook de métricas del Dashboard.
  *
  * FIN-013: weekData ya NO excluye VENTA_FIADA (criterio unificado con todayTotalUsd).
@@ -155,20 +182,9 @@ export function useDashboardMetrics(sales, customers, products, bcvRate) {
     // Top productos vendidos (todas las ventas netas — excluye Venta Libre / ítems personalizados)
     // FIN-019: usar mulR + round2 en vez de multiplicación raw.
     const topProducts = useMemo(() => {
-        const productSalesMap = {};
-        sales.filter(s => s.tipo !== 'COBRO_DEUDA' && s.tipo !== 'COBRO_CASHEA' && s.tipo !== 'AJUSTE_ENTRADA' && s.tipo !== 'AJUSTE_SALIDA' && s.status !== 'ANULADA').forEach(s => {
-            if (s.items) {
-                s.items.forEach(item => {
-                    const isCustom = item.isCustom || String(item.id || '').startsWith('custom_') || item.name?.toLowerCase()?.trim() === 'venta libre' || item.name?.toLowerCase()?.startsWith('venta libre');
-                    if (isCustom) return;
-                    if (!productSalesMap[item.name]) productSalesMap[item.name] = { name: item.name, qty: 0, revenue: 0 };
-                    productSalesMap[item.name].qty += item.qty;
-                    productSalesMap[item.name].revenue = sumR(productSalesMap[item.name].revenue, mulR(item.priceUsd, item.qty));
-                });
-            }
-        });
-        return Object.values(productSalesMap).sort((a, b) => b.qty - a.qty).slice(0, 5);
-    }, [sales]);
+        const filtered = sales.filter(s => s.tipo !== 'COBRO_DEUDA' && s.tipo !== 'COBRO_CASHEA' && s.tipo !== 'AJUSTE_ENTRADA' && s.tipo !== 'AJUSTE_SALIDA' && s.status !== 'ANULADA');
+        return aggregateTopProducts(filtered, products).slice(0, 5);
+    }, [sales, products]);
 
     // Payment method breakdown (today)
     const paymentBreakdown = useMemo(() => {
@@ -186,20 +202,8 @@ export function useDashboardMetrics(sales, customers, products, bcvRate) {
     // Top productos vendidos HOY (para cierre del día — excluye Venta Libre)
     // FIN-019: usar mulR + round2 en vez de multiplicación raw.
     const todayTopProducts = useMemo(() => {
-        const todayProductMap = {};
-        todaySales.forEach(s => {
-            if (s.items) {
-                s.items.forEach(item => {
-                    const isCustom = item.isCustom || String(item.id || '').startsWith('custom_') || item.name?.toLowerCase()?.trim() === 'venta libre' || item.name?.toLowerCase()?.startsWith('venta libre');
-                    if (isCustom) return;
-                    if (!todayProductMap[item.name]) todayProductMap[item.name] = { name: item.name, qty: 0, revenue: 0 };
-                    todayProductMap[item.name].qty += item.qty;
-                    todayProductMap[item.name].revenue = sumR(todayProductMap[item.name].revenue, mulR(item.priceUsd, item.qty));
-                });
-            }
-        });
-        return Object.values(todayProductMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
-    }, [todaySales]);
+        return aggregateTopProducts(todaySales, products).slice(0, 10);
+    }, [todaySales, products]);
 
     // Métricas financieras del inventario en stock
     const inventoryMetrics = useMemo(() => {
