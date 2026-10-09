@@ -6,6 +6,10 @@
  * (`bodega_users_catalog_v1`, colección `store`) es el catálogo sanitizado:
  * `{ v, users: [{ id, nombre, rol, requirePin }], deleted: [{ id, deletedAt }] }`.
  *
+ * - Sede: la lista de usuarios del store es global al dispositivo, pero cada
+ *   usuario lleva `sedeId` (su sede). El catálogo de cada sede solo publica y
+ *   fusiona a los usuarios de SU sede; los de otras sedes no se tocan.
+ *   Usuarios sin `sedeId` (legacy) pertenecen a la primera sede registrada.
  * - Push: `useAuthStore` publica el doc tras agregar/eliminar/editar usuario.
  * - Pull: `useCloudSync._applyFromCloud` fusiona con `mergeUserCatalog`,
  *   preservando los PINs locales. Un usuario que llega sin PIN local queda
@@ -15,7 +19,7 @@
  * @module utils/userCatalog
  */
 
-import { getNegocioActivoId } from './negocioContext';
+import { getNegocioActivoId, getNegocios } from './negocioContext';
 
 /** Clave del documento en `sync_documents`. */
 export const USER_CATALOG_DOC_KEY = 'bodega_users_catalog_v1';
@@ -27,6 +31,39 @@ export const USER_CATALOG_DOC_VERSION = 1;
 export const USER_TOMBSTONE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const TOMBSTONE_STORAGE_PREFIX = 'bodega_users_tombstones_v1';
+
+/** Primera sede registrada: dueña de los usuarios legacy sin `sedeId`. */
+function defaultOwnerSedeId() {
+    try {
+        return getNegocios()[0]?.id ?? null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Sede dueña de un usuario. Sin `sedeId` (legacy) se usa la primera sede.
+ * @returns {string|null}
+ */
+export function userSedeId(user, legacySedeId = defaultOwnerSedeId()) {
+    return user?.sedeId ?? legacySedeId ?? null;
+}
+
+/**
+ * ¿El usuario pertenece a la sede? Sin sede consultada (null) o sin sede
+ * dueña conocida, el usuario es visible en todas (comportamiento previo).
+ */
+export function userBelongsToSede(user, sedeId, legacySedeId = defaultOwnerSedeId()) {
+    if (!sedeId) return true;
+    const owner = userSedeId(user, legacySedeId);
+    return !owner || owner === sedeId;
+}
+
+/** Filtra la lista de usuarios a los de una sede (sin sede → todos). */
+export function usersOfSede(users, sedeId, legacySedeId = defaultOwnerSedeId()) {
+    if (!Array.isArray(users)) return [];
+    return users.filter(u => u && userBelongsToSede(u, sedeId, legacySedeId));
+}
 
 /**
  * Elimina hashes de PIN (`pin`) y PINs en texto plano (`plainPin`) antes de
@@ -95,11 +132,12 @@ export function pruneUserTombstones(tombstones, now = Date.now()) {
 }
 
 /**
- * Construye el documento a publicar en `sync_documents`.
- * Solo viajan id/nombre/rol/requirePin + tombstones. NUNCA PINs.
+ * Construye el documento a publicar en `sync_documents` para UNA sede.
+ * Solo viajan los usuarios de esa sede, con id/nombre/rol/requirePin + tombstones.
+ * NUNCA PINs. Sin `sedeId` publica todos (comportamiento previo).
  */
-export function buildUserCatalogDoc(users, tombstones) {
-    const cleanUsers = sanitizeUserCatalog(users)
+export function buildUserCatalogDoc(users, tombstones, sedeId = null) {
+    const cleanUsers = sanitizeUserCatalog(usersOfSede(users, sedeId))
         .filter(u => u && u.id != null)
         .map(u => ({
             id: u.id,
@@ -134,27 +172,30 @@ export function isValidUserCatalogDoc(doc) {
 }
 
 /**
- * Fusiona el catálogo remoto con los usuarios locales.
+ * Fusiona el catálogo remoto de UNA sede con los usuarios locales.
  *
  * Reglas:
+ * - Solo participan en el merge los usuarios de `sedeId` (los de otras sedes
+ *   se devuelven intactos y no se borran ni reasocian).
  * - Match por `uid` (estable): un renombrado actualiza nombre/rol/requirePin
  *   del mismo usuario y conserva su PIN local.
  * - Sin `uid` (usuarios legacy): match por id + mismo nombre; si el nombre
  *   difiere se trata como colisión (nunca se reasocia un PIN a otro nombre).
  * - El PIN local (`pin`/`plainPin`) se preserva SIEMPRE.
- * - Usuario remoto sin contraparte local → se agrega con `pin: null` y
- *   `pinPendiente: true` (un admin debe definir su PIN en este equipo). Si su
- *   id numérico ya está ocupado por otro usuario, se le asigna uno libre.
- * - Tombstone remoto → el usuario se elimina localmente (no resucita).
- * - Usuario local ausente del remoto y sin tombstone → se conserva (su push
- *   posterior lo propagará; evita borrar creaciones offline).
+ * - Usuario remoto sin contraparte local → se agrega con `pin: null`,
+ *   `pinPendiente: true` y `sedeId`. Si su id ya está ocupado, se reasigna.
+ * - Tombstone remoto → el usuario de esa sede se elimina localmente.
+ * - Usuario local de la sede ausente del remoto y sin tombstone → se conserva.
  *
  * @param {Array} localUsers usuarios del auth store local (con PINs)
  * @param {object} doc documento remoto `{ v, users, deleted }`
+ * @param {string|null} [sedeId] sede del documento; null = sin acotar
  * @returns {Array} usuarios fusionados listos para el store
  */
-export function mergeUserCatalog(localUsers, doc) {
-    const local = Array.isArray(localUsers) ? localUsers : [];
+export function mergeUserCatalog(localUsers, doc, sedeId = null) {
+    const all = Array.isArray(localUsers) ? localUsers : [];
+    const others = sedeId ? all.filter(u => u && !userBelongsToSede(u, sedeId)) : [];
+    const local = sedeId ? all.filter(u => u && userBelongsToSede(u, sedeId)) : all;
     const remoteUsers = doc && Array.isArray(doc.users) ? doc.users : [];
     const deletedIds = new Set(
         (doc && Array.isArray(doc.deleted) ? doc.deleted : [])
@@ -169,16 +210,15 @@ export function mergeUserCatalog(localUsers, doc) {
         if (u.uid) localByUid.set(u.uid, u);
         if (u.id != null) localById.set(u.id, u);
     }
-    let nextId = local.reduce((m, u) => Math.max(m, Number(u?.id) || 0), 0);
-    // Ids numéricos ocupados (locales + asignados en este merge): jamás se
-    // reutilizan dentro del merge para no pisar a otro usuario.
-    const takenIds = new Set(localById.keys());
+    // Los ids son únicos en TODA la lista (también los de otras sedes).
+    let nextId = all.reduce((m, u) => Math.max(m, Number(u?.id) || 0), 0);
+    const takenIds = new Set(all.filter(u => u && u.id != null).map(u => u.id));
     const seenRemoteIds = new Set();
     const mergedById = new Map();
 
     const pushMerged = (u) => {
         if (!u || u.id == null) return;
-        mergedById.set(u.id, u);
+        mergedById.set(u.id, sedeId ? { ...u, sedeId } : u);
         takenIds.add(u.id);
     };
 
@@ -196,7 +236,6 @@ export function mergeUserCatalog(localUsers, doc) {
         seenRemoteIds.add(r.id);
 
         // 1) Match por uid: es el mismo usuario aunque lo hayan renombrado.
-        //    El PIN local se conserva; nombre/rol/requirePin remotos ganan.
         const byUid = (r.uid && localByUid.get(r.uid)) || null;
         if (byUid) {
             pushMerged({
@@ -208,8 +247,7 @@ export function mergeUserCatalog(localUsers, doc) {
             continue;
         }
 
-        // 2) Fallback legacy (sin uid en ningún lado): solo si id + nombre
-        //    coinciden se considera el mismo usuario.
+        // 2) Fallback legacy (sin uid en ningún lado): id + nombre coinciden.
         if (!r.uid) {
             const byId = localById.get(r.id);
             if (byId && !byId.uid && byId.nombre === r.nombre && !mergedById.has(byId.id)) {
@@ -222,10 +260,8 @@ export function mergeUserCatalog(localUsers, doc) {
             }
         }
 
-        // 2b) Fallback equipo nuevo: el usuario local (creado por defecto con
-        //     uid aleatorio) y el remoto son el mismo si coinciden nombre+rol
-        //     y el local aún no fue fusionado. Adopta el uid remoto para que
-        //     futuros merges lo reconozcan por uid.
+        // 2b) Fallback equipo nuevo: nombre+rol coinciden con un local aún no
+        //     fusionado. Adopta el uid remoto para futuros merges.
         if (r.uid) {
             const byNameRol = local.find(u =>
                 u && u.id != null &&
@@ -245,9 +281,8 @@ export function mergeUserCatalog(localUsers, doc) {
             }
         }
 
-        // 2c) Remoto legacy SIN uid: si un local aún no fusionado tiene el mismo
-        //     nombre+rol, es el mismo usuario. Sin esto cada merge agrega una
-        //     copia nueva (duplica al cambiar de sede). Conserva el uid local.
+        // 2c) Remoto legacy SIN uid: mismo nombre+rol que un local aún no
+        //     fusionado es el mismo usuario. Conserva el uid local.
         if (!r.uid) {
             const byNameRolLegacy = local.find(u =>
                 u && u.id != null &&
@@ -267,8 +302,6 @@ export function mergeUserCatalog(localUsers, doc) {
         }
 
         // 3) Usuario nuevo para este equipo: entra con `pinPendiente: true`.
-        //    Si su id numérico ya está ocupado, se le asigna uno libre
-        //    (el uid lo identifica de forma estable entre equipos).
         pushMerged({
             id: allocId(r.id),
             ...(r.uid ? { uid: r.uid } : {}),
@@ -287,5 +320,5 @@ export function mergeUserCatalog(localUsers, doc) {
         pushMerged(u);                           // creación local aún no vista
     }
 
-    return [...mergedById.values()];
+    return [...others, ...mergedById.values()];
 }

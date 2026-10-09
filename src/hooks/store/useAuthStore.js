@@ -26,7 +26,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { logEvent } from '../../services/auditService';
 import { hashPin, verifyPin } from '../../utils/crypto';
-import { routeAuthKey, getNegocios } from '../../utils/negocioContext';
+import { routeAuthKey, getNegocios, getNegocioActivoId } from '../../utils/negocioContext';
 // Catálogo de usuarios sync (SEC-002): solo builders sanitizados, sin PINs.
 // El push a la nube va por import dinámico de useCloudSync (evita acoplarlo
 // al store y romper el tree-shaking).
@@ -35,6 +35,7 @@ import {
     buildUserCatalogDoc,
     readUserTombstones,
     addUserTombstone,
+    usersOfSede,
 } from '../../utils/userCatalog';
 import {
     verifyMasterPin,
@@ -122,7 +123,9 @@ async function _ensureDefaultUsers(state, set) {
 
     _defaultUsersInitializationPromise = (async () => {
         const { usuarios, initialPins } = await _createDefaultUsersWithRandomPins();
-        set({ usuarios });
+        // Los usuarios por defecto pertenecen a la sede en la que se crean.
+        const sedeActiva = getNegocioActivoId();
+        set({ usuarios: usuarios.map(u => (sedeActiva ? { ...u, sedeId: sedeActiva } : u)) });
 
         // En una instalación sin usuarios ni PIN maestro, inicializar al dueño
         // con el PIN de fábrica de seis ceros. Nunca reemplazar uno existente.
@@ -298,7 +301,8 @@ function _pushUserCatalog() {
                 if (typeof cs?.queueCloudSync !== 'function') return;
                 const doc = buildUserCatalogDoc(
                     useAuthStore.getState().usuarios,
-                    readUserTombstones()
+                    readUserTombstones(),
+                    getNegocioActivoId(),
                 );
                 cs.queueCloudSync(USER_CATALOG_DOC_KEY, doc);
             })
@@ -367,7 +371,10 @@ export const useAuthStore = create(
                 }
 
                 // Buscar usuario candidato por ID (si se especificó) o por todos.
-                const candidatos = userId ? usuarios.filter(u => u.id === userId) : usuarios;
+                // Sin id explícito, solo se prueban los usuarios de la sede activa.
+                const candidatos = userId
+                    ? usuarios.filter(u => u.id === userId)
+                    : usersOfSede(usuarios, getNegocioActivoId());
 
                 let userEncontrado = null;
                 let needsRehash = false;
@@ -654,7 +661,16 @@ export const useAuthStore = create(
                         const maxId = state.usuarios.reduce((max, u) => Math.max(max, u.id), 0);
                         return {
                             // Fase 1 (ALTO-2): los usuarios nuevos exigen PIN (antes: acceso directo).
-                            usuarios: [...state.usuarios, { id: maxId + 1, uid: _newUserUid(), nombre, rol, pin: hashedPin, requirePin: true }]
+                            usuarios: [...state.usuarios, {
+                                id: maxId + 1,
+                                uid: _newUserUid(),
+                                nombre,
+                                rol,
+                                pin: hashedPin,
+                                requirePin: true,
+                                // Cada usuario pertenece a la sede en la que se crea.
+                                ...(getNegocioActivoId() ? { sedeId: getNegocioActivoId() } : {}),
+                            }]
                         };
                     });
                     logEvent('USUARIO', 'USUARIO_CREADO', `Usuario "${nombre}" (${rol}) creado`, get().usuarioActivo);
@@ -669,7 +685,8 @@ export const useAuthStore = create(
 
             eliminarUsuario: (userId) => {
                 const { usuarios, usuarioActivo } = get();
-                const admins = usuarios.filter(u => u.rol === 'ADMIN');
+                // Solo cuentan los administradores de la sede activa.
+                const admins = usersOfSede(usuarios, getNegocioActivoId()).filter(u => u.rol === 'ADMIN');
                 const target = usuarios.find(u => u.id === userId);
                 if (target?.rol === 'ADMIN' && admins.length <= 1) return false;
                 if (usuarioActivo?.id === userId) return false;

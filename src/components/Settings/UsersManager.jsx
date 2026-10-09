@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../../hooks/store/useAuthStore';
+import { usersOfSede } from '../../utils/userCatalog';
+import { getNegocioActivoId } from '../../utils/negocioContext';
 import { showToast } from '../Toast';
 import { verifyPin, sha256Hex } from '../../utils/crypto';
 import { pinLengthForRole, validatePin } from '../../utils/securityConstants';
@@ -174,7 +176,9 @@ function UserRow({ user, currentUserId, canManage, onChangePin, onDelete, onEdit
 
 // ═══════════════════════════════════════════════════ MAIN
 export default function UsersManager({ triggerHaptic }) {
-    const { usuarios, usuarioActivo, agregarUsuario, eliminarUsuario, cambiarPin, editarUsuario } = useAuthStore();
+    const { usuarios: usuariosTodos, usuarioActivo, agregarUsuario, eliminarUsuario, cambiarPin, editarUsuario } = useAuthStore();
+    // Solo se gestionan los usuarios de la sede activa.
+    const usuarios = useMemo(() => usersOfSede(usuariosTodos, getNegocioActivoId()), [usuariosTodos]);
 
     // States
     const [showAddForm, setShowAddForm] = useState(false);
