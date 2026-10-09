@@ -124,6 +124,7 @@ $RECYCLE.BIN/
 test-results/
 test-results-af/
 supabase/.temp/
+.offline-lease-private-jwk.json
 .freebuff/
 
 

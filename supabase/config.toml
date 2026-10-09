@@ -1,0 +1,2 @@
+[functions.offline-lease]
+verify_jwt = true
