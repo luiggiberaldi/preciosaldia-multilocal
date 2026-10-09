@@ -2355,6 +2355,8 @@ export function useCloudSync(deviceId) {
                   event: "*",
                   schema: "public",
                   table: "sync_documents",
+                  // Solo las columnas que usa el handler; sin `data` (evita egress realtime).
+                  select: ["device_id", "collection", "doc_id", "updated_at"],
                 },
                 (change) => {
                   const row = change?.new;
