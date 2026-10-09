@@ -129,3 +129,5 @@ supabase/.temp/
 
 
 .vercel
+__pycache__/
+.vite-dev.pid
