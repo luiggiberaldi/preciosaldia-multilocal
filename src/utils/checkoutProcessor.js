@@ -10,6 +10,8 @@ import { deepFreeze } from './deepFreeze.js';      // FIN-008: deep freeze (no s
 import { FINANCIAL_EPSILON } from './securityConstants.js';
 import { FinancialEngine } from '../core/FinancialEngine.js';
 import { CurrencyService } from '../services/CurrencyService.js';
+import { buildStockMovements, enqueueStockMovements } from './stockLedger.js';
+import { getNegocioActivoId } from './negocioContext.js';
 
 const SALES_KEY = 'bodega_sales_v1';
 const PRODUCTS_KEY = 'bodega_products_v1';
@@ -384,6 +386,9 @@ export async function processSaleTransaction({
         let negativeStockUsed = false;
         const negativeItems = [];
 
+        // Delta efectivo por producto para el ledger de la nube (se encola solo
+        // tras confirmar la venta; si la transacción falla, no se registra nada).
+        const stockChanges = [];
         const updatedProducts = freshProducts.map(p => {
             const cartItemsForThisProduct = cart.filter(i => (i._originalId || i.id) === p.id);
             if (cartItemsForThisProduct.length > 0) {
@@ -406,7 +411,9 @@ export async function processSaleTransaction({
                     negativeStockUsed = true;
                     negativeItems.push({ productId: p.id, name: p.name, stockBefore: p.stock ?? 0, deducted: totalDeducted, stockAfter: newStock });
                 }
-                return { ...p, stock: allowNeg ? newStock : Math.max(0, newStock) };
+                const finalStock = allowNeg ? newStock : Math.max(0, newStock);
+                stockChanges.push({ productId: p.id, delta: finalStock - (p.stock ?? 0) });
+                return { ...p, stock: finalStock };
             }
             return p;
         });
@@ -507,6 +514,21 @@ export async function processSaleTransaction({
                     [CUSTOMER_LEDGER_KEY]: updatedLedger,
                 },
             });
+        }
+
+        // Ledger de stock para la nube: solo después de confirmar la venta.
+        // No altera el stock local; si falla, la cola queda intacta y el envío
+        // es idempotente (movement_id determinista por intentId + producto).
+        try {
+            enqueueStockMovements(buildStockMovements({
+                negocioId: getNegocioActivoId(),
+                deviceId: localStorage.getItem('pda_device_id'),
+                reason: 'SALE',
+                sourceRef: `sale:${stableIntentId}`,
+                changes: stockChanges,
+            }));
+        } catch (err) {
+            console.warn('[checkout] No se pudo registrar el movimiento de stock:', err?.message || err);
         }
 
         const tipo = casheaUsd > 0 ? 'VENTA_CASHEA' : (fiadoAmountUsd > 0 ? 'VENTA_FIADA' : 'VENTA_COMPLETADA');
